@@ -1,4 +1,3 @@
-"""Claude/Anthropic provider implementation."""
 
 import json
 import asyncio

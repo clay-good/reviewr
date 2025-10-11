@@ -1,4 +1,3 @@
-"""Code review orchestration."""
 
 from .orchestrator import ReviewOrchestrator, ReviewResult
 

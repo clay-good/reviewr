@@ -1,4 +1,3 @@
-"""Configuration file loading and merging."""
 
 import os
 import re
@@ -9,6 +8,14 @@ from dotenv import load_dotenv
 
 from .schema import ReviewrConfig
 from .defaults import get_default_config
+
+try:
+    import tomllib  # Python 3.11+
+except ImportError:
+    try:
+        import tomli as tomllib  # Fallback for Python < 3.11
+    except ImportError:
+        tomllib = None  # type: ignore
 
 
 class ConfigLoader:
@@ -50,11 +57,23 @@ class ConfigLoader:
             user_config = self._load_yaml_file(user_config_path)
             config_dict = self._deep_merge(config_dict, user_config)
         
-        # Load project config
-        project_config_path = Path.cwd() / ".reviewr.yml"
-        if project_config_path.exists():
-            project_config = self._load_yaml_file(project_config_path)
+        # Load project config - check multiple formats
+        # Priority: .reviewr.toml > .reviewr.yml > pyproject.toml
+        project_config_toml = Path.cwd() / ".reviewr.toml"
+        project_config_yml = Path.cwd() / ".reviewr.yml"
+        pyproject_toml = Path.cwd() / "pyproject.toml"
+
+        if project_config_toml.exists():
+            project_config = self._load_toml_file(project_config_toml)
             config_dict = self._deep_merge(config_dict, project_config)
+        elif project_config_yml.exists():
+            project_config = self._load_yaml_file(project_config_yml)
+            config_dict = self._deep_merge(config_dict, project_config)
+        elif pyproject_toml.exists():
+            # Load from [tool.reviewr] section
+            project_config = self._load_pyproject_toml(pyproject_toml)
+            if project_config:
+                config_dict = self._deep_merge(config_dict, project_config)
         
         # Load specified config file
         if config_path:
@@ -76,13 +95,34 @@ class ConfigLoader:
         """Load and parse YAML file with environment variable expansion."""
         with open(path, 'r') as f:
             content = f.read()
-        
+
         # Expand environment variables
         content = self._expand_env_vars(content)
-        
+
         # Parse YAML
         data = yaml.safe_load(content)
         return data or {}
+
+    def _load_toml_file(self, path: Path) -> Dict[str, Any]:
+        """Load and parse TOML file."""
+        if tomllib is None:
+            raise ImportError("TOML support requires Python 3.11+ or 'tomli' package. Install with: pip install tomli")
+
+        with open(path, 'rb') as f:
+            data = tomllib.load(f)
+
+        return data or {}
+
+    def _load_pyproject_toml(self, path: Path) -> Optional[Dict[str, Any]]:
+        """Load reviewr configuration from pyproject.toml [tool.reviewr] section."""
+        if tomllib is None:
+            return None
+
+        with open(path, 'rb') as f:
+            data = tomllib.load(f)
+
+        # Extract [tool.reviewr] section
+        return data.get('tool', {}).get('reviewr', {})
     
     def _expand_env_vars(self, content: str) -> str:
         """Expand ${VAR} and $VAR style environment variables."""

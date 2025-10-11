@@ -1,4 +1,3 @@
-"""Configuration management for reviewr."""
 
 from .schema import (
     ProviderConfig,

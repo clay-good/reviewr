@@ -1,4 +1,3 @@
-"""LLM provider implementations."""
 
 from .base import LLMProvider, ReviewType, CodeChunk, ReviewFinding
 from .factory import ProviderFactory

@@ -1,4 +1,3 @@
-"""File discovery utilities."""
 
 from pathlib import Path
 from typing import List, Optional

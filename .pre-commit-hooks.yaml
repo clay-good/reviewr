@@ -1,0 +1,34 @@
+# Pre-commit hook configuration for reviewr
+# Install with: pre-commit install
+# Run manually with: pre-commit run --all-files
+
+- id: reviewr
+  name: reviewr code review
+  description: Run AI-powered code review on staged files
+  entry: reviewr-pre-commit
+  language: system
+  types: [python, javascript, typescript, java, go, rust, ruby, php, c, cpp]
+  pass_filenames: true
+  require_serial: true
+  stages: [commit]
+
+- id: reviewr-security
+  name: reviewr security review
+  description: Run security-focused code review on staged files
+  entry: reviewr-pre-commit --security-only
+  language: system
+  types: [python, javascript, typescript, java, go, rust, ruby, php, c, cpp]
+  pass_filenames: true
+  require_serial: true
+  stages: [commit]
+
+- id: reviewr-secrets
+  name: reviewr secrets scanner
+  description: Scan for hardcoded secrets and credentials
+  entry: reviewr-pre-commit --secrets-only
+  language: system
+  types: [text]
+  pass_filenames: true
+  require_serial: false
+  stages: [commit]
+

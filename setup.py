@@ -21,10 +21,12 @@ setup(
         "anthropic>=0.18",
         "openai>=1.0",
         "google-generativeai>=0.3",
+        "tomli>=2.0.0;python_version<'3.11'",
     ],
     entry_points={
         "console_scripts": [
             "reviewr=reviewr.cli:main",
+            "reviewr-pre-commit=reviewr.pre_commit_hook:main",
         ],
     },
     python_requires=">=3.9",

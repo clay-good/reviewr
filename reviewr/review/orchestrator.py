@@ -1,4 +1,3 @@
-"""Main review orchestration logic."""
 
 import asyncio
 from pathlib import Path
@@ -11,6 +10,7 @@ from ..config.schema import ReviewrConfig
 from .chunker import get_chunker
 from ..utils.language_detector import detect_language
 from ..utils.file_discovery import discover_files
+from ..utils.secrets_scanner import SecretsScanner
 
 
 @dataclass
@@ -63,7 +63,7 @@ class ReviewOrchestrator:
     def __init__(self, provider: LLMProvider, config: ReviewrConfig, verbose: int = 0):
         """
         Initialize the orchestrator.
-        
+
         Args:
             provider: LLM provider to use
             config: Configuration
@@ -76,6 +76,7 @@ class ReviewOrchestrator:
             config.chunking.strategy.value,
             overlap_lines=config.chunking.overlap // 50  # Rough conversion
         )
+        self.secrets_scanner = SecretsScanner()
     
     async def review_path(
         self,
@@ -177,12 +178,39 @@ class ReviewOrchestrator:
         
         # Detect language
         language = language_override or detect_language(file_path, content)
-        
+
         if not language:
             if self.verbose:
                 print(f"Could not detect language for: {file_path}")
             return []
-        
+
+        # Scan for secrets before sending to AI
+        secrets_matches = self.secrets_scanner.scan_content(content, str(file_path))
+
+        if secrets_matches:
+            # Create findings for detected secrets
+            secret_findings = []
+            for match in secrets_matches:
+                finding = ReviewFinding(
+                    file_path=str(file_path),
+                    line_start=match.line_number,
+                    line_end=match.line_number,
+                    severity='critical',
+                    type=ReviewType.SECURITY,
+                    message=f'Potential {match.type.replace("_", " ")} detected: {match.matched_text}',
+                    suggestion='Remove hardcoded secrets and use environment variables or a secrets management system.',
+                    confidence=0.9
+                )
+                secret_findings.append(finding)
+
+            if self.verbose:
+                print(f"Found {len(secrets_matches)} potential secret(s) in {file_path}")
+
+            # Redact secrets from content before sending to AI
+            content, _ = self.secrets_scanner.get_redacted_content(content)
+        else:
+            secret_findings = []
+
         # Chunk the file
         chunks = self.chunker.chunk_file(
             str(file_path),
@@ -191,31 +219,45 @@ class ReviewOrchestrator:
             self.config.chunking.max_chunk_size
         )
         
-        # Review each chunk
+        # Review each chunk - process review types in parallel for better performance
         all_findings = []
-        
+
         for chunk in chunks:
             try:
-                findings = await self.provider.review_code(
-                    chunk,
-                    review_types
-                )
-                
-                # Filter by confidence threshold
-                filtered_findings = [
-                    f for f in findings
-                    if f.confidence >= self.config.review.confidence_threshold
-                ]
-                
-                all_findings.extend(filtered_findings)
-                
+                # Run different review types in parallel
+                review_tasks = []
+                for review_type in review_types:
+                    task = self.provider.review_code(chunk, [review_type])
+                    review_tasks.append(task)
+
+                # Gather all results concurrently
+                results = await asyncio.gather(*review_tasks, return_exceptions=True)
+
+                # Process results
+                for result in results:
+                    if isinstance(result, Exception):
+                        if self.verbose:
+                            print(f"Error in parallel review for {file_path}: {result}")
+                        continue
+
+                    # Filter by confidence threshold
+                    filtered_findings = [
+                        f for f in result
+                        if f.confidence >= self.config.review.confidence_threshold
+                    ]
+
+                    all_findings.extend(filtered_findings)
+
             except Exception as e:
                 if self.verbose:
                     print(f"Error reviewing chunk in {file_path}: {e}")
-        
+
+        # Add secret findings to the results
+        all_findings.extend(secret_findings)
+
         # Limit findings per file
         if len(all_findings) > self.config.review.max_findings_per_file:
             all_findings = all_findings[:self.config.review.max_findings_per_file]
-        
+
         return all_findings
 

@@ -12,21 +12,32 @@
 
 **Comprehensive analysis** - Covers security, performance, correctness, maintainability, architecture, and coding standards with detailed SARIF and Markdown reports for easy tracking and compliance.
 
-**⚡ Multi-LLM flexibility** - Choose from Claude, OpenAI GPT, or Google Gemini based on your needs, budget, and compliance requirements.
+**Multi-LLM flexibility** - Choose from Claude, OpenAI GPT, or Google Gemini based on your needs, budget, and compliance requirements.
 
 ## Features
 
+### Core Features
 - **Multiple LLM Providers**: Support for Claude, OpenAI GPT, and Google Gemini
 - **Comprehensive Reviews**: Security, performance, correctness, maintainability, architecture, and standards
 - **Code Explanation**: `--explain` flag to understand unfamiliar code quickly
 - **Flexible Input**: Review single files or entire directories
-- **SARIF + Markdown Output**: Automatic generation of SARIF JSON and Markdown reports for CI/CD integration and compliance
-- **Configurable**: YAML configuration with environment variable support
+- **Multiple Output Formats**: SARIF JSON, Markdown, HTML, and JUnit XML
 - **Smart Chunking**: Intelligent code chunking for large files
 - **Language Detection**: Automatic programming language detection (30+ languages)
 - **Retry Logic**: Automatic retries with exponential backoff
 - **Progress Tracking**: Beautiful progress bars and status updates
-- **CI/CD Integration**: Ready-to-use examples for GitHub Actions and GitLab CI with SARIF upload support
+
+### Performance & Security
+- **Parallel Processing**: Multiple review types run concurrently for faster results
+- **Secrets Detection**: Local regex-based scanning for API keys and credentials (30+ patterns)
+- **Smart Caching**: Reduce API calls and costs with intelligent caching
+- **Local-First**: Secrets scanning and validation happen locally before AI processing
+
+### Configuration & Integration
+- **Flexible Configuration**: Support for YAML (.reviewr.yml), TOML (.reviewr.toml), and pyproject.toml
+- **Pre-commit Hooks**: Git pre-commit integration with configurable quality thresholds
+- **VS Code Extension**: Native VS Code integration with Problems panel support
+- **CI/CD Ready**: Examples for GitHub Actions and GitLab CI with SARIF upload support
 
 ## Example Project Cost 
 - **Small** (10 files): ~$0.20-0.30
@@ -65,34 +76,37 @@ export OPENAI_API_KEY="your-openai-api-key"
 export GOOGLE_API_KEY="your-gemini-api-key"
 ```
 
-2. **Initialize configuration** (optional):
+2. **Review your code**:
 
 ```bash
-reviewr init
+# Review a single file with all review types, output as SARIF
+reviewr path/to/file.py --all --output-format sarif
+
+# Review with specific types, output as HTML
+reviewr path/to/file.py --security --performance --output-format html
+
+# Review a directory with all types, output as Markdown
+reviewr path/to/project --all --output-format markdown
+
+# Explain code (great for understanding unfamiliar code)
+reviewr path/to/file.py --explain --output-format html
+
+# Output as JUnit XML for CI/CD integration
+reviewr path/to/file.py --all --output-format junit
 ```
 
-This creates a `.reviewr.yml` file in your current directory.
+**Note**: You must specify:
+- At least one review type (or `--all`)
+- An output format (`--output-format`)
 
-3. **Review your code** (automatically generates SARIF and Markdown reports):
+3. **Optional: Initialize configuration**:
 
 ```bash
-# Review a single file (creates reviewr-report.sarif and reviewr-report.md)
-reviewr review path/to/file.py
+# Creates .reviewr.yml in current directory
+reviewr init
 
-# Review a directory
-reviewr review path/to/project
-
-# Review with specific types
-reviewr review path/to/file.py --security --performance
-
-# Review all types
-reviewr review path/to/file.py --all
-
-# Generate only Markdown report
-reviewr review path/to/file.py --output markdown
-
-# Generate only SARIF report
-reviewr review path/to/file.py --output sarif
+# Or create .reviewr.toml for TOML format
+# Or add [tool.reviewr] section to pyproject.toml
 ```
 
 ## Usage
@@ -100,49 +114,53 @@ reviewr review path/to/file.py --output sarif
 ### Basic Commands
 
 ```bash
-# Review code (default: security and performance, generates both SARIF and Markdown)
-reviewr review <path>
+# Review code with all types, output as SARIF
+reviewr <path> --all --output-format sarif
 
-# Review with specific types
-reviewr review <path> --security --performance --correctness
+# Review with specific types, output as Markdown
+reviewr <path> --security --performance --correctness --output-format markdown
 
-# Review all types
-reviewr review <path> --all
+# Review with specific types, output as HTML
+reviewr <path> --security --output-format html
+
+# Review with specific types, output as JUnit XML
+reviewr <path> --all --output-format junit
 
 # Use a specific provider
-reviewr review <path> --provider claude
+reviewr <path> --all --output-format sarif --provider claude
 
-# Generate only Markdown report
-reviewr review <path> --output markdown
+# Verbose output
+reviewr <path> --all --output-format sarif --verbose
 
-# Generate only SARIF report
-reviewr review <path> --output sarif
+# Disable caching
+reviewr <path> --all --output-format sarif --no-cache
 
-# Show current configuration
-reviewr show-config
-
-# Initialize configuration file
-reviewr init
-
-# Global options (can be used with any command)
-reviewr --config /path/to/config.yml review <path>
-reviewr --provider openai review <path>
-reviewr --verbose review <path>
-reviewr --no-cache review <path>
-reviewr --output markdown review <path>
+# Use custom config file
+reviewr <path> --all --output-format sarif --config /path/to/config.yml
 ```
 
-### Global Options
+### Options
 
+- `--security`: Security review (vulnerabilities, injections, auth issues)
+- `--performance`: Performance review (inefficient algorithms, bottlenecks)
+- `--correctness`: Correctness review (logic errors, edge cases)
+- `--maintainability`: Maintainability review (clarity, documentation)
+- `--architecture`: Architecture review (design patterns, SOLID principles)
+- `--standards`: Standards review (idioms, conventions, style)
+- `--explain`: Comprehensive code explanation and overview
+- `--all`: Run all review types (except explain)
+- `--output-format`: **Required** - Output format (sarif, markdown, html, junit)
 - `--config`, `-c`: Path to configuration file
 - `--provider`, `-p`: Override default LLM provider (claude, openai, gemini)
-- `--verbose`, `-v`: Increase verbosity (use -vv for more detail)
+- `--verbose`, `-v`: Increase verbosity
 - `--no-cache`: Disable caching for this run
-- `--output`, `-o`: Output format (sarif, markdown, both) - default: both
+- `--language`, `-l`: Explicitly specify programming language
+- `--include`: File patterns to include (can be used multiple times)
+- `--exclude`: File patterns to exclude (can be used multiple times)
 
 ### Review Types
 
-- `--security`: Security vulnerabilities, injections, authentication issues
+- `--security`: Security vulnerabilities, injections, authentication issues (includes local secrets detection)
 - `--performance`: Inefficient algorithms, bottlenecks, optimization opportunities
 - `--correctness`: Logic errors, edge cases, potential bugs
 - `--maintainability`: Code clarity, documentation, naming conventions
@@ -150,6 +168,8 @@ reviewr --output markdown review <path>
 - `--standards`: Language idioms, conventions, style guidelines
 - `--explain`: Comprehensive code explanation and overview (great for understanding unfamiliar code)
 - `--all`: Run all review types (except explain)
+
+**Note**: All reviews include automatic local secrets detection before AI processing.
 
 ### Review Command Options
 
@@ -260,67 +280,78 @@ rate_limiting:
 ### Review a Python file for security issues
 
 ```bash
-reviewr review app.py --security
+reviewr app.py --security --output-format sarif
 ```
 
 ### Review a project directory with all checks
 
 ```bash
-reviewr review ./src --all
-# Creates: reviewr-report.sarif and reviewr-report.md
+reviewr ./src --all --output-format markdown
 ```
 
 ### Review with a specific provider
 
 ```bash
-reviewr review app.py --provider openai --performance
+reviewr app.py --performance --output-format html --provider openai
 ```
 
 ### Review with custom patterns
 
 ```bash
-reviewr review ./src --include "*.py" --exclude "test_*.py"
+reviewr ./src --all --output-format sarif --include "*.py" --exclude "test_*.py"
 ```
 
 ### Review with explicit language specification
 
 ```bash
-reviewr review script.txt --language python --security
+reviewr script.txt --security --output-format sarif --language python
 ```
 
 ### Explain code to understand it quickly
 
 ```bash
 # Get a comprehensive explanation of a file
-reviewr review complex_module.py --explain
+reviewr complex_module.py --explain --output-format html
 
 # Explain an entire directory
-reviewr review ./src --explain
+reviewr ./src --explain --output-format markdown
 ```
 
 ## Output Formats
 
-### Default: SARIF + Markdown (recommended)
+reviewr supports multiple output formats to fit different use cases. You must specify the format using `--output-format`.
 
-By default, reviewr generates both formats automatically:
-- `reviewr-report.sarif` - SARIF 2.1.0 JSON for CI/CD integration and compliance
-- `reviewr-report.md` - Human-readable Markdown report
-
-### SARIF Only
+### SARIF JSON
 
 ```bash
-reviewr review app.py --output sarif
+reviewr app.py --all --output-format sarif
 ```
 
-Generates only the SARIF JSON file for automated processing and CI/CD integration.
+SARIF 2.1.0 JSON format for CI/CD integration and compliance. Creates `reviewr-report.sarif`.
 
-### Markdown Only
+### Markdown
 
 ```bash
-reviewr review app.py --output markdown
+reviewr app.py --all --output-format markdown
 ```
 
-Generates only the Markdown report for documentation or manual review.
+Human-readable Markdown report for documentation. Creates `reviewr-report.md`.
+
+### HTML
+
+```bash
+reviewr app.py --all --output-format html
+```
+
+Beautiful HTML report with styling for easy viewing in browsers. Creates `reviewr-report.html`.
+
+### JUnit XML
+
+```bash
+reviewr app.py --all --output-format junit
+```
+
+JUnit XML format for test integration and CI/CD systems. Creates `reviewr-report.xml`.
 
 ### SARIF Integration Benefits
 
@@ -612,47 +643,151 @@ post_review_comment:
 4. **Customize review scope**: Adjust review types and file patterns
 5. **Set up merge request approvals**: Require review completion before merging
 
-### Pre-commit Hook
+### Pre-commit Hook Integration
 
-For local development, you can set up a pre-commit hook to review code before committing.
+reviewr includes built-in support for pre-commit hooks using the [pre-commit framework](https://pre-commit.com/).
 
-Create `.git/hooks/pre-commit`:
+#### Installation
 
-```bash
-#!/bin/bash
-
-# Get list of staged files
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
-
-if [ -z "$STAGED_FILES" ]; then
-  exit 0
-fi
-
-echo "Running reviewr on staged files..."
-
-# Review staged files
-for file in $STAGED_FILES; do
-  if [ -f "$file" ]; then
-    echo "Reviewing $file"
-    reviewr review "$file" --security --correctness
-
-    if [ $? -ne 0 ]; then
-      echo "Review found issues in $file"
-      echo "Commit aborted. Fix issues or use 'git commit --no-verify' to skip."
-      exit 1
-    fi
-  fi
-done
-
-echo "Review complete. Proceeding with commit."
-exit 0
-```
-
-Make the hook executable:
+1. **Install pre-commit**:
 
 ```bash
-chmod +x .git/hooks/pre-commit
+pip install pre-commit
 ```
+
+2. **Create `.pre-commit-config.yaml`** in your repository:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      # Full review (security + correctness)
+      - id: reviewr
+        name: reviewr code review
+        entry: reviewr-pre-commit
+        language: system
+        types: [python, javascript, typescript, java, go, rust]
+        pass_filenames: true
+        require_serial: true
+        stages: [commit]
+
+      # Secrets scanner (fast, no AI required)
+      - id: reviewr-secrets
+        name: reviewr secrets scanner
+        entry: reviewr-pre-commit --secrets-only
+        language: system
+        types: [text]
+        pass_filenames: true
+        stages: [commit]
+```
+
+3. **Install the hooks**:
+
+```bash
+pre-commit install
+```
+
+#### Usage
+
+The hooks will run automatically on `git commit`. To run manually:
+
+```bash
+# Run on all files
+pre-commit run --all-files
+
+# Run on staged files only
+pre-commit run
+
+# Skip hooks for a specific commit
+git commit --no-verify
+```
+
+#### Hook Options
+
+The `reviewr-pre-commit` command supports several options:
+
+```bash
+# Security-only review (faster)
+reviewr-pre-commit --security-only file.py
+
+# Secrets-only scan (very fast, no AI)
+reviewr-pre-commit --secrets-only file.py
+
+# Custom fail threshold
+reviewr-pre-commit --fail-on high file.py
+
+# Verbose output
+reviewr-pre-commit --verbose file.py
+```
+
+#### Benefits
+
+- **Catch issues early**: Find problems before they reach the repository
+- **Fast feedback**: Get immediate feedback during development
+- **Configurable**: Choose which checks to run and when
+- **No AI for secrets**: Secrets scanning is instant and doesn't require API calls
+- **Team consistency**: Ensure all team members run the same checks
+
+### VS Code Extension
+
+reviewr includes a lightweight VS Code extension that integrates directly with the Problems panel.
+
+#### Installation
+
+1. **Install reviewr CLI** (if not already installed):
+
+```bash
+pip install -e /path/to/reviewr
+```
+
+2. **Build and install the extension**:
+
+```bash
+cd vscode-extension
+npm install
+npm run compile
+npm run package
+code --install-extension reviewr-vscode-0.1.0.vsix
+```
+
+#### Usage
+
+**Command Palette** (Ctrl+Shift+P / Cmd+Shift+P):
+- `reviewr: Review Current File` - Analyze the active file
+- `reviewr: Review Entire Workspace` - Analyze all files in workspace
+
+**Context Menu**:
+- Right-click in editor or on a file in Explorer
+- Select "Review Current File"
+
+#### Configuration
+
+Open VS Code Settings (Ctrl+, / Cmd+,) and search for "reviewr":
+
+```json
+{
+  "reviewr.cliPath": "reviewr",
+  "reviewr.useAllReviewTypes": true,
+  "reviewr.reviewTypes": ["security", "performance", "correctness"],
+  "reviewr.autoReview": false,
+  "reviewr.clearProblemsOnReview": true
+}
+```
+
+#### Features
+
+- **Problems Panel Integration**: View findings directly in VS Code's Problems panel
+- **Click to Navigate**: Click on any finding to jump to the relevant code
+- **Auto-review on Save**: Optionally run reviews automatically when you save files
+- **Configurable Review Types**: Choose which types of reviews to run
+- **SARIF Support**: Uses SARIF format for rich diagnostic information
+
+#### Benefits
+
+- **Seamless Integration**: Works within your existing VS Code workflow
+- **Instant Feedback**: See issues as you code
+- **No Context Switching**: Stay in your editor
+- **Rich Diagnostics**: Detailed information and suggestions inline
 
 ### Docker Integration
 
@@ -709,6 +844,57 @@ Run with:
 
 ```bash
 docker-compose run reviewr
+```
+
+## Secrets Detection
+
+reviewr includes built-in local secrets detection that scans for hardcoded credentials before sending code to AI.
+
+### Features
+
+- **30+ Secret Patterns**: Detects AWS keys, GitHub tokens, API keys, database URLs, and more
+- **Local Processing**: No AI required, instant results
+- **Automatic Redaction**: Secrets are redacted before AI processing
+- **Zero False Negatives**: Comprehensive pattern matching
+- **Smart Filtering**: Reduces false positives with context-aware detection
+
+### Detected Secret Types
+
+- AWS Access Keys & Secret Keys
+- GitHub Tokens (PAT, OAuth, App tokens)
+- Google API Keys & OAuth tokens
+- Slack Tokens & Webhooks
+- Stripe API Keys
+- Heroku API Keys
+- Database Connection Strings
+- Private Keys (RSA, EC, DSA)
+- JWT Tokens
+- Bearer Tokens
+- SSH Keys
+- And 20+ more patterns
+
+### Usage
+
+Secrets detection runs automatically during all security reviews:
+
+```bash
+# Secrets are detected and reported automatically
+reviewr app.py --security --output-format sarif
+
+# Use pre-commit hook for instant feedback
+reviewr-pre-commit --secrets-only app.py
+```
+
+### Example Output
+
+```
+    Secrets detected in app.py:
+  Line 15: aws_access_key - AKIA...XXXX
+  Line 16: github_token - ghp_...XXXX
+  Line 42: database_url - postgres://user:pass@...
+
+    Found 3 potential secret(s)
+Remove hardcoded secrets and use environment variables or a secrets management system.
 ```
 
 ## Supported Languages

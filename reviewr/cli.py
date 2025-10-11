@@ -1,4 +1,3 @@
-"""Main CLI interface for reviewr."""
 
 import sys
 import asyncio
@@ -17,27 +16,7 @@ from .utils.formatters import TerminalFormatter, MarkdownFormatter
 console = Console()
 
 
-@click.group()
-@click.option('--config', '-c', type=click.Path(exists=True), help='Path to config file')
-@click.option('--provider', '-p', type=click.Choice(['claude', 'openai', 'gemini']), 
-              help='LLM provider to use')
-@click.option('--verbose', '-v', count=True, help='Increase verbosity')
-@click.option('--no-cache', is_flag=True, help='Disable caching')
-@click.option('--output', '-o', type=click.Choice(['sarif', 'markdown', 'both']),
-              default='both', help='Output format (default: both sarif and markdown files)')
-@click.pass_context
-def cli(ctx: click.Context, config: Optional[str], provider: Optional[str], 
-        verbose: int, no_cache: bool, output: str) -> None:
-    """reviewr - AI-powered code review CLI tool."""
-    ctx.ensure_object(dict)
-    ctx.obj['config_path'] = config
-    ctx.obj['provider_override'] = provider
-    ctx.obj['verbose'] = verbose
-    ctx.obj['no_cache'] = no_cache
-    ctx.obj['output_format'] = output
-
-
-@cli.command()
+@click.command()
 @click.argument('path', type=click.Path(exists=True))
 @click.option('--security', is_flag=True, help='Security review: vulnerabilities, injections, auth issues')
 @click.option('--performance', is_flag=True, help='Performance review: inefficient algorithms, bottlenecks')
@@ -47,31 +26,47 @@ def cli(ctx: click.Context, config: Optional[str], provider: Optional[str],
 @click.option('--standards', is_flag=True, help='Standards review: idioms, conventions, style')
 @click.option('--explain', is_flag=True, help='Explain: comprehensive code explanation and overview')
 @click.option('--all', 'all_types', is_flag=True, help='Run all review types (except explain)')
+@click.option('--output-format', type=click.Choice(['sarif', 'markdown', 'html', 'junit']),
+              required=True, help='Output format (required)')
+@click.option('--config', '-c', type=click.Path(exists=True), help='Path to config file')
+@click.option('--provider', '-p', type=click.Choice(['claude', 'openai', 'gemini']),
+              help='LLM provider to use')
+@click.option('--verbose', '-v', count=True, help='Increase verbosity')
+@click.option('--no-cache', is_flag=True, help='Disable caching')
 @click.option('--language', '-l', help='Explicitly specify language (auto-detected if not provided)')
 @click.option('--include', multiple=True, help='File patterns to include')
 @click.option('--exclude', multiple=True, help='File patterns to exclude')
-@click.pass_context
-def review(ctx: click.Context, path: str, security: bool, performance: bool,
-           correctness: bool, maintainability: bool, architecture: bool,
-           standards: bool, explain: bool, all_types: bool, language: Optional[str],
-           include: tuple, exclude: tuple) -> None:
-    """Review code at the specified path."""
+def cli(path: str, security: bool, performance: bool,
+        correctness: bool, maintainability: bool, architecture: bool,
+        standards: bool, explain: bool, all_types: bool, output_format: str,
+        config: Optional[str], provider: Optional[str], verbose: int, no_cache: bool,
+        language: Optional[str], include: tuple, exclude: tuple) -> None:
+    """reviewr - AI-powered code review CLI tool.
+
+    Review code at PATH with specified review types and output format.
+    You must specify at least one review type (or --all) and an output format.
+
+    Examples:
+        reviewr /path/to/file.py --all --output-format sarif
+        reviewr /path/to/file.py --security --performance --output-format markdown
+        reviewr /path/to/project --explain --output-format html
+    """
     try:
         # Load configuration
         loader = ConfigLoader()
         cli_overrides = {}
-        
-        if ctx.obj['provider_override']:
-            cli_overrides['default_provider'] = ctx.obj['provider_override']
-        
-        if ctx.obj['no_cache']:
+
+        if provider:
+            cli_overrides['default_provider'] = provider
+
+        if no_cache:
             cli_overrides['cache'] = {'enabled': False}
-        
-        config = loader.load(
-            config_path=ctx.obj['config_path'],
+
+        cfg = loader.load(
+            config_path=config,
             cli_overrides=cli_overrides
         )
-        
+
         # Determine review types
         review_types = []
         if all_types:
@@ -92,52 +87,72 @@ def review(ctx: click.Context, path: str, security: bool, performance: bool,
                 review_types.append(ReviewType.STANDARDS)
             if explain:
                 review_types.append(ReviewType.EXPLAIN)
-        
-        # Use default review types if none specified
+
+        # Require at least one review type
         if not review_types:
-            review_types = [ReviewType(rt) for rt in config.review.default_types]
-        
-        if ctx.obj['verbose']:
+            console.print("[red]Error:[/red] You must specify at least one review type (or use --all)")
+            console.print("\nAvailable review types:")
+            console.print("  --security        Security vulnerabilities")
+            console.print("  --performance     Performance issues")
+            console.print("  --correctness     Logic errors and bugs")
+            console.print("  --maintainability Code maintainability")
+            console.print("  --architecture    Architecture and design")
+            console.print("  --standards       Coding standards")
+            console.print("  --explain         Code explanation")
+            console.print("  --all             All review types (except explain)")
+            sys.exit(1)
+
+        if verbose:
             console.print(f"[blue]Review types:[/blue] {', '.join(rt.value for rt in review_types)}")
-            console.print(f"[blue]Provider:[/blue] {config.default_provider}")
-        
+            console.print(f"[blue]Provider:[/blue] {cfg.default_provider}")
+            console.print(f"[blue]Output format:[/blue] {output_format}")
+
         # Run review
         result = asyncio.run(_run_review(
-            config=config,
+            config=cfg,
             path=path,
             review_types=review_types,
             language=language,
             include_patterns=list(include),
             exclude_patterns=list(exclude),
-            verbose=ctx.obj['verbose']
+            verbose=verbose
         ))
-        
-        # Generate and save output files
-        output_format = ctx.obj['output_format']
 
-        # Always generate both SARIF and Markdown unless specifically limited
-        if output_format in ['both', 'sarif']:
-            # Generate SARIF output
+        # Generate and save output file based on format
+        if output_format == 'sarif':
             from .utils.formatters import SarifFormatter
-            sarif_formatter = SarifFormatter()
-            sarif_output = sarif_formatter.format_result(result)
+            formatter = SarifFormatter()
+            output = formatter.format_result(result)
+            output_path = Path.cwd() / "reviewr-report.sarif"
+            with open(output_path, 'w') as f:
+                f.write(output)
+            console.print(f"[green]✓[/green] SARIF report saved to: {output_path}")
 
-            # Save SARIF file
-            sarif_path = Path.cwd() / "reviewr-report.sarif"
-            with open(sarif_path, 'w') as f:
-                f.write(sarif_output)
-            console.print(f"[green]✓[/green] SARIF report saved to: {sarif_path}")
-
-        if output_format in ['both', 'markdown']:
-            # Generate Markdown output
+        elif output_format == 'markdown':
             markdown_formatter = MarkdownFormatter()
-            markdown_output = markdown_formatter.format_result(result)
+            output = markdown_formatter.format_result(result)
+            output_path = Path.cwd() / "reviewr-report.md"
+            with open(output_path, 'w') as f:
+                f.write(output)
+            console.print(f"[green]✓[/green] Markdown report saved to: {output_path}")
 
-            # Save Markdown file
-            markdown_path = Path.cwd() / "reviewr-report.md"
-            with open(markdown_path, 'w') as f:
-                f.write(markdown_output)
-            console.print(f"[green]✓[/green] Markdown report saved to: {markdown_path}")
+        elif output_format == 'html':
+            from .utils.formatters import HtmlFormatter
+            formatter = HtmlFormatter()
+            output = formatter.format_result(result)
+            output_path = Path.cwd() / "reviewr-report.html"
+            with open(output_path, 'w') as f:
+                f.write(output)
+            console.print(f"[green]✓[/green] HTML report saved to: {output_path}")
+
+        elif output_format == 'junit':
+            from .utils.formatters import JunitFormatter
+            formatter = JunitFormatter()
+            output = formatter.format_result(result)
+            output_path = Path.cwd() / "reviewr-report.xml"
+            with open(output_path, 'w') as f:
+                f.write(output)
+            console.print(f"[green]✓[/green] JUnit XML report saved to: {output_path}")
 
         # Show summary in terminal
         console.print(f"\n[bold cyan]Review Summary:[/bold cyan]")
@@ -161,71 +176,9 @@ def review(ctx: click.Context, path: str, security: bool, performance: bool,
         
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        if ctx.obj['verbose'] > 1:
+        if verbose > 1:
             import traceback
             console.print(traceback.format_exc())
-        sys.exit(1)
-
-
-@cli.command()
-@click.pass_context
-def init(ctx: click.Context) -> None:
-    """Initialize a new configuration file."""
-    config_path = Path.cwd() / ".reviewr.yml"
-    
-    if config_path.exists():
-        if not click.confirm(f"{config_path} already exists. Overwrite?"):
-            console.print("[yellow]Cancelled.[/yellow]")
-            return
-    
-    try:
-        with open(config_path, 'w') as f:
-            f.write(DEFAULT_CONFIG_TEMPLATE)
-        
-        console.print(f"[green]✓[/green] Created configuration file: {config_path}")
-        console.print("\n[blue]Next steps:[/blue]")
-        console.print("1. Set your API keys as environment variables:")
-        console.print("   - ANTHROPIC_API_KEY for Claude")
-        console.print("   - OPENAI_API_KEY for OpenAI")
-        console.print("   - GOOGLE_API_KEY for Gemini")
-        console.print("2. Edit .reviewr.yml to customize settings")
-        console.print("3. Run: reviewr review <path>")
-        
-    except Exception as e:
-        console.print(f"[red]Error creating config file:[/red] {e}")
-        sys.exit(1)
-
-
-@cli.command()
-@click.pass_context
-def show_config(ctx: click.Context) -> None:
-    """Show current configuration."""
-    try:
-        loader = ConfigLoader()
-        config = loader.load(config_path=ctx.obj['config_path'])
-        
-        table = Table(title="reviewr Configuration")
-        table.add_column("Setting", style="cyan")
-        table.add_column("Value", style="green")
-        
-        table.add_row("Default Provider", config.default_provider)
-        table.add_row("Review Types", ", ".join(config.review.default_types))
-        table.add_row("Severity Threshold", config.review.severity_threshold.value)
-        table.add_row("Cache Enabled", str(config.cache.enabled))
-        table.add_row("Cache Directory", config.cache.directory)
-        table.add_row("Chunking Strategy", config.chunking.strategy.value)
-        table.add_row("Max Chunk Size", str(config.chunking.max_chunk_size))
-        
-        console.print(table)
-        
-        # Show configured providers
-        console.print("\n[bold]Configured Providers:[/bold]")
-        for name, provider_config in config.providers.items():
-            has_key = "✓" if provider_config.api_key else "✗"
-            console.print(f"  {has_key} {name}: {provider_config.model}")
-        
-    except Exception as e:
-        console.print(f"[red]Error loading config:[/red] {e}")
         sys.exit(1)
 
 
@@ -271,7 +224,7 @@ async def _run_review(
 
 def main() -> None:
     """Main entry point."""
-    cli(obj={})
+    cli()
 
 
 if __name__ == '__main__':

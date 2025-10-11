@@ -1,0 +1,124 @@
+{
+  "name": "reviewr-vscode",
+  "displayName": "reviewr - AI Code Review",
+  "description": "AI-powered code review directly in VS Code",
+  "version": "0.1.0",
+  "publisher": "reviewr",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Testing"
+  ],
+  "keywords": [
+    "code review",
+    "ai",
+    "security",
+    "linter",
+    "static analysis"
+  ],
+  "activationEvents": [
+    "onCommand:reviewr.reviewCurrentFile",
+    "onCommand:reviewr.reviewWorkspace"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "reviewr.reviewCurrentFile",
+        "title": "Review Current File",
+        "category": "reviewr"
+      },
+      {
+        "command": "reviewr.reviewWorkspace",
+        "title": "Review Entire Workspace",
+        "category": "reviewr"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "reviewr.reviewCurrentFile",
+          "group": "reviewr",
+          "when": "editorTextFocus"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "reviewr.reviewCurrentFile",
+          "group": "reviewr",
+          "when": "resourceScheme == file"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "reviewr.reviewCurrentFile",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "reviewr.reviewWorkspace"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "reviewr",
+      "properties": {
+        "reviewr.cliPath": {
+          "type": "string",
+          "default": "reviewr",
+          "description": "Path to the reviewr CLI executable"
+        },
+        "reviewr.reviewTypes": {
+          "type": "array",
+          "default": ["security", "performance", "correctness"],
+          "description": "Default review types to run",
+          "items": {
+            "type": "string",
+            "enum": ["security", "performance", "correctness", "maintainability", "architecture", "standards", "explain"]
+          }
+        },
+        "reviewr.useAllReviewTypes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use --all flag to run all review types"
+        },
+        "reviewr.autoReview": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically review files on save"
+        },
+        "reviewr.clearProblemsOnReview": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clear previous reviewr problems before running a new review"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.19.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clay-good/reviewr"
+  },
+  "license": "MIT"
+}
+

@@ -1,4 +1,3 @@
-"""Factory for creating LLM providers."""
 
 from typing import Dict, Type
 from .base import LLMProvider
