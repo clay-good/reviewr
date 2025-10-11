@@ -102,7 +102,22 @@ reviewr show-config
 
 # Initialize configuration file
 reviewr init
+
+# Global options (can be used with any command)
+reviewr --config /path/to/config.yml review <path>
+reviewr --provider openai review <path>
+reviewr --verbose review <path>
+reviewr --no-cache review <path>
+reviewr --output markdown review <path>
 ```
+
+### Global Options
+
+- `--config`, `-c`: Path to configuration file
+- `--provider`, `-p`: Override default LLM provider (claude, openai, gemini)
+- `--verbose`, `-v`: Increase verbosity (use -vv for more detail)
+- `--no-cache`: Disable caching for this run
+- `--output`, `-o`: Output format (terminal, markdown)
 
 ### Review Types
 
@@ -115,15 +130,32 @@ reviewr init
 - `--explain`: Comprehensive code explanation and overview (great for understanding unfamiliar code)
 - `--all`: Run all review types (except explain)
 
+### Review Command Options
+
+- `--language`, `-l`: Explicitly specify programming language (auto-detected if not provided)
+- `--include`: File patterns to include (can be used multiple times)
+- `--exclude`: File patterns to exclude (can be used multiple times)
+
 ### Configuration
 
 Configuration is loaded from multiple sources with the following precedence (highest to lowest):
 
 1. Command-line arguments
-2. Environment variables (`REVIEWR_*`)
+2. Environment variables (`REVIEWR_*` and API keys)
 3. Project config (`.reviewr.yml` in current directory)
 4. User config (`~/.config/reviewr/config.yml`)
 5. Default values
+
+#### Environment Variables
+
+**API Keys:**
+- `ANTHROPIC_API_KEY`: Claude API key
+- `OPENAI_API_KEY`: OpenAI API key
+- `GOOGLE_API_KEY`: Google Gemini API key
+
+**Configuration Overrides:**
+- `REVIEWR_DEFAULT_PROVIDER`: Override default provider
+- `REVIEWR_CACHE_ENABLED`: Enable/disable caching (true/false)
 
 #### Example Configuration File
 
@@ -132,19 +164,24 @@ Configuration is loaded from multiple sources with the following precedence (hig
 providers:
   claude:
     api_key: ${ANTHROPIC_API_KEY}
-    model: claude-3-5-sonnet-20241022
-    max_tokens: 4096
+    model: claude-sonnet-4-20250514
+    max_tokens: 8192
     temperature: 0.0
-    
+    timeout: 60
+
   openai:
     api_key: ${OPENAI_API_KEY}
     model: gpt-4-turbo-preview
     max_tokens: 4096
-    
+    temperature: 0.0
+    timeout: 60
+
   gemini:
     api_key: ${GOOGLE_API_KEY}
     model: gemini-pro
     max_tokens: 4096
+    temperature: 0.0
+    timeout: 60
 
 default_provider: claude
 
@@ -170,10 +207,32 @@ cache:
 
 rate_limiting:
   requests_per_minute: 60
+  requests_per_hour: null  # optional
   retry_max_attempts: 3
   retry_backoff: exponential
   initial_retry_delay: 1.0
 ```
+
+### Supported Models
+
+#### Claude (Anthropic)
+- `claude-sonnet-4-20250514` (default, 200K context)
+- `claude-3-5-sonnet-20241022` (200K context)
+- `claude-3-opus-20240229` (200K context)
+- `claude-3-sonnet-20240229` (200K context)
+- `claude-3-haiku-20240307` (200K context)
+
+#### OpenAI
+- `gpt-4-turbo-preview` (default, 128K context)
+- `gpt-4-turbo` (128K context)
+- `gpt-4` (8K context)
+- `gpt-3.5-turbo` (16K context)
+- `gpt-3.5-turbo-16k` (16K context)
+
+#### Google Gemini
+- `gemini-pro` (default, 32K context)
+- `gemini-1.5-pro` (1M context)
+- `gemini-1.5-flash` (1M context)
 
 ## Examples
 
@@ -199,6 +258,12 @@ reviewr review app.py --provider openai --performance
 
 ```bash
 reviewr review ./src --include "*.py" --exclude "test_*.py"
+```
+
+### Review with explicit language specification
+
+```bash
+reviewr review script.txt --language python --security
 ```
 
 ### Explain code to understand it quickly
@@ -591,30 +656,6 @@ reviewr is **production-ready** for local file and directory reviews.
 - Error handling and retries
 - Comprehensive documentation
 - CI/CD integration examples (GitHub Actions, GitLab CI)
-
-### Planned Features
-- Git integration and PR reviews (native)
-- Active caching system
-- Advanced rate limiting
-- AST-aware code chunking
-- Comprehensive test suite
-- Cost tracking with detailed pricing
-
-## Development
-
-### Running Tests
-
-```bash
-# Tests structure is ready, implementation pending
-pytest tests/
-```
-
-### Code Formatting
-
-```bash
-black reviewr/
-ruff check reviewr/
-```
 
 ## Troubleshooting
 
