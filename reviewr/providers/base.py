@@ -157,28 +157,111 @@ class LLMProvider(ABC):
         if len(review_types) == 1 and review_types[0] == ReviewType.EXPLAIN:
             return self._build_explain_prompt(chunk)
 
-        review_types_str = ', '.join(rt.value for rt in review_types)
+        # Build comprehensive review instructions
+        review_instructions = self._build_review_instructions(review_types)
 
-        prompt = f"""Senior engineer reviewing {chunk.language} code for {review_types_str}.
+        prompt = f"""You are a senior software engineer conducting a comprehensive code review. Analyze the following {chunk.language} code for the specified review types.
 
-{chunk.file_path} (L{chunk.start_line}-{chunk.end_line})
+FILE: {chunk.file_path} (Lines {chunk.start_line}-{chunk.end_line})
 
 ```{chunk.language}
 {chunk.content}
 ```"""
 
         if chunk.context:
-            prompt += f"\n\nContext:\n```{chunk.language}\n{chunk.context}\n```"
+            prompt += f"\n\nCONTEXT:\n```{chunk.language}\n{chunk.context}\n```"
 
         prompt += f"""
 
-Return JSON array. Only genuine issues with clear impact. Be concise.
+REVIEW CRITERIA:
+{review_instructions}
 
-[{{"type":"{review_types_str}","severity":"critical|high|medium|low|info","line_start":<n>,"line_end":<n>,"message":"Issue","suggestion":"Fix","confidence":<0-1>}}]
+INSTRUCTIONS:
+- Only report genuine issues with clear impact on code quality, security, or maintainability
+- Be specific about the problem and provide actionable suggestions
+- Include line numbers for precise issue location
+- Rate confidence based on certainty of the issue (0.0-1.0)
+- Use appropriate severity levels: critical (security/data loss), high (bugs/major issues), medium (improvements), low (minor issues), info (suggestions)
 
-[] if none.
+RESPONSE FORMAT (JSON array):
+[{{"type":"<review_type>","severity":"critical|high|medium|low|info","line_start":<n>,"line_end":<n>,"message":"<specific issue description>","suggestion":"<actionable fix>","confidence":<0.0-1.0>}}]
+
+Return [] if no issues found.
 """
         return prompt
+
+    def _build_review_instructions(self, review_types: List[ReviewType]) -> str:
+        """Build detailed instructions for each review type."""
+        instructions = []
+
+        for review_type in review_types:
+            if review_type == ReviewType.SECURITY:
+                instructions.append("""SECURITY REVIEW:
+- SQL injection, XSS, CSRF vulnerabilities
+- Authentication/authorization bypasses
+- Insecure data handling (passwords, tokens, PII)
+- Cryptographic weaknesses
+- Input validation failures
+- Path traversal vulnerabilities
+- Insecure deserialization
+- Race conditions and TOCTOU issues""")
+
+            elif review_type == ReviewType.PERFORMANCE:
+                instructions.append("""PERFORMANCE REVIEW:
+- Inefficient algorithms (O(n²) where O(n) possible)
+- Unnecessary loops or nested iterations
+- Memory leaks and excessive allocations
+- Database N+1 queries
+- Blocking I/O in performance-critical paths
+- Missing caching opportunities
+- Inefficient data structures
+- Resource contention issues""")
+
+            elif review_type == ReviewType.CORRECTNESS:
+                instructions.append("""CORRECTNESS REVIEW:
+- Logic errors and edge case handling
+- Null pointer/undefined reference risks
+- Off-by-one errors and boundary conditions
+- Race conditions and concurrency issues
+- Exception handling gaps
+- Type mismatches and casting errors
+- Resource cleanup failures
+- State management inconsistencies""")
+
+            elif review_type == ReviewType.MAINTAINABILITY:
+                instructions.append("""MAINTAINABILITY REVIEW:
+- Code clarity and readability
+- Function/class size and complexity
+- Naming conventions and descriptiveness
+- Code duplication and DRY violations
+- Missing or inadequate documentation
+- Hard-coded values that should be configurable
+- Overly complex conditional logic
+- Tight coupling between components""")
+
+            elif review_type == ReviewType.ARCHITECTURE:
+                instructions.append("""ARCHITECTURE REVIEW:
+- SOLID principle violations
+- Design pattern misuse or opportunities
+- Separation of concerns issues
+- Dependency injection opportunities
+- Layer boundary violations
+- Circular dependencies
+- Interface segregation needs
+- Single responsibility violations""")
+
+            elif review_type == ReviewType.STANDARDS:
+                instructions.append("""STANDARDS REVIEW:
+- Language-specific idiom violations
+- Code style and formatting issues
+- Naming convention inconsistencies
+- Import/include organization
+- Comment style and placement
+- Error handling patterns
+- Logging and debugging practices
+- API design consistency""")
+
+        return "\n\n".join(instructions)
 
     def _build_explain_prompt(self, chunk: CodeChunk) -> str:
         """
@@ -190,22 +273,33 @@ Return JSON array. Only genuine issues with clear impact. Be concise.
         Returns:
             Formatted prompt string
         """
-        prompt = f"""Explain this {chunk.language} code clearly.
+        prompt = f"""You are a senior software engineer providing a comprehensive code explanation. Analyze and explain the following {chunk.language} code in detail.
 
-{chunk.file_path} (L{chunk.start_line}-{chunk.end_line})
+FILE: {chunk.file_path} (Lines {chunk.start_line}-{chunk.end_line})
 
 ```{chunk.language}
 {chunk.content}
 ```"""
 
         if chunk.context:
-            prompt += f"\n\nContext:\n```{chunk.language}\n{chunk.context}\n```"
+            prompt += f"\n\nCONTEXT:\n```{chunk.language}\n{chunk.context}\n```"
 
-        prompt += """
+        prompt += f"""
 
-Explain: purpose, key components, logic flow, patterns, dependencies, entry points.
+EXPLANATION REQUIREMENTS:
+1. PURPOSE: What does this code accomplish? What problem does it solve?
+2. KEY COMPONENTS: Identify main classes, functions, variables, and their roles
+3. LOGIC FLOW: Trace the execution path and decision points
+4. PATTERNS: Identify design patterns, algorithms, or architectural approaches used
+5. DEPENDENCIES: External libraries, modules, or services this code relies on
+6. ENTRY POINTS: How is this code typically invoked or used?
+7. DATA FLOW: How data moves through the code and transforms
+8. ERROR HANDLING: How errors and edge cases are managed
+9. PERFORMANCE CONSIDERATIONS: Any notable performance characteristics
+10. RECOMMENDATIONS: Suggestions for improvements or best practices
 
-[{{"type":"explain","severity":"info","line_start":1,"line_end":<n>,"message":"Explanation","suggestion":"Context/recommendations","confidence":1.0}}]
+RESPONSE FORMAT (JSON):
+[{{"type":"explain","severity":"info","line_start":{chunk.start_line},"line_end":{chunk.end_line},"message":"<comprehensive explanation covering all requirements>","suggestion":"<recommendations for improvements, usage tips, or related best practices>","confidence":1.0}}]
 """
         return prompt
 

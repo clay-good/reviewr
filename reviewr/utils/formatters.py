@@ -1,7 +1,10 @@
 """Output formatting utilities."""
 
+import json
+import hashlib
+from datetime import datetime, timezone
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Any
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -213,4 +216,218 @@ class MarkdownFormatter(OutputFormatter):
             'info': '[INFO]',
         }
         return symbols.get(severity, '[INFO]')
+
+
+class SarifFormatter(OutputFormatter):
+    """Format output as SARIF 2.1.0 JSON."""
+
+    def format_result(self, result: 'ReviewResult') -> str:
+        """Format result as SARIF 2.1.0 JSON."""
+        sarif_log = {
+            "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+            "version": "2.1.0",
+            "runs": [self._create_run(result)]
+        }
+
+        return json.dumps(sarif_log, indent=2, ensure_ascii=False)
+
+    def _create_run(self, result: 'ReviewResult') -> Dict[str, Any]:
+        """Create a SARIF run object."""
+        # Create rules from findings
+        rules = self._create_rules(result.findings)
+
+        # Create results
+        sarif_results = []
+        for finding in result.findings:
+            sarif_results.append(self._create_result(finding))
+
+        run = {
+            "tool": {
+                "driver": {
+                    "name": "reviewr",
+                    "version": "0.1.0",
+                    "semanticVersion": "0.1.0",
+                    "informationUri": "https://github.com/your-org/reviewr",
+                    "rules": rules
+                }
+            },
+            "results": sarif_results,
+            "columnKind": "utf16CodeUnits"
+        }
+
+        # Add invocation info if we have stats
+        if result.provider_stats:
+            run["invocations"] = [{
+                "executionSuccessful": True,
+                "startTimeUtc": datetime.now(timezone.utc).isoformat(),
+                "endTimeUtc": datetime.now(timezone.utc).isoformat(),
+                "machine": "reviewr-cli"
+            }]
+
+        return run
+
+    def _create_rules(self, findings: List) -> List[Dict[str, Any]]:
+        """Create SARIF rules from findings."""
+        rules_dict = {}
+
+        for finding in findings:
+            rule_id = self._get_rule_id(finding)
+            if rule_id not in rules_dict:
+                rules_dict[rule_id] = self._create_rule(finding)
+
+        return list(rules_dict.values())
+
+    def _create_rule(self, finding) -> Dict[str, Any]:
+        """Create a SARIF rule from a finding."""
+        from ..providers.base import ReviewType
+
+        rule_id = self._get_rule_id(finding)
+
+        # Map review types to descriptions
+        descriptions = {
+            ReviewType.SECURITY: {
+                "short": "Security vulnerability detected",
+                "full": "Identifies potential security vulnerabilities, injections, authentication issues, and other security concerns."
+            },
+            ReviewType.PERFORMANCE: {
+                "short": "Performance issue detected",
+                "full": "Identifies inefficient algorithms, bottlenecks, and optimization opportunities."
+            },
+            ReviewType.CORRECTNESS: {
+                "short": "Correctness issue detected",
+                "full": "Identifies logic errors, edge cases, and potential bugs."
+            },
+            ReviewType.MAINTAINABILITY: {
+                "short": "Maintainability issue detected",
+                "full": "Identifies code clarity, documentation, and naming convention issues."
+            },
+            ReviewType.ARCHITECTURE: {
+                "short": "Architecture issue detected",
+                "full": "Identifies design pattern violations, SOLID principle violations, and code structure issues."
+            },
+            ReviewType.STANDARDS: {
+                "short": "Standards violation detected",
+                "full": "Identifies language idiom violations, convention issues, and style guideline violations."
+            },
+            ReviewType.EXPLAIN: {
+                "short": "Code explanation",
+                "full": "Provides comprehensive code explanation and overview."
+            }
+        }
+
+        desc = descriptions.get(finding.type, descriptions[ReviewType.CORRECTNESS])
+
+        rule = {
+            "id": rule_id,
+            "name": f"{finding.type.value.title()}Rule",
+            "shortDescription": {
+                "text": desc["short"]
+            },
+            "fullDescription": {
+                "text": desc["full"]
+            },
+            "defaultConfiguration": {
+                "level": self._map_severity_to_level(finding.severity)
+            },
+            "properties": {
+                "tags": [finding.type.value],
+                "precision": self._map_confidence_to_precision(finding.confidence)
+            }
+        }
+
+        # Add security-severity for security rules
+        if finding.type == ReviewType.SECURITY:
+            rule["properties"]["security-severity"] = self._map_severity_to_security_score(finding.severity)
+        else:
+            rule["properties"]["problem.severity"] = self._map_severity_to_problem_severity(finding.severity)
+
+        return rule
+
+    def _create_result(self, finding) -> Dict[str, Any]:
+        """Create a SARIF result from a finding."""
+        result = {
+            "ruleId": self._get_rule_id(finding),
+            "level": self._map_severity_to_level(finding.severity),
+            "message": {
+                "text": finding.message
+            },
+            "locations": [{
+                "physicalLocation": {
+                    "artifactLocation": {
+                        "uri": finding.file_path
+                    },
+                    "region": {
+                        "startLine": finding.line_start,
+                        "endLine": finding.line_end
+                    }
+                }
+            }],
+            "partialFingerprints": {
+                "primaryLocationLineHash": self._generate_fingerprint(finding)
+            }
+        }
+
+        # Add suggestion as fix if available
+        if finding.suggestion:
+            result["fixes"] = [{
+                "description": {
+                    "text": finding.suggestion
+                }
+            }]
+
+        return result
+
+    def _get_rule_id(self, finding) -> str:
+        """Generate a rule ID for a finding."""
+        return f"reviewr-{finding.type.value}"
+
+    def _map_severity_to_level(self, severity: str) -> str:
+        """Map reviewr severity to SARIF level."""
+        mapping = {
+            'critical': 'error',
+            'high': 'error',
+            'medium': 'warning',
+            'low': 'note',
+            'info': 'note'
+        }
+        return mapping.get(severity, 'warning')
+
+    def _map_confidence_to_precision(self, confidence: float) -> str:
+        """Map confidence score to SARIF precision."""
+        if confidence >= 0.9:
+            return "very-high"
+        elif confidence >= 0.7:
+            return "high"
+        elif confidence >= 0.5:
+            return "medium"
+        else:
+            return "low"
+
+    def _map_severity_to_security_score(self, severity: str) -> str:
+        """Map severity to security score (0.1-10.0)."""
+        mapping = {
+            'critical': '9.5',
+            'high': '8.0',
+            'medium': '5.5',
+            'low': '3.0',
+            'info': '1.0'
+        }
+        return mapping.get(severity, '5.5')
+
+    def _map_severity_to_problem_severity(self, severity: str) -> str:
+        """Map severity to problem severity."""
+        mapping = {
+            'critical': 'error',
+            'high': 'error',
+            'medium': 'warning',
+            'low': 'recommendation',
+            'info': 'recommendation'
+        }
+        return mapping.get(severity, 'warning')
+
+    def _generate_fingerprint(self, finding) -> str:
+        """Generate a fingerprint for the finding."""
+        # Create a stable fingerprint based on file path, line, and message
+        fingerprint_data = f"{finding.file_path}:{finding.line_start}:{finding.message}"
+        return hashlib.md5(fingerprint_data.encode()).hexdigest()[:16]
 

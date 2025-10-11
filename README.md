@@ -1,6 +1,18 @@
 # reviewr
 
-AI-powered code review CLI tool supporting multiple LLM providers (Claude, OpenAI, Gemini).
+**Catch bugs before they ship.** A CLI tool that provides AI-powered code review for pre-commit validation and seamless integration with GitLab/GitHub CI/CD pipelines for post-commit (MR/PR) code reviews.
+
+## Why reviewr?
+
+**Ship faster with confidence** - Automated code review catches security vulnerabilities, performance issues, and bugs before they reach production, reducing debugging time by up to 70%.
+
+**Save development costs** - Early detection prevents expensive production fixes. One critical security vulnerability caught in development saves thousands in incident response and reputation damage.
+
+**Seamless workflow integration** - Works as a pre-commit hook for instant feedback and integrates with CI/CD pipelines for automated PR/MR reviews, requiring zero workflow changes.
+
+**Comprehensive analysis** - Covers security, performance, correctness, maintainability, architecture, and coding standards with detailed SARIF and Markdown reports for easy tracking and compliance.
+
+**⚡ Multi-LLM flexibility** - Choose from Claude, OpenAI GPT, or Google Gemini based on your needs, budget, and compliance requirements.
 
 ## Features
 
@@ -8,13 +20,13 @@ AI-powered code review CLI tool supporting multiple LLM providers (Claude, OpenA
 - **Comprehensive Reviews**: Security, performance, correctness, maintainability, architecture, and standards
 - **Code Explanation**: `--explain` flag to understand unfamiliar code quickly
 - **Flexible Input**: Review single files or entire directories
-- **Multiple Output Formats**: Terminal (with colors) and Markdown
+- **SARIF + Markdown Output**: Automatic generation of SARIF JSON and Markdown reports for CI/CD integration and compliance
 - **Configurable**: YAML configuration with environment variable support
 - **Smart Chunking**: Intelligent code chunking for large files
 - **Language Detection**: Automatic programming language detection (30+ languages)
 - **Retry Logic**: Automatic retries with exponential backoff
 - **Progress Tracking**: Beautiful progress bars and status updates
-- **CI/CD Integration**: Ready-to-use examples for GitHub Actions and GitLab CI
+- **CI/CD Integration**: Ready-to-use examples for GitHub Actions and GitLab CI with SARIF upload support
 
 ## Example Project Cost 
 - **Small** (10 files): ~$0.20-0.30
@@ -61,10 +73,10 @@ reviewr init
 
 This creates a `.reviewr.yml` file in your current directory.
 
-3. **Review your code**:
+3. **Review your code** (automatically generates SARIF and Markdown reports):
 
 ```bash
-# Review a single file
+# Review a single file (creates reviewr-report.sarif and reviewr-report.md)
 reviewr review path/to/file.py
 
 # Review a directory
@@ -75,6 +87,12 @@ reviewr review path/to/file.py --security --performance
 
 # Review all types
 reviewr review path/to/file.py --all
+
+# Generate only Markdown report
+reviewr review path/to/file.py --output markdown
+
+# Generate only SARIF report
+reviewr review path/to/file.py --output sarif
 ```
 
 ## Usage
@@ -82,7 +100,7 @@ reviewr review path/to/file.py --all
 ### Basic Commands
 
 ```bash
-# Review code (default: security and performance)
+# Review code (default: security and performance, generates both SARIF and Markdown)
 reviewr review <path>
 
 # Review with specific types
@@ -94,8 +112,11 @@ reviewr review <path> --all
 # Use a specific provider
 reviewr review <path> --provider claude
 
-# Output as Markdown
+# Generate only Markdown report
 reviewr review <path> --output markdown
+
+# Generate only SARIF report
+reviewr review <path> --output sarif
 
 # Show current configuration
 reviewr show-config
@@ -117,7 +138,7 @@ reviewr --output markdown review <path>
 - `--provider`, `-p`: Override default LLM provider (claude, openai, gemini)
 - `--verbose`, `-v`: Increase verbosity (use -vv for more detail)
 - `--no-cache`: Disable caching for this run
-- `--output`, `-o`: Output format (terminal, markdown)
+- `--output`, `-o`: Output format (sarif, markdown, both) - default: both
 
 ### Review Types
 
@@ -245,7 +266,8 @@ reviewr review app.py --security
 ### Review a project directory with all checks
 
 ```bash
-reviewr review ./src --all --output markdown > review.md
+reviewr review ./src --all
+# Creates: reviewr-report.sarif and reviewr-report.md
 ```
 
 ### Review with a specific provider
@@ -278,17 +300,47 @@ reviewr review ./src --explain
 
 ## Output Formats
 
-### Terminal (default)
+### Default: SARIF + Markdown (recommended)
 
-Colorful, formatted output with syntax highlighting.
+By default, reviewr generates both formats automatically:
+- `reviewr-report.sarif` - SARIF 2.1.0 JSON for CI/CD integration and compliance
+- `reviewr-report.md` - Human-readable Markdown report
 
-### Markdown
+### SARIF Only
 
 ```bash
-reviewr review app.py --output markdown > review.md
+reviewr review app.py --output sarif
 ```
 
-Generates a Markdown report suitable for documentation or GitHub.
+Generates only the SARIF JSON file for automated processing and CI/CD integration.
+
+### Markdown Only
+
+```bash
+reviewr review app.py --output markdown
+```
+
+Generates only the Markdown report for documentation or manual review.
+
+### SARIF Integration Benefits
+
+**GitHub Integration**: SARIF files automatically appear in GitHub's Security tab, providing:
+- Inline code annotations in pull requests
+- Security dashboard integration
+- Compliance reporting and tracking
+- Integration with GitHub Advanced Security
+
+**GitLab Integration**: SARIF files integrate with GitLab's security features:
+- Security dashboard visibility
+- Merge request security widgets
+- Compliance pipeline integration
+- Vulnerability management
+
+**Tool Compatibility**: SARIF is the industry standard, supported by:
+- SonarQube, CodeQL, Semgrep, and other security tools
+- IDE extensions and security platforms
+- Compliance and audit tools
+- Custom security workflows
 
 ## CI/CD Integration
 
@@ -334,27 +386,37 @@ jobs:
           # Get list of changed files
           git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
 
-          # Review each changed file
+          # Review each changed file (generates both SARIF and Markdown)
           while IFS= read -r file; do
             if [ -f "$file" ]; then
               echo "Reviewing $file"
-              reviewr review "$file" --security --performance --correctness --output markdown >> review_report.md
+              reviewr review "$file" --security --performance --correctness
             fi
           done < changed_files.txt
 
+      - name: Upload SARIF results to GitHub
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: reviewr-report.sarif
+          category: reviewr
+
       - name: Comment PR with review
         uses: actions/github-script@v6
+        if: always()
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const report = fs.readFileSync('review_report.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '## Code Review Report\n\n' + report
-            });
+            if (fs.existsSync('reviewr-report.md')) {
+              const report = fs.readFileSync('reviewr-report.md', 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '## Code Review Report\n\n' + report
+              });
+            }
 ```
 
 #### Advanced GitHub Actions with Annotations
@@ -391,27 +453,40 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          reviewr review . --security --output markdown > security_review.md
+          reviewr review . --security
 
-      - name: Upload review as artifact
-        uses: actions/upload-artifact@v3
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
         with:
-          name: review-report
-          path: security_review.md
+          sarif_file: reviewr-report.sarif
+          category: reviewr-security
+
+      - name: Upload review reports as artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: review-reports
+          path: |
+            reviewr-report.sarif
+            reviewr-report.md
 
       - name: Post review summary
         uses: actions/github-script@v6
+        if: always()
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const report = fs.readFileSync('security_review.md', 'utf8');
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
+            if (fs.existsSync('reviewr-report.md')) {
+              const report = fs.readFileSync('reviewr-report.md', 'utf8');
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            }
 ```
 
 #### GitHub Actions Configuration Tips
@@ -448,19 +523,23 @@ code_review:
       git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
       git diff --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD > changed_files.txt
 
-      # Review changed files
+      # Review changed files (generates both SARIF and Markdown)
       while IFS= read -r file; do
         if [ -f "$file" ]; then
           echo "Reviewing $file"
-          reviewr review "$file" --security --performance --correctness --output markdown >> review_report.md
+          reviewr review "$file" --security --performance --correctness
         fi
       done < changed_files.txt
 
-      # Display report
-      cat review_report.md
+      # Display summary
+      echo "Review completed. Reports generated:"
+      ls -la reviewr-report.*
   artifacts:
     paths:
-      - review_report.md
+      - reviewr-report.sarif
+      - reviewr-report.md
+    reports:
+      sast: reviewr-report.sarif
     expire_in: 1 week
   only:
     - merge_requests
@@ -485,10 +564,13 @@ code_review:
   before_script:
     - pip install -e .
   script:
-    - reviewr review . --all --output markdown > review_report.md
+    - reviewr review . --all
   artifacts:
     paths:
-      - review_report.md
+      - reviewr-report.sarif
+      - reviewr-report.md
+    reports:
+      sast: reviewr-report.sarif
     expire_in: 1 week
   only:
     - merge_requests
@@ -502,12 +584,14 @@ post_review_comment:
     - apk add --no-cache curl jq
   script:
     - |
-      REPORT=$(cat review_report.md)
-      curl --request POST \
-        --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-        --header "Content-Type: application/json" \
-        --data "{\"body\": \"## Code Review Report\n\n$REPORT\"}" \
-        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
+      if [ -f "reviewr-report.md" ]; then
+        REPORT=$(cat reviewr-report.md)
+        curl --request POST \
+          --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "{\"body\": \"## Code Review Report\n\n$REPORT\"}" \
+          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
+      fi
   dependencies:
     - code_review
   only:
@@ -618,7 +702,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-    command: review /code --all --output markdown
+    command: review /code --all
 ```
 
 Run with:
@@ -641,21 +725,6 @@ docker-compose run reviewr
 - Swift
 - Kotlin
 - And many more...
-
-## Implementation Status
-
-reviewr is **production-ready** for local file and directory reviews.
-
-### Fully Implemented
-- Multi-provider support (Claude, OpenAI, Gemini)
-- All 7 review types (security, performance, correctness, maintainability, architecture, standards, explain)
-- CLI with all core commands
-- Configuration system with YAML support
-- File discovery and language detection
-- Output formatting (terminal, markdown)
-- Error handling and retries
-- Comprehensive documentation
-- CI/CD integration examples (GitHub Actions, GitLab CI)
 
 ## Troubleshooting
 
@@ -703,46 +772,6 @@ If installation fails:
    source venv/bin/activate
    pip install -e .
    ```
-
-## License
-
-MIT License
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-Priority areas for contribution:
-- Test suite implementation
-- Git/PR integration
-- AST-aware chunking
-- Active caching
-- Additional language support
-- Performance optimizations
-
-### Development Setup
-
-1. Fork the repository
-2. Clone your fork:
-   ```bash
-   git clone https://github.com/your-username/reviewr.git
-   cd reviewr
-   ```
-
-3. Create a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-4. Install in development mode:
-   ```bash
-   pip install -e .
-   ```
-
-5. Make your changes and test thoroughly
-
-6. Submit a pull request with a clear description of changes
 
 ## Support
 

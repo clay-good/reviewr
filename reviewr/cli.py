@@ -23,8 +23,8 @@ console = Console()
               help='LLM provider to use')
 @click.option('--verbose', '-v', count=True, help='Increase verbosity')
 @click.option('--no-cache', is_flag=True, help='Disable caching')
-@click.option('--output', '-o', type=click.Choice(['terminal', 'markdown']),
-              default='terminal', help='Output format')
+@click.option('--output', '-o', type=click.Choice(['sarif', 'markdown', 'both']),
+              default='both', help='Output format (default: both sarif and markdown files)')
 @click.pass_context
 def cli(ctx: click.Context, config: Optional[str], provider: Optional[str], 
         verbose: int, no_cache: bool, output: str) -> None:
@@ -112,15 +112,48 @@ def review(ctx: click.Context, path: str, security: bool, performance: bool,
             verbose=ctx.obj['verbose']
         ))
         
-        # Format and display output
+        # Generate and save output files
         output_format = ctx.obj['output_format']
-        if output_format == 'terminal':
-            formatter = TerminalFormatter()
-        else:
-            formatter = MarkdownFormatter()
-        
-        output = formatter.format_result(result)
-        console.print(output)
+
+        # Always generate both SARIF and Markdown unless specifically limited
+        if output_format in ['both', 'sarif']:
+            # Generate SARIF output
+            from .utils.formatters import SarifFormatter
+            sarif_formatter = SarifFormatter()
+            sarif_output = sarif_formatter.format_result(result)
+
+            # Save SARIF file
+            sarif_path = Path.cwd() / "reviewr-report.sarif"
+            with open(sarif_path, 'w') as f:
+                f.write(sarif_output)
+            console.print(f"[green]✓[/green] SARIF report saved to: {sarif_path}")
+
+        if output_format in ['both', 'markdown']:
+            # Generate Markdown output
+            markdown_formatter = MarkdownFormatter()
+            markdown_output = markdown_formatter.format_result(result)
+
+            # Save Markdown file
+            markdown_path = Path.cwd() / "reviewr-report.md"
+            with open(markdown_path, 'w') as f:
+                f.write(markdown_output)
+            console.print(f"[green]✓[/green] Markdown report saved to: {markdown_path}")
+
+        # Show summary in terminal
+        console.print(f"\n[bold cyan]Review Summary:[/bold cyan]")
+        console.print(f"Files reviewed: {result.files_reviewed}")
+        console.print(f"Total findings: {len(result.findings)}")
+
+        # Show findings by severity
+        by_severity = result.get_findings_by_severity()
+        for severity in ['critical', 'high', 'medium', 'low', 'info']:
+            count = len(by_severity[severity])
+            if count > 0:
+                console.print(f"{severity.title()}: {count}")
+
+        if result.provider_stats:
+            console.print(f"API requests: {result.provider_stats.get('request_count', 0)}")
+            console.print(f"Tokens used: {result.provider_stats.get('total_input_tokens', 0) + result.provider_stats.get('total_output_tokens', 0)}")
         
         # Exit with error code if critical or high severity issues found
         if result.has_critical_issues():
