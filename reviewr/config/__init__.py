@@ -1,4 +1,3 @@
-
 from .schema import (
     ProviderConfig,
     ReviewConfig,

@@ -1,5 +1,3 @@
-"""Setup script for reviewr."""
-
 from setuptools import setup, find_packages
 
 setup(
