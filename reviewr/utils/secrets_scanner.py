@@ -26,13 +26,27 @@ class SecretsScanner:
         'github_app': re.compile(r'(ghu|ghs)_[0-9a-zA-Z]{36}'),
         'slack_token': re.compile(r'xox[baprs]-([0-9a-zA-Z]{10,48})'),
         'slack_webhook': re.compile(r'https://hooks\.slack\.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}'),
+<<<<<<< HEAD
+        'google_api_key': re.compile(r'AIza[0-9A-Za-z\-_]{35}'),
+=======
         'google_api_key': re.compile(r'AIza[0-9A-Za-z\\-_]{35}'),
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
         'google_oauth': re.compile(r'[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com'),
         'heroku_api_key': re.compile(r'[h|H][e|E][r|R][o|O][k|K][u|U].*[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}'),
         'mailchimp_api_key': re.compile(r'[0-9a-f]{32}-us[0-9]{1,2}'),
         'mailgun_api_key': re.compile(r'key-[0-9a-zA-Z]{32}'),
         'stripe_api_key': re.compile(r'(?:r|s)k_live_[0-9a-zA-Z]{24}'),
         'stripe_restricted_key': re.compile(r'rk_live_[0-9a-zA-Z]{24}'),
+<<<<<<< HEAD
+        'square_access_token': re.compile(r'sq0atp-[0-9A-Za-z\-_]{22}'),
+        'square_oauth_secret': re.compile(r'sq0csp-[0-9A-Za-z\-_]{43}'),
+        'paypal_braintree': re.compile(r'access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32}'),
+        'picatic_api_key': re.compile(r'sk_live_[0-9a-z]{32}'),
+        'twilio_api_key': re.compile(r'SK[0-9a-fA-F]{32}'),
+        'twilio_account_sid': re.compile(r'AC[a-zA-Z0-9_\-]{32}'),
+        'twilio_app_sid': re.compile(r'AP[a-zA-Z0-9_\-]{32}'),
+        'dynatrace_token': re.compile(r'dt0[a-zA-Z]{1}[0-9]{2}\.[A-Z0-9]{24}\.[A-Z0-9]{64}'),
+=======
         'square_access_token': re.compile(r'sq0atp-[0-9A-Za-z\\-_]{22}'),
         'square_oauth_secret': re.compile(r'sq0csp-[0-9A-Za-z\\-_]{43}'),
         'paypal_braintree': re.compile(r'access_token\\$production\\$[0-9a-z]{16}\\$[0-9a-f]{32}'),
@@ -41,6 +55,7 @@ class SecretsScanner:
         'twilio_account_sid': re.compile(r'AC[a-zA-Z0-9_\\-]{32}'),
         'twilio_app_sid': re.compile(r'AP[a-zA-Z0-9_\\-]{32}'),
         'dynatrace_token': re.compile(r'dt0[a-zA-Z]{1}[0-9]{2}\\.[A-Z0-9]{24}\\.[A-Z0-9]{64}'),
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
         'shopify_shared_secret': re.compile(r'shpss_[a-fA-F0-9]{32}'),
         'shopify_access_token': re.compile(r'shpat_[a-fA-F0-9]{32}'),
         'shopify_custom_app': re.compile(r'shpca_[a-fA-F0-9]{32}'),

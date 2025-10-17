@@ -2,6 +2,31 @@
 
 **Catch bugs before they ship.** A CLI tool that provides AI-powered code review for pre-commit validation and seamless integration with GitLab/GitHub CI/CD pipelines for post-commit (MR/PR) code reviews.
 
+<<<<<<< HEAD
+## Quick Start
+
+```bash
+# Install
+pip install -e .
+
+# Review a Python file
+reviewr app.py --all --output-format sarif
+
+# Review JavaScript/TypeScript with local analysis
+reviewr src/app.js --all --output-format markdown
+
+# Use custom rules for team standards
+reviewr . --all --rules team-rules.yml
+
+# Interactive mode for reviewing findings
+reviewr . --all --interactive
+
+# GitHub PR integration
+reviewr-github review --pr 123 --repo owner/repo
+```
+
+=======
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 ## Why reviewr?
 
 **Ship faster with confidence** - Automated code review catches security vulnerabilities, performance issues, and bugs before they reach production, reducing debugging time by up to 70%.
@@ -28,10 +53,21 @@
 - **Progress Tracking**: Beautiful progress bars and status updates
 
 ### Performance & Security
+<<<<<<< HEAD
+- **Parallel Processing**: Multiple review types run concurrently for faster results (6x speedup)
+- **Intelligent Caching**: Hash-based caching with automatic invalidation (50-80% API call reduction)
+- **Local-First Analysis**: AST-based analysis for Python and JavaScript/TypeScript (no API calls required)
+- **Custom Rules Engine**: Define team-specific rules with regex patterns (YAML/JSON configuration)
+- **Interactive Mode**: Review findings one-by-one with accept/reject/fix actions
+- **Secrets Detection**: Local regex-based scanning for API keys and credentials (30+ patterns)
+- **GitHub Integration**: Automated PR reviews with inline comments
+- **Cache Statistics**: Real-time hit/miss rates and performance metrics
+=======
 - **Parallel Processing**: Multiple review types run concurrently for faster results
 - **Secrets Detection**: Local regex-based scanning for API keys and credentials (30+ patterns)
 - **Smart Caching**: Reduce API calls and costs with intelligent caching
 - **Local-First**: Secrets scanning and validation happen locally before AI processing
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 
 ### Configuration & Integration
 - **Flexible Configuration**: Support for YAML (.reviewr.yml), TOML (.reviewr.toml), and pyproject.toml
@@ -63,9 +99,24 @@ poetry shell
 ### Using pip
 
 ```bash
+<<<<<<< HEAD
+# Basic installation
+pip install -e .
+
+# With GitHub integration
+pip install -e ".[github]"
+
+# With all extras
+pip install -e ".[all]"
+```
+
+**Note**: This project requires Python 3.9 or higher.
+
+=======
 pip install -e .
 ```
 
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 ## Quick Start
 
 1. **Set up API keys** (choose one or more providers):
@@ -846,6 +897,672 @@ Run with:
 docker-compose run reviewr
 ```
 
+<<<<<<< HEAD
+## Local-First Analysis
+
+reviewr includes powerful local analysis capabilities that provide instant feedback without any API calls.
+
+### What is Local Analysis?
+
+Local analysis uses Abstract Syntax Tree (AST) parsing and static analysis to detect issues directly in your code, without sending anything to an AI service. This means:
+
+- **Instant results** (no network latency)
+- **Zero API costs** (no LLM calls)
+- **Complete privacy** (code never leaves your machine)
+- **Deterministic results** (same code = same findings)
+
+### Supported Languages
+
+Currently supported:
+- **Python**: Full AST-based analysis with 10+ checks
+- **JavaScript/TypeScript**: Regex-based analysis with 10+ checks (includes JSX/TSX)
+
+Coming soon: Java, Go, Ruby, and more!
+
+### What Does It Detect?
+
+#### Python Analysis
+
+**Complexity Issues:**
+- Cyclomatic complexity: Functions with too many decision points
+- Nesting depth: Deeply nested code blocks
+- Function length: Functions that are too long
+- Parameter count: Functions with too many parameters
+
+**Code Smells:**
+- Bare except clauses: Catching all exceptions without specificity
+- Swallowed exceptions: Exception handlers with only pass
+- Mutable default arguments: The classic Python gotcha
+- Duplicate code: Functions with identical implementations
+
+**Dead Code:**
+- Unused functions: Functions that are never called
+- Unreachable code: Code after return statements
+- Unused imports: Imported modules that are never used
+- Wildcard imports: from module import *
+
+#### JavaScript/TypeScript Analysis
+
+**Complexity Issues:**
+- Cyclomatic complexity: Functions with too many decision points
+- Function length: Functions that are too long
+- Callback hell: Deeply nested callbacks
+
+**Code Quality:**
+- Console statements: console.log/debug/info/warn/error
+- var usage: Detects var instead of let/const
+- Equality operators: Detects == instead of ===
+- Empty catch blocks: Exception handling without logic
+- Nested ternary operators: Reduces readability
+- Magic numbers: Numeric literals without constants
+- Unused variables: Basic unused variable detection
+
+### Usage
+
+Local analysis is **enabled by default** and runs automatically:
+
+```bash
+# Local analysis runs automatically
+reviewr app.py --all --output-format sarif
+
+# Disable local analysis if needed
+reviewr app.py --all --output-format sarif --no-local-analysis
+```
+
+### Example Output
+
+```
+Review Summary:
+Files reviewed: 5
+Total findings: 23
+
+Local Analysis:
+Files analyzed: 5
+Issues found: 12
+No API calls required for local analysis
+
+API requests: 8
+Tokens used: 15,234
+```
+
+### Performance Benefits
+
+- **30-40% fewer AI calls**: Many issues caught locally
+- **Instant feedback**: No waiting for API responses
+- **Cost savings**: Reduced LLM API usage
+- **Better UX**: Immediate results for common issues
+
+### Example Findings
+
+```python
+# High complexity detected
+def complex_function(x, y, z):
+    if x > 0:
+        if y > 0:
+            if z > 0:
+                if x > 10:
+                    if y > 10:
+                        return "too complex"
+# → Function has cyclomatic complexity of 6 (target: <10)
+
+# Mutable default argument detected
+def append_to_list(item, lst=[]):
+    lst.append(item)
+    return lst
+# → Use None as default: def func(item, lst=None): lst = lst or []
+
+# Unused import detected
+import os  # Never used
+import sys
+
+def main():
+    print(sys.version)
+# → Remove unused import 'os'
+```
+
+## GitHub Integration
+
+reviewr can automatically review GitHub Pull Requests and post inline comments directly on your PRs!
+
+### Quick Start
+
+```bash
+# Install with GitHub support
+pip install -e ".[github]"
+
+# Set GitHub token
+export GITHUB_TOKEN="your_github_token_here"
+
+# Review a PR (auto-detects PR number in CI)
+reviewr-github --all
+
+# Review specific PR
+reviewr-github --pr-number 123 --all
+
+# Approve if no issues
+reviewr-github --all --approve-if-no-issues
+
+# Request changes on critical issues
+reviewr-github --all --request-changes-on-critical
+```
+
+### GitHub Actions Setup
+
+Create `.github/workflows/reviewr-pr.yml`:
+
+```yaml
+name: reviewr PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install reviewr
+        run: pip install -e ".[github]"
+
+      - name: Review PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          reviewr-github \
+            --pr-number ${{ github.event.pull_request.number }} \
+            --all \
+            --request-changes-on-critical
+```
+
+### Features
+
+- ✅ **Automated PR Reviews**: Reviews all changed files automatically
+- ✅ **Inline Comments**: Posts findings as inline comments on specific lines
+- ✅ **Review Status**: Can approve PRs or request changes
+- ✅ **Smart Filtering**: Only comments on changed files
+- ✅ **Rich Summaries**: Posts comprehensive review summaries
+- ✅ **Auto-detection**: Automatically detects PR number and repository
+
+### Example Output
+
+reviewr posts inline comments like:
+
+```
+🟠 HIGH: SQL injection vulnerability detected
+
+The user input is directly concatenated into the SQL query.
+
+Suggestion: Use parameterized queries to prevent SQL injection.
+
+Confidence: 95%
+```
+
+And a summary comment:
+
+```markdown
+## 🤖 reviewr Code Review Summary
+
+**Files reviewed**: 5
+**Total findings**: 12
+
+**Findings by severity**:
+🔴 2 critical, 🟠 3 high, 🟡 4 medium, 🔵 3 low
+
+**Local analysis**: 8 issues found (no API calls)
+
+⚠️ **This PR has critical or high severity issues that should be addressed.**
+```
+
+**See [GITHUB_INTEGRATION.md](GITHUB_INTEGRATION.md) for complete documentation.**
+
+## Intelligent Caching
+
+reviewr includes an intelligent caching system that dramatically reduces API calls and costs by caching review results.
+
+### How It Works
+
+- **Hash-based**: Cache keys are based on file content hash (SHA-256), not file path
+- **Automatic Invalidation**: Cache is automatically invalidated when file content changes
+- **Multi-dimensional**: Separate cache entries for different review types, providers, and models
+- **Persistent**: Cache survives across sessions (stored in `~/.cache/reviewr/`)
+- **TTL Support**: Cache entries expire after 7 days by default
+
+### Performance Benefits
+
+- **50-80% reduction** in API calls for repeated reviews
+- **Instant results** for cached files
+- **Cost savings** on LLM API usage
+- **Faster CI/CD** pipelines with cached results
+
+### Usage
+
+```bash
+# First run - cache miss, calls API
+reviewr app.py --security --output-format sarif
+# ⏱️  Takes 5 seconds
+
+# Second run - cache hit, instant results!
+reviewr app.py --security --output-format sarif
+# ⚡ Takes <1 second
+
+# Disable caching when needed
+reviewr app.py --security --output-format sarif --no-cache
+
+# Cache is automatically invalidated when file changes
+echo "# new code" >> app.py
+reviewr app.py --security --output-format sarif
+# ⏱️  Cache miss, calls API again
+```
+
+### Cache Statistics
+
+reviewr displays cache performance metrics after each run:
+
+```
+Review Summary:
+Files reviewed: 5
+Total findings: 12
+
+Cache Performance:
+Cache hits: 3
+Cache misses: 2
+Hit rate: 60.0%
+```
+
+### Cache Management
+
+The cache is stored in `~/.cache/reviewr/` and can be manually cleared if needed:
+
+```bash
+# Clear cache directory
+rm -rf ~/.cache/reviewr/
+```
+
+## Custom Rules Engine
+
+reviewr includes a powerful custom rules engine that allows you to define team-specific coding standards and patterns using regex-based rules.
+
+### What is the Custom Rules Engine?
+
+The custom rules engine allows you to:
+
+- Define custom patterns to detect in your codebase
+- Enforce team-specific coding standards
+- Catch project-specific anti-patterns
+- Create language-specific rules
+- Run rules locally without API calls
+
+### Rule Definition Format
+
+Rules can be defined in YAML or JSON format:
+
+#### YAML Format
+
+```yaml
+rules:
+  - id: no-hardcoded-api-keys
+    name: No Hardcoded API Keys
+    description: Detect hardcoded API keys in code
+    pattern: '(api[_-]?key|apikey)\s*=\s*["\'][^"\']+["\']'
+    severity: critical
+    message: Hardcoded API key detected
+    suggestion: Use environment variables or a secrets manager
+    languages:
+      - python
+      - javascript
+      - typescript
+    enabled: true
+    case_sensitive: false
+    multiline: false
+
+  - id: no-console-log
+    name: No Console Statements
+    description: Detect console.log statements
+    pattern: 'console\.(log|debug|info)'
+    severity: low
+    message: Console statement detected
+    suggestion: Remove console statements before committing
+    languages:
+      - javascript
+      - typescript
+    enabled: true
+```
+
+#### JSON Format
+
+```json
+{
+  "rules": [
+    {
+      "id": "no-hardcoded-api-keys",
+      "name": "No Hardcoded API Keys",
+      "description": "Detect hardcoded API keys in code",
+      "pattern": "(api[_-]?key|apikey)\\s*=\\s*[\"'][^\"']+[\"']",
+      "severity": "critical",
+      "message": "Hardcoded API key detected",
+      "suggestion": "Use environment variables or a secrets manager",
+      "languages": ["python", "javascript", "typescript"],
+      "enabled": true,
+      "case_sensitive": false,
+      "multiline": false
+    }
+  ]
+}
+```
+
+### Default Rules
+
+reviewr includes 8 built-in recommended rules:
+
+1. **no-hardcoded-secrets**: Detects API keys, passwords, tokens
+2. **no-todo-comments**: Detects TODO comments
+3. **no-fixme-comments**: Detects FIXME comments
+4. **no-debugger**: Detects debugger statements (JS/TS)
+5. **no-print-statements**: Detects print statements (Python)
+6. **no-eval**: Detects eval() usage
+7. **no-sql-concat**: Detects SQL injection via concatenation
+8. **no-weak-crypto**: Detects MD5, SHA1, DES usage
+
+### Usage
+
+```bash
+# Use custom rules file
+reviewr app.py --all --rules my-rules.yml
+
+# Custom rules work with any review type
+reviewr src/ --security --rules team-standards.json
+
+# Combine with other features
+reviewr . --all --rules rules.yml --output-format sarif
+```
+
+### Example Output
+
+```
+Review Summary:
+Files reviewed: 10
+Total findings: 15
+
+Custom Rules:
+Files analyzed: 10
+Issues found: 8
+No API calls required for custom rules
+
+API requests: 12
+Tokens used: 8,234
+```
+
+### Rule Severity Levels
+
+- **critical**: Security vulnerabilities, data leaks
+- **high**: Major bugs, performance issues
+- **medium**: Code quality issues, maintainability concerns
+- **low**: Style issues, minor improvements
+- **info**: Informational findings
+
+### Language Filtering
+
+Rules can be restricted to specific languages:
+
+```yaml
+rules:
+  - id: python-specific-rule
+    pattern: 'some_pattern'
+    languages:
+      - python
+    # This rule only runs on Python files
+
+  - id: javascript-specific-rule
+    pattern: 'another_pattern'
+    languages:
+      - javascript
+      - typescript
+      - jsx
+      - tsx
+    # This rule only runs on JavaScript/TypeScript files
+```
+
+### Pattern Tips
+
+- Use raw strings in YAML to avoid escaping issues
+- Test patterns with online regex testers
+- Use word boundaries (\b) for precise matching
+- Consider case sensitivity for your use case
+- Use multiline mode for patterns spanning multiple lines
+
+### Example: Team-Specific Rules
+
+```yaml
+rules:
+  # Enforce company naming conventions
+  - id: component-naming
+    pattern: 'class\s+(?!Component)[A-Z]\w+\s*\('
+    severity: medium
+    message: Component classes must end with 'Component'
+    languages: [python]
+
+  # Prevent deprecated API usage
+  - id: no-deprecated-api
+    pattern: 'old_api_function\('
+    severity: high
+    message: old_api_function is deprecated
+    suggestion: Use new_api_function instead
+    languages: [python, javascript]
+
+  # Enforce error handling
+  - id: require-error-handling
+    pattern: 'fetch\([^)]+\)(?!\s*\.catch)'
+    severity: medium
+    message: fetch calls must include error handling
+    suggestion: Add .catch() or try/catch block
+    languages: [javascript, typescript]
+```
+
+## Interactive Mode
+
+reviewr includes an interactive mode that allows you to review findings one-by-one, making decisions about each issue before generating the final report.
+
+### What is Interactive Mode?
+
+Interactive mode provides a guided review experience where you can:
+
+- Review each finding individually with full context
+- Accept findings you agree with
+- Reject false positives or irrelevant findings
+- Apply suggested fixes automatically (when available)
+- Skip findings to decide later
+- Export your decisions for future reference
+
+### Usage
+
+```bash
+# Enable interactive mode with -i or --interactive
+reviewr app.py --all --interactive
+
+# Works with any review type
+reviewr src/ --security --performance --interactive
+
+# Combine with other features
+reviewr . --all --interactive --rules custom-rules.yml
+```
+
+### Interactive Review Flow
+
+When you run reviewr in interactive mode, you will see each finding displayed with:
+
+1. **Severity level** (critical, high, medium, low, info)
+2. **File path and line numbers**
+3. **Issue type** (security, performance, etc.)
+4. **Detailed message** explaining the issue
+5. **Suggestion** for how to fix it (when available)
+6. **Code snippet** showing the problematic code
+7. **Confidence level** (if less than 100%)
+
+### Available Actions
+
+For each finding, you can choose:
+
+- **[a]ccept**: Include this finding in the final report
+- **[r]eject**: Exclude this finding (with optional note)
+- **[f]ix**: Apply the suggested fix automatically (when available)
+- **[s]kip**: Skip this finding for now (default)
+
+### Example Session
+
+```
+Interactive Review Mode
+Found 5 issue(s) to review
+
+Finding 1/5
+CRITICAL
+File: app.py
+Lines: 45-47
+Type: security
+
+Message:
+Hardcoded API key detected in source code
+
+Suggestion:
+Move API key to environment variable or secrets manager
+
+Code:
+45  def connect_api():
+46      api_key = "sk-1234567890abcdef"
+47      return ApiClient(api_key)
+
+Action (accept, reject, fix, skip): a
+
+Finding 2/5
+MEDIUM
+File: utils.py
+Lines: 23-25
+Type: performance
+
+Message:
+List comprehension would be more efficient than loop
+
+Suggestion:
+Replace loop with: results = [process(item) for item in items]
+
+Code:
+23  results = []
+24  for item in items:
+25      results.append(process(item))
+
+Action (accept, reject, fix, skip): f
+Applying fix...
+This is a suggestion only. Manual review recommended.
+Proceed with applying fix? (y/n): n
+Fix not applied.
+
+Finding 3/5
+LOW
+File: test.py
+Lines: 100-100
+Type: maintainability
+
+Message:
+TODO comment found
+
+Code:
+100  # TODO: refactor this later
+
+Action (accept, reject, fix, skip): r
+Add a note? (y/n): y
+Note: This is intentional, tracked in JIRA-123
+
+Review Summary
+Action          Count
+accept          1
+reject          1
+skip            3
+
+Rejected findings with notes:
+  - test.py:100: This is intentional, tracked in JIRA-123
+
+Decisions exported to: reviewr-decisions.json
+```
+
+### Decision Export
+
+All decisions are automatically exported to `reviewr-decisions.json`:
+
+```json
+[
+  {
+    "file": "app.py",
+    "line": 45,
+    "severity": "critical",
+    "message": "Hardcoded API key detected in source code",
+    "action": "accept",
+    "note": null
+  },
+  {
+    "file": "test.py",
+    "line": 100,
+    "severity": "low",
+    "message": "TODO comment found",
+    "action": "reject",
+    "note": "This is intentional, tracked in JIRA-123"
+  }
+]
+```
+
+### Benefits
+
+- **Reduce false positives**: Filter out irrelevant findings before reporting
+- **Learn from findings**: Understand each issue in detail
+- **Quick triage**: Make fast decisions on what matters
+- **Track decisions**: Export decisions for team review
+- **Better reports**: Only include findings you care about
+
+### Use Cases
+
+**Pre-commit review:**
+```bash
+# Review changes before committing
+git diff --name-only | xargs reviewr --all --interactive
+```
+
+**Team code review:**
+```bash
+# Review PR changes interactively
+reviewr src/ --all --interactive --output-format markdown
+```
+
+**Learning and training:**
+```bash
+# Use interactive mode to learn about code quality issues
+reviewr examples/ --all --interactive
+```
+
+### Tips
+
+- Use interactive mode for smaller changesets (1-50 findings)
+- For large reviews, use filters to reduce findings first
+- Rejected findings with notes help document false positives
+- Export decisions to share with your team
+- Combine with custom rules for team-specific standards
+
+### When Cache is Invalidated
+
+- File content changes (detected via SHA-256 hash)
+- Different review types requested
+- Different LLM provider or model used
+- Cache entry expires (after 7 days)
+
+=======
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 ## Secrets Detection
 
 reviewr includes built-in local secrets detection that scans for hardcoded credentials before sending code to AI.
@@ -958,6 +1675,8 @@ If installation fails:
    source venv/bin/activate
    pip install -e .
    ```
+<<<<<<< HEAD
+=======
 
 ## Support
 
@@ -972,3 +1691,4 @@ Built with:
 - [Anthropic](https://www.anthropic.com/) - Claude API
 - [OpenAI](https://openai.com/) - GPT API
 - [Google](https://ai.google.dev/) - Gemini API
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4

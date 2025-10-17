@@ -199,6 +199,9 @@ This creates a `.vsix` file you can install manually.
 
 ```bash
 npm run watch  # Watch mode for development
+<<<<<<< HEAD
+```
+=======
 ```
 
 Then press F5 in VS Code to launch Extension Development Host.
@@ -212,3 +215,4 @@ MIT
 For issues and feature requests, please visit:
 https://github.com/yourusername/reviewr/issues
 
+>>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4

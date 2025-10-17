@@ -1,0 +1,28 @@
+# Include important documentation files
+include README.md
+include LICENSE
+include CONTRIBUTING.md
+include QUICKSTART.md
+include PRODUCTION_CHECKLIST.md
+include STATUS.md
+
+# Include configuration files
+include .pre-commit-hooks.yaml
+include .pre-commit-config.yaml.example
+
+# Include package data
+recursive-include reviewr *.py
+recursive-include reviewr *.yml
+recursive-include reviewr *.yaml
+recursive-include reviewr *.toml
+
+# Exclude unnecessary files
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * .DS_Store
+exclude .gitignore
+exclude poetry.lock
+prune venv
+prune reviewr/venv
+prune vscode-extension/node_modules
+
