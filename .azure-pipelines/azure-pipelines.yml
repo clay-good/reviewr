@@ -1,0 +1,289 @@
+# Azure Pipelines configuration for reviewr
+# This example shows how to integrate reviewr into your Azure DevOps CI/CD pipeline
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+      - feature/*
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: reviewr-config  # Variable group containing AZURE_DEVOPS_PAT
+
+stages:
+  - stage: CodeReview
+    displayName: 'Code Review'
+    jobs:
+      - job: ReviewCode
+        displayName: 'Run reviewr Code Review'
+        steps:
+          - task: UsePythonVersion@0
+            displayName: 'Set up Python'
+            inputs:
+              versionSpec: '3.9'
+              addToPath: true
+          
+          - script: |
+              python -m pip install --upgrade pip
+              pip install reviewr
+            displayName: 'Install reviewr'
+          
+          - script: |
+              reviewr azure review --auto-approve
+            displayName: 'Run Code Review'
+            env:
+              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+            condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+          
+          - script: |
+              reviewr azure status \
+                --commit-id $(Build.SourceVersion) \
+                --state succeeded \
+                --description "Code review passed"
+            displayName: 'Update Build Status (Success)'
+            env:
+              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+            condition: succeeded()
+          
+          - script: |
+              reviewr azure status \
+                --commit-id $(Build.SourceVersion) \
+                --state failed \
+                --description "Code review failed"
+            displayName: 'Update Build Status (Failed)'
+            env:
+              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+            condition: failed()
+
+---
+
+# Advanced configuration with work item linking
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: reviewr-config
+
+stages:
+  - stage: CodeReview
+    displayName: 'Code Review with Work Item Linking'
+    jobs:
+      - job: ReviewCode
+        displayName: 'Run reviewr Code Review'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.9'
+          
+          - script: pip install reviewr
+            displayName: 'Install reviewr'
+          
+          - script: |
+              # Extract work item ID from PR title or branch name
+              WORK_ITEM_ID=$(echo "$(System.PullRequest.SourceBranch)" | grep -oP '\d+' | head -1)
+              
+              if [ -n "$WORK_ITEM_ID" ]; then
+                reviewr azure review --auto-approve --work-item $WORK_ITEM_ID
+              else
+                reviewr azure review --auto-approve
+              fi
+            displayName: 'Run Code Review with Work Item Linking'
+            env:
+              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+            condition: eq(variables['Build.Reason'], 'PullRequest')
+
+---
+
+# Multi-stage pipeline with security scanning
+
+trigger:
+  - main
+
+pr:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: reviewr-config
+
+stages:
+  - stage: SecurityScan
+    displayName: 'Security Scanning'
+    jobs:
+      - job: SecurityReview
+        displayName: 'Security Review'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.9'
+          
+          - script: pip install reviewr
+            displayName: 'Install reviewr'
+          
+          - script: |
+              reviewr . \
+                --review-type security \
+                --security-scan \
+                --check-vulnerabilities \
+                --check-licenses \
+                --output-format json \
+                --output security-report.json
+            displayName: 'Run Security Scan'
+            env:
+              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+          
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: 'security-report.json'
+              artifactName: 'security-report'
+            displayName: 'Publish Security Report'
+  
+  - stage: CodeQuality
+    displayName: 'Code Quality Review'
+    dependsOn: SecurityScan
+    jobs:
+      - job: QualityReview
+        displayName: 'Quality Review'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.9'
+          
+          - script: pip install reviewr
+            displayName: 'Install reviewr'
+          
+          - script: |
+              reviewr azure review \
+                --review-type correctness maintainability \
+                --code-metrics \
+                --check-complexity \
+                --check-duplication \
+                --check-debt \
+                --auto-approve
+            displayName: 'Run Quality Review'
+            env:
+              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+            condition: eq(variables['Build.Reason'], 'PullRequest')
+
+---
+
+# Scheduled code quality checks
+
+schedules:
+  - cron: "0 0 * * 0"  # Weekly on Sunday at midnight
+    displayName: Weekly Code Quality Check
+    branches:
+      include:
+        - main
+    always: true
+
+trigger: none
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: reviewr-config
+
+jobs:
+  - job: WeeklyReview
+    displayName: 'Weekly Code Quality Review'
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.9'
+      
+      - script: pip install reviewr
+        displayName: 'Install reviewr'
+      
+      - script: |
+          reviewr . \
+            --review-type security correctness maintainability \
+            --security-scan \
+            --code-metrics \
+            --output-format json \
+            --output weekly-report.json \
+            --slack \
+            --slack-channel '#code-quality'
+        displayName: 'Run Weekly Review'
+        env:
+          AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+          SLACK_WEBHOOK_URL: $(SLACK_WEBHOOK_URL)
+      
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathToPublish: 'weekly-report.json'
+          artifactName: 'weekly-report'
+        displayName: 'Publish Weekly Report'
+
+---
+
+# Configuration with custom presets
+
+trigger:
+  - main
+
+pr:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: reviewr-config
+
+jobs:
+  - job: CustomPresetReview
+    displayName: 'Review with Custom Preset'
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.9'
+      
+      - script: pip install reviewr
+        displayName: 'Install reviewr'
+      
+      - script: |
+          # Use strict preset for production code
+          reviewr azure review \
+            --preset strict \
+            --auto-approve
+        displayName: 'Run Strict Review'
+        env:
+          AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+        condition: and(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['System.PullRequest.TargetBranch'], 'refs/heads/main'))
+      
+      - script: |
+          # Use balanced preset for feature branches
+          reviewr azure review \
+            --preset balanced \
+            --auto-approve
+        displayName: 'Run Balanced Review'
+        env:
+          AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+        condition: and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.TargetBranch'], 'refs/heads/main'))
+

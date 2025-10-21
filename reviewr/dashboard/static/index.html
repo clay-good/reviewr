@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reviewr Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .metric-change {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric-change.positive {
+            color: #10b981;
+        }
+
+        .metric-change.negative {
+            color: #ef4444;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .projects-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .projects-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .projects-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .project-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .project-item:hover {
+            background: #f9fafb;
+        }
+
+        .project-item:last-child {
+            border-bottom: none;
+        }
+
+        .project-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-stats {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-critical {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .severity-high {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .severity-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .severity-low {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 reviewr Dashboard</h1>
+        <p>AI-powered code review analytics and insights</p>
+    </div>
+
+    <div class="container">
+        <!-- Overview Metrics -->
+        <div class="metrics-grid" id="metricsGrid">
+            <div class="loading">Loading metrics...</div>
+        </div>
+
+        <!-- Trends Chart -->
+        <div class="chart-container">
+            <div class="chart-title">Issue Trends (Last 30 Days)</div>
+            <canvas id="trendsChart"></canvas>
+        </div>
+
+        <!-- Projects List -->
+        <div class="projects-list">
+            <div class="projects-header">
+                <h2>Projects</h2>
+            </div>
+            <div id="projectsList">
+                <div class="loading">Loading projects...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+
+        // Fetch and display overview metrics
+        async function loadMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/metrics/overview`);
+                const data = await response.json();
+
+                const metricsHTML = `
+                    <div class="metric-card">
+                        <div class="metric-label">Total Projects</div>
+                        <div class="metric-value">${data.total_projects}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Reviews</div>
+                        <div class="metric-value">${data.total_reviews}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Findings</div>
+                        <div class="metric-value">${data.total_findings}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Avg Findings/Review</div>
+                        <div class="metric-value">${data.avg_findings_per_review.toFixed(1)}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Critical Issues</div>
+                        <div class="metric-value" style="color: #ef4444;">${data.critical_findings}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">High Issues</div>
+                        <div class="metric-value" style="color: #f59e0b;">${data.high_findings}</div>
+                    </div>
+                `;
+
+                document.getElementById('metricsGrid').innerHTML = metricsHTML;
+            } catch (error) {
+                document.getElementById('metricsGrid').innerHTML =
+                    '<div class="error">Failed to load metrics</div>';
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        // Fetch and display projects
+        async function loadProjects() {
+            try {
+                const response = await fetch(`${API_BASE}/projects`);
+                const projects = await response.json();
+
+                if (projects.length === 0) {
+                    document.getElementById('projectsList').innerHTML =
+                        '<div class="loading">No projects yet</div>';
+                    return;
+                }
+
+                const projectsHTML = projects.map(project => `
+                    <div class="project-item" onclick="viewProject(${project.id})">
+                        <div class="project-name">${project.name}</div>
+                        <div class="project-stats">
+                            <span>Language: ${project.language || 'N/A'}</span>
+                            <span>Created: ${new Date(project.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('projectsList').innerHTML = projectsHTML;
+            } catch (error) {
+                document.getElementById('projectsList').innerHTML =
+                    '<div class="error">Failed to load projects</div>';
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        // View project details
+        function viewProject(projectId) {
+            // In a real app, this would navigate to a project detail page
+            alert(`Project details for ID: ${projectId}\n\nThis would show:\n- Recent reviews\n- Trend charts\n- Finding details\n- Team metrics`);
+        }
+
+        // Initialize dashboard
+        async function init() {
+            await loadMetrics();
+            await loadProjects();
+        }
+
+        // Load data on page load
+        init();
+
+        // Refresh every 30 seconds
+        setInterval(init, 30000);
+    </script>
+</body>
+</html>

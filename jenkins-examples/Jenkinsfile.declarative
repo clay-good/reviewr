@@ -1,0 +1,337 @@
+// Declarative Pipeline for reviewr Code Review
+// This example shows how to integrate reviewr into a Jenkins declarative pipeline
+
+pipeline {
+    agent any
+    
+    environment {
+        // Jenkins credentials (configure in Jenkins Credentials)
+        JENKINS_URL = credentials('jenkins-url')
+        JENKINS_USERNAME = credentials('jenkins-username')
+        JENKINS_API_TOKEN = credentials('jenkins-api-token')
+        
+        // AI Provider credentials (choose one)
+        OPENAI_API_KEY = credentials('openai-api-key')
+        // ANTHROPIC_API_KEY = credentials('anthropic-api-key')
+        // GOOGLE_API_KEY = credentials('google-api-key')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install reviewr') {
+            steps {
+                sh '''
+                    python3 -m pip install --upgrade pip
+                    pip install reviewr
+                '''
+            }
+        }
+        
+        stage('Code Review') {
+            steps {
+                script {
+                    // Run reviewr and update Jenkins build
+                    sh 'reviewr jenkins review --output review-report.json'
+                }
+            }
+        }
+        
+        stage('Archive Results') {
+            steps {
+                // Archive the review report
+                archiveArtifacts artifacts: 'review-report.json', fingerprint: true
+                
+                // Publish SARIF report (if using Warnings Next Generation Plugin)
+                // recordIssues(tools: [sarif(pattern: 'review-report.sarif')])
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up
+            cleanWs()
+        }
+        success {
+            echo 'Code review passed!'
+        }
+        failure {
+            echo 'Code review failed - critical issues found'
+        }
+    }
+}
+
+// ============================================================================
+// Advanced Configuration with Multiple Review Types
+// ============================================================================
+
+pipeline {
+    agent any
+    
+    environment {
+        JENKINS_URL = credentials('jenkins-url')
+        JENKINS_USERNAME = credentials('jenkins-username')
+        JENKINS_API_TOKEN = credentials('jenkins-api-token')
+        OPENAI_API_KEY = credentials('openai-api-key')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install reviewr') {
+            steps {
+                sh 'pip install reviewr'
+            }
+        }
+        
+        stage('Security Review') {
+            steps {
+                sh '''
+                    reviewr . \
+                        --review-type security \
+                        --security-scan \
+                        --check-vulnerabilities \
+                        --check-licenses \
+                        --output-format json \
+                        --output security-report.json
+                '''
+            }
+        }
+        
+        stage('Code Quality Review') {
+            steps {
+                sh '''
+                    reviewr jenkins review \
+                        --review-type correctness maintainability \
+                        --code-metrics \
+                        --check-complexity \
+                        --check-duplication \
+                        --output quality-report.json
+                '''
+            }
+        }
+        
+        stage('Archive Results') {
+            steps {
+                archiveArtifacts artifacts: '*-report.json', fingerprint: true
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Configuration with Conditional Execution
+// ============================================================================
+
+pipeline {
+    agent any
+    
+    environment {
+        JENKINS_URL = credentials('jenkins-url')
+        JENKINS_USERNAME = credentials('jenkins-username')
+        JENKINS_API_TOKEN = credentials('jenkins-api-token')
+        OPENAI_API_KEY = credentials('openai-api-key')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install reviewr') {
+            steps {
+                sh 'pip install reviewr'
+            }
+        }
+        
+        stage('Quick Review') {
+            when {
+                not {
+                    branch 'main'
+                }
+            }
+            steps {
+                sh 'reviewr jenkins review --preset quick'
+            }
+        }
+        
+        stage('Strict Review') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh 'reviewr jenkins review --preset strict'
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Configuration with Parallel Execution
+// ============================================================================
+
+pipeline {
+    agent any
+    
+    environment {
+        JENKINS_URL = credentials('jenkins-url')
+        JENKINS_USERNAME = credentials('jenkins-username')
+        JENKINS_API_TOKEN = credentials('jenkins-api-token')
+        OPENAI_API_KEY = credentials('openai-api-key')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install reviewr') {
+            steps {
+                sh 'pip install reviewr'
+            }
+        }
+        
+        stage('Parallel Reviews') {
+            parallel {
+                stage('Security Review') {
+                    steps {
+                        sh '''
+                            reviewr . \
+                                --review-type security \
+                                --security-scan \
+                                --output security-report.json
+                        '''
+                    }
+                }
+                
+                stage('Code Quality Review') {
+                    steps {
+                        sh '''
+                            reviewr . \
+                                --review-type correctness maintainability \
+                                --code-metrics \
+                                --output quality-report.json
+                        '''
+                    }
+                }
+                
+                stage('Performance Review') {
+                    steps {
+                        sh '''
+                            reviewr . \
+                                --review-type performance \
+                                --output performance-report.json
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Update Jenkins') {
+            steps {
+                sh '''
+                    # Combine reports and update Jenkins
+                    reviewr jenkins review --output combined-report.json
+                '''
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Configuration with Slack Notifications
+// ============================================================================
+
+pipeline {
+    agent any
+    
+    environment {
+        JENKINS_URL = credentials('jenkins-url')
+        JENKINS_USERNAME = credentials('jenkins-username')
+        JENKINS_API_TOKEN = credentials('jenkins-api-token')
+        OPENAI_API_KEY = credentials('openai-api-key')
+        SLACK_WEBHOOK_URL = credentials('slack-webhook-url')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install reviewr') {
+            steps {
+                sh 'pip install reviewr'
+            }
+        }
+        
+        stage('Code Review') {
+            steps {
+                sh '''
+                    reviewr jenkins review \
+                        --slack \
+                        --slack-channel '#code-reviews' \
+                        --slack-critical-only
+                '''
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Configuration with Custom Presets
+// ============================================================================
+
+pipeline {
+    agent any
+    
+    environment {
+        JENKINS_URL = credentials('jenkins-url')
+        JENKINS_USERNAME = credentials('jenkins-username')
+        JENKINS_API_TOKEN = credentials('jenkins-api-token')
+        OPENAI_API_KEY = credentials('openai-api-key')
+    }
+    
+    parameters {
+        choice(
+            name: 'REVIEW_PRESET',
+            choices: ['balanced', 'strict', 'quick', 'security-focused'],
+            description: 'Review preset to use'
+        )
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Install reviewr') {
+            steps {
+                sh 'pip install reviewr'
+            }
+        }
+        
+        stage('Code Review') {
+            steps {
+                sh "reviewr jenkins review --preset ${params.REVIEW_PRESET}"
+            }
+        }
+    }
+}
+

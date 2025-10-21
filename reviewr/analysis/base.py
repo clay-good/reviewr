@@ -30,18 +30,21 @@ class LocalFinding:
     
     def to_review_finding(self):
         """Convert to ReviewFinding format."""
-        from ..providers.base import ReviewFinding
-        
+        from ..providers.base import ReviewFinding, ReviewType
+
         return ReviewFinding(
             file_path=self.file_path,
             line_start=self.line_start,
             line_end=self.line_end,
             severity=self.severity,
-            type='local_analysis',
+            type=ReviewType.CORRECTNESS,  # Use enum instead of string
             message=self.message,
             suggestion=self.suggestion or "",
             confidence=1.0,  # Local analysis is deterministic
-            code_snippet=self.code_snippet or ""
+            code_snippet=self.code_snippet or "",
+            category=self.category,  # Preserve category
+            metric_name=self.metric_name,  # Preserve metric name
+            metric_value=self.metric_value  # Preserve metric value
         )
 
 

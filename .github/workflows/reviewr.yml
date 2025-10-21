@@ -1,0 +1,229 @@
+name: reviewr Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - master
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  code-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install reviewr
+        run: |
+          pip install reviewr
+      
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          files: |
+            **/*.py
+            **/*.js
+            **/*.ts
+            **/*.tsx
+            **/*.go
+            **/*.rs
+            **/*.java
+      
+      - name: Run reviewr analysis
+        id: reviewr
+        if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          # Set your AI provider API key as a GitHub secret
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Or use OpenAI:
+          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Or use Gemini:
+          # GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          # Create output directory
+          mkdir -p reviewr-output
+          
+          # Run reviewr on changed files
+          echo "Analyzing changed files..."
+          reviewr analyze ${{ steps.changed-files.outputs.all_changed_files }} \
+            --all \
+            --output-format json \
+            > reviewr-output/results.json || true
+          
+          # Check if results file exists and has content
+          if [ -f reviewr-output/results.json ] && [ -s reviewr-output/results.json ]; then
+            echo "has_results=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_results=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Generate PR comment
+        id: generate-comment
+        if: steps.reviewr.outputs.has_results == 'true'
+        run: |
+          python3 << 'EOF'
+          import json
+          import os
+          from pathlib import Path
+          
+          # Read results
+          with open('reviewr-output/results.json', 'r') as f:
+              result_data = json.load(f)
+          
+          # Import formatter (assuming reviewr is installed)
+          try:
+              from reviewr.utils.pr_formatter import PRCommentFormatter
+              from reviewr.review.orchestrator import ReviewResult
+              
+              # Reconstruct ReviewResult object
+              # This is a simplified version - adjust based on actual structure
+              class SimpleResult:
+                  def __init__(self, data):
+                      self.files_reviewed = data.get('files_reviewed', 0)
+                      self.findings = data.get('findings', [])
+                      self.provider_stats = data.get('provider_stats', {})
+                  
+                  def get_findings_by_severity(self):
+                      by_severity = {
+                          'critical': [],
+                          'high': [],
+                          'medium': [],
+                          'low': [],
+                          'info': []
+                      }
+                      for finding in self.findings:
+                          severity = finding.get('severity', 'info').lower()
+                          by_severity[severity].append(finding)
+                      return by_severity
+              
+              result = SimpleResult(result_data)
+              
+              # Format comment
+              formatter = PRCommentFormatter(max_findings=50, collapse_low_severity=True)
+              repo_name = os.environ.get('GITHUB_REPOSITORY', '')
+              pr_number = os.environ.get('GITHUB_REF', '').split('/')[-2] if '/pull/' in os.environ.get('GITHUB_REF', '') else ''
+              
+              comment = formatter.format_comment(result, repo_name, pr_number)
+              
+              # Save comment to file
+              with open('reviewr-output/comment.md', 'w') as f:
+                  f.write(comment)
+              
+              print("Comment generated successfully")
+              
+          except Exception as e:
+              print(f"Error generating comment: {e}")
+              # Fallback to simple comment
+              with open('reviewr-output/comment.md', 'w') as f:
+                  f.write(f"## 🤖 reviewr Code Review\n\nAnalysis complete. Found {len(result_data.get('findings', []))} issues.\n")
+          
+          EOF
+      
+      - name: Post PR comment
+        if: steps.reviewr.outputs.has_results == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync('reviewr-output/comment.md', 'utf8');
+            
+            // Find existing reviewr comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🤖 reviewr Code Review')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+      
+      - name: Check for critical issues
+        if: steps.reviewr.outputs.has_results == 'true'
+        run: |
+          python3 << 'EOF'
+          import json
+          import sys
+          
+          # Read results
+          with open('reviewr-output/results.json', 'r') as f:
+              result_data = json.load(f)
+          
+          # Count critical and high severity issues
+          critical_count = 0
+          high_count = 0
+          
+          for finding in result_data.get('findings', []):
+              severity = finding.get('severity', 'info').lower()
+              if severity == 'critical':
+                  critical_count += 1
+              elif severity == 'high':
+                  high_count += 1
+          
+          print(f"Found {critical_count} critical and {high_count} high severity issues")
+          
+          # Fail the build if there are critical issues
+          # Adjust this threshold based on your needs
+          if critical_count > 0:
+              print("❌ Build failed due to critical issues")
+              sys.exit(1)
+          elif high_count > 5:  # Configurable threshold
+              print("⚠️  Build failed due to too many high severity issues")
+              sys.exit(1)
+          else:
+              print("✅ Build passed")
+              sys.exit(0)
+          
+          EOF
+      
+      - name: Upload results as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewr-results
+          path: reviewr-output/
+          retention-days: 30
+      
+      - name: No changes to review
+        if: steps.changed-files.outputs.any_changed != 'true'
+        run: |
+          echo "No relevant files changed in this PR"
+

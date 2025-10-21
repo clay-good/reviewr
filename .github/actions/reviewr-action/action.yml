@@ -1,0 +1,227 @@
+name: 'reviewr Code Review'
+description: 'Run AI-powered code review with reviewr'
+author: 'reviewr'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  api-key:
+    description: 'API key for AI provider (Anthropic, OpenAI, or Gemini)'
+    required: true
+  
+  provider:
+    description: 'AI provider to use (claude, openai, or gemini)'
+    required: false
+    default: 'claude'
+  
+  files:
+    description: 'Files or directories to analyze (space-separated)'
+    required: false
+    default: '.'
+  
+  review-types:
+    description: 'Review types to run (comma-separated: security,performance,correctness,maintainability,architecture,standards)'
+    required: false
+    default: 'all'
+  
+  fail-on-critical:
+    description: 'Fail the build if critical issues are found'
+    required: false
+    default: 'true'
+  
+  fail-on-high-threshold:
+    description: 'Fail the build if high severity issues exceed this threshold (0 = disabled)'
+    required: false
+    default: '5'
+  
+  post-comment:
+    description: 'Post results as PR comment'
+    required: false
+    default: 'true'
+  
+  max-findings:
+    description: 'Maximum number of findings to show in PR comment'
+    required: false
+    default: '50'
+  
+  github-token:
+    description: 'GitHub token for posting comments'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  total-issues:
+    description: 'Total number of issues found'
+    value: ${{ steps.analyze.outputs.total_issues }}
+  
+  critical-issues:
+    description: 'Number of critical issues found'
+    value: ${{ steps.analyze.outputs.critical_issues }}
+  
+  high-issues:
+    description: 'Number of high severity issues found'
+    value: ${{ steps.analyze.outputs.high_issues }}
+  
+  results-file:
+    description: 'Path to results JSON file'
+    value: 'reviewr-output/results.json'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install reviewr
+      shell: bash
+      run: |
+        pip install reviewr
+    
+    - name: Run reviewr analysis
+      id: analyze
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.provider == 'claude' && inputs.api-key || '' }}
+        OPENAI_API_KEY: ${{ inputs.provider == 'openai' && inputs.api-key || '' }}
+        GEMINI_API_KEY: ${{ inputs.provider == 'gemini' && inputs.api-key || '' }}
+      run: |
+        # Create output directory
+        mkdir -p reviewr-output
+        
+        # Build command
+        CMD="reviewr analyze ${{ inputs.files }}"
+        
+        if [ "${{ inputs.review-types }}" = "all" ]; then
+          CMD="$CMD --all"
+        else
+          IFS=',' read -ra TYPES <<< "${{ inputs.review-types }}"
+          for type in "${TYPES[@]}"; do
+            CMD="$CMD --$type"
+          done
+        fi
+        
+        CMD="$CMD --output-format json"
+        
+        # Run analysis
+        echo "Running: $CMD"
+        $CMD > reviewr-output/results.json || true
+        
+        # Parse results
+        if [ -f reviewr-output/results.json ] && [ -s reviewr-output/results.json ]; then
+          TOTAL=$(python3 -c "import json; data=json.load(open('reviewr-output/results.json')); print(len(data.get('findings', [])))")
+          CRITICAL=$(python3 -c "import json; data=json.load(open('reviewr-output/results.json')); print(len([f for f in data.get('findings', []) if f.get('severity', '').lower() == 'critical']))")
+          HIGH=$(python3 -c "import json; data=json.load(open('reviewr-output/results.json')); print(len([f for f in data.get('findings', []) if f.get('severity', '').lower() == 'high']))")
+          
+          echo "total_issues=$TOTAL" >> $GITHUB_OUTPUT
+          echo "critical_issues=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high_issues=$HIGH" >> $GITHUB_OUTPUT
+          echo "has_results=true" >> $GITHUB_OUTPUT
+          
+          echo "✅ Analysis complete: $TOTAL issues ($CRITICAL critical, $HIGH high)"
+        else
+          echo "total_issues=0" >> $GITHUB_OUTPUT
+          echo "critical_issues=0" >> $GITHUB_OUTPUT
+          echo "high_issues=0" >> $GITHUB_OUTPUT
+          echo "has_results=false" >> $GITHUB_OUTPUT
+          echo "⚠️  No results generated"
+        fi
+    
+    - name: Generate PR comment
+      if: steps.analyze.outputs.has_results == 'true' && inputs.post-comment == 'true'
+      shell: bash
+      run: |
+        python3 << 'EOFPYTHON'
+        import json
+        import os
+        
+        # Read results
+        with open('reviewr-output/results.json', 'r') as f:
+            result_data = json.load(f)
+        
+        # Simple comment generation (fallback)
+        total = len(result_data.get('findings', []))
+        critical = len([f for f in result_data.get('findings', []) if f.get('severity', '').lower() == 'critical'])
+        high = len([f for f in result_data.get('findings', []) if f.get('severity', '').lower() == 'high'])
+        medium = len([f for f in result_data.get('findings', []) if f.get('severity', '').lower() == 'medium'])
+        
+        comment = f"""## 🤖 reviewr Code Review
+
+### Summary
+
+| Metric | Value |
+|--------|-------|
+| Total Issues | {total} |
+| 🔴 Critical | {critical} |
+| 🟠 High | {high} |
+| 🟡 Medium | {medium} |
+
+*Powered by [reviewr](https://github.com/clay-good/reviewr) - AI-powered code review* 🚀
+"""
+        
+        with open('reviewr-output/comment.md', 'w') as f:
+            f.write(comment)
+        
+        EOFPYTHON
+    
+    - name: Post PR comment
+      if: steps.analyze.outputs.has_results == 'true' && inputs.post-comment == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+          const comment = fs.readFileSync('reviewr-output/comment.md', 'utf8');
+          
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('🤖 reviewr Code Review')
+          );
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: comment
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+          }
+    
+    - name: Check failure conditions
+      if: steps.analyze.outputs.has_results == 'true'
+      shell: bash
+      run: |
+        CRITICAL=${{ steps.analyze.outputs.critical_issues }}
+        HIGH=${{ steps.analyze.outputs.high_issues }}
+        FAIL_ON_CRITICAL="${{ inputs.fail-on-critical }}"
+        HIGH_THRESHOLD=${{ inputs.fail-on-high-threshold }}
+        
+        if [ "$FAIL_ON_CRITICAL" = "true" ] && [ "$CRITICAL" -gt 0 ]; then
+          echo "❌ Build failed: $CRITICAL critical issues found"
+          exit 1
+        fi
+        
+        if [ "$HIGH_THRESHOLD" -gt 0 ] && [ "$HIGH" -gt "$HIGH_THRESHOLD" ]; then
+          echo "❌ Build failed: $HIGH high severity issues exceed threshold of $HIGH_THRESHOLD"
+          exit 1
+        fi
+        
+        echo "✅ Build passed quality checks"
+

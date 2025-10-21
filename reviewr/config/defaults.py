@@ -38,10 +38,10 @@ def get_default_config() -> ReviewrConfig:
             confidence_threshold=0.5,
         ),
         chunking=ChunkingConfig(
-            max_chunk_size=3000,
-            overlap=200,
+            max_chunk_size=150000,  # Use 75% of Claude's 200K context window
+            overlap=500,  # Increased overlap for better context
             strategy=ChunkingStrategy.AST_AWARE,
-            context_lines=10,
+            context_lines=20,  # More context lines
         ),
         cache=CacheConfig(
             directory="~/.cache/reviewr",
@@ -103,17 +103,17 @@ review:
 
 # Code chunking configuration
 chunking:
-  # Maximum chunk size in tokens
-  max_chunk_size: 3000
-  
+  # Maximum chunk size in tokens (Claude supports 200K, using 75%)
+  max_chunk_size: 150000
+
   # Overlap between chunks in tokens
-  overlap: 200
-  
+  overlap: 500
+
   # Chunking strategy: ast_aware, sliding_window, file_based
   strategy: ast_aware
-  
+
   # Number of context lines to include
-  context_lines: 10
+  context_lines: 20
 
 # Caching configuration
 cache:
@@ -185,17 +185,17 @@ max_findings_per_file = 50
 confidence_threshold = 0.5
 
 [chunking]
-# Maximum chunk size in tokens
-max_chunk_size = 3000
+# Maximum chunk size in tokens (Claude supports 200K, using 75%)
+max_chunk_size = 150000
 
 # Overlap between chunks in tokens
-overlap = 200
+overlap = 500
 
 # Chunking strategy: ast_aware, sliding_window, file_based
 strategy = "ast_aware"
 
 # Number of context lines to include
-context_lines = 10
+context_lines = 20
 
 [cache]
 # Cache directory

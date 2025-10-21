@@ -38,10 +38,14 @@ class ReviewFinding:
     suggestion: Optional[str] = None
     code_snippet: Optional[str] = None
     confidence: float = 1.0
-    
+    # Extended fields for advanced analyzers
+    category: Optional[str] = None  # 'security', 'dataflow', 'complexity', etc.
+    metric_name: Optional[str] = None  # e.g., 'cyclomatic_complexity'
+    metric_value: Optional[float] = None  # Numeric metric value
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
-        return {
+        result = {
             "type": self.type.value,
             "severity": self.severity,
             "file_path": self.file_path,
@@ -52,6 +56,14 @@ class ReviewFinding:
             "code_snippet": self.code_snippet,
             "confidence": self.confidence,
         }
+        # Add optional fields if present
+        if self.category:
+            result["category"] = self.category
+        if self.metric_name:
+            result["metric_name"] = self.metric_name
+        if self.metric_value is not None:
+            result["metric_value"] = self.metric_value
+        return result
 
 
 class LLMProvider(ABC):

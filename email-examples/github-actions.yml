@@ -1,0 +1,269 @@
+name: Code Review with Email Notifications
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    # Daily digest at 9 AM UTC
+    - cron: '0 9 * * *'
+
+jobs:
+  # ============================================================================
+  # PR Code Review with Email
+  # ============================================================================
+  pr-review:
+    name: PR Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install reviewr
+        run: pip install reviewr
+      
+      - name: Run code review
+        run: reviewr . --output review-results.json --format json
+      
+      - name: Send email notification
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          reviewr email send review-results.json \
+            --to ${{ secrets.TEAM_EMAIL }} \
+            --project-name "${{ github.repository }}" \
+            --repository-url "${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.pull_request.number }}"
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        with:
+          name: review-results
+          path: review-results.json
+
+  # ============================================================================
+  # Critical Security Alerts
+  # ============================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install reviewr
+        run: pip install reviewr
+      
+      - name: Run security scan
+        run: |
+          reviewr . \
+            --preset security \
+            --scan-dependencies \
+            --check-licenses \
+            --output security-results.json \
+            --format json
+      
+      - name: Send critical alerts
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          reviewr email send security-results.json \
+            --to ${{ secrets.SECURITY_EMAIL }} \
+            --critical-only \
+            --project-name "${{ github.repository }}" \
+            --repository-url "${{ github.server_url }}/${{ github.repository }}"
+
+  # ============================================================================
+  # Daily Digest Report
+  # ============================================================================
+  daily-digest:
+    name: Daily Digest
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install reviewr
+        run: pip install reviewr
+      
+      - name: Run code review
+        run: reviewr . --output daily-review.json --format json
+      
+      - name: Send daily digest
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          reviewr email send daily-review.json \
+            --to ${{ secrets.TEAM_EMAIL }} \
+            --cc ${{ secrets.MANAGER_EMAIL }} \
+            --project-name "${{ github.repository }} - Daily Digest" \
+            --repository-url "${{ github.server_url }}/${{ github.repository }}" \
+            --attach-json
+
+  # ============================================================================
+  # Main Branch Review with Multiple Recipients
+  # ============================================================================
+  main-branch-review:
+    name: Main Branch Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install reviewr
+        run: pip install reviewr
+      
+      - name: Run code review
+        run: reviewr . --preset strict --output main-review.json --format json
+      
+      - name: Send to multiple recipients
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          reviewr email send main-review.json \
+            --to ${{ secrets.TEAM_EMAIL }} \
+            --to ${{ secrets.LEAD_EMAIL }} \
+            --cc ${{ secrets.MANAGER_EMAIL }} \
+            --project-name "${{ github.repository }}" \
+            --repository-url "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+
+  # ============================================================================
+  # SendGrid Example
+  # ============================================================================
+  sendgrid-example:
+    name: SendGrid Email
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install reviewr
+        run: pip install reviewr
+      
+      - name: Run code review
+        run: reviewr . --output review-results.json --format json
+      
+      - name: Send via SendGrid
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+        run: |
+          reviewr email send review-results.json \
+            --to ${{ secrets.TEAM_EMAIL }} \
+            --provider sendgrid \
+            --project-name "${{ github.repository }}" \
+            --repository-url "${{ github.server_url }}/${{ github.repository }}"
+
+  # ============================================================================
+  # AWS SES Example
+  # ============================================================================
+  aws-ses-example:
+    name: AWS SES Email
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install reviewr
+        run: pip install reviewr
+      
+      - name: Run code review
+        run: reviewr . --output review-results.json --format json
+      
+      - name: Send via AWS SES
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          reviewr email send review-results.json \
+            --to ${{ secrets.TEAM_EMAIL }} \
+            --provider aws_ses \
+            --project-name "${{ github.repository }}" \
+            --repository-url "${{ github.server_url }}/${{ github.repository }}"
+
+# ============================================================================
+# Required Secrets
+# ============================================================================
+# SMTP:
+# - EMAIL_FROM
+# - SMTP_HOST
+# - SMTP_PORT
+# - SMTP_USERNAME
+# - SMTP_PASSWORD
+# - TEAM_EMAIL
+# - SECURITY_EMAIL (optional)
+# - MANAGER_EMAIL (optional)
+# - LEAD_EMAIL (optional)
+#
+# SendGrid:
+# - EMAIL_FROM
+# - SENDGRID_API_KEY
+# - TEAM_EMAIL
+#
+# AWS SES:
+# - EMAIL_FROM
+# - AWS_REGION
+# - AWS_ACCESS_KEY_ID
+# - AWS_SECRET_ACCESS_KEY
+# - TEAM_EMAIL
+

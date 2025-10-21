@@ -1,8 +1,7 @@
 # reviewr
 
-**Catch bugs before they ship.** A CLI tool that provides AI-powered code review for pre-commit validation and seamless integration with GitLab/GitHub CI/CD pipelines for post-commit (MR/PR) code reviews.
+**Enterprise-grade AI-powered code review platform** for pre-commit validation, CI/CD integration, and comprehensive code quality enforcement across your entire development lifecycle.
 
-<<<<<<< HEAD
 ## Quick Start
 
 ```bash
@@ -12,73 +11,205 @@ pip install -e .
 # Review a Python file
 reviewr app.py --all --output-format sarif
 
-# Review JavaScript/TypeScript with local analysis
-reviewr src/app.js --all --output-format markdown
+# Review with advanced analysis (security, performance, complexity)
+reviewr src/ --all --security-scan --metrics --output-format markdown
 
-# Use custom rules for team standards
-reviewr . --all --rules team-rules.yml
+# Use configuration presets
+reviewr . --preset security --output-format sarif
 
 # Interactive mode for reviewing findings
 reviewr . --all --interactive
 
+# Auto-fix issues
+reviewr fix app.py --dry-run
+
+# Enforce enterprise policies
+reviewr policy check --scope pre-commit
+
 # GitHub PR integration
-reviewr-github review --pr 123 --repo owner/repo
+reviewr-github --pr-number 123 --all
+
+# GitLab MR integration
+reviewr-gitlab --mr-iid 123 --all
 ```
 
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 ## Why reviewr?
+
+**Enterprise-Ready** - Complete policy enforcement engine with quality gates, approval workflows, and compliance reporting for organizations of any size.
 
 **Ship faster with confidence** - Automated code review catches security vulnerabilities, performance issues, and bugs before they reach production, reducing debugging time by up to 70%.
 
 **Save development costs** - Early detection prevents expensive production fixes. One critical security vulnerability caught in development saves thousands in incident response and reputation damage.
 
-**Seamless workflow integration** - Works as a pre-commit hook for instant feedback and integrates with CI/CD pipelines for automated PR/MR reviews, requiring zero workflow changes.
+**Seamless workflow integration** - Works as a pre-commit hook, integrates with CI/CD pipelines, and provides IDE extensions for VSCode and IntelliJ, requiring zero workflow changes.
 
-**Comprehensive analysis** - Covers security, performance, correctness, maintainability, architecture, and coding standards with detailed SARIF and Markdown reports for easy tracking and compliance.
+**Comprehensive analysis** - 31 specialized analyzers across 10 languages covering security, performance, correctness, maintainability, architecture, and coding standards.
 
 **Multi-LLM flexibility** - Choose from Claude, OpenAI GPT, or Google Gemini based on your needs, budget, and compliance requirements.
 
 ## Features
 
-### Core Features
+### Core Capabilities
+- **31 Specialized Analyzers**: Deep analysis across Python, JavaScript/TypeScript, Go, Rust, Java, C++, Ruby, PHP, Shell, and more
 - **Multiple LLM Providers**: Support for Claude, OpenAI GPT, and Google Gemini
 - **Comprehensive Reviews**: Security, performance, correctness, maintainability, architecture, and standards
+- **Advanced Security Scanning**: CVE detection, SAST rules, license compliance, and secrets detection (30+ patterns)
+- **Code Metrics**: Complexity analysis, code duplication detection, and technical debt estimation
+- **Auto-Fix Capabilities**: Automatic fixes for 13+ issue types with safe application and rollback
 - **Code Explanation**: `--explain` flag to understand unfamiliar code quickly
-- **Flexible Input**: Review single files or entire directories
 - **Multiple Output Formats**: SARIF JSON, Markdown, HTML, and JUnit XML
-- **Smart Chunking**: Intelligent code chunking for large files
-- **Language Detection**: Automatic programming language detection (30+ languages)
-- **Retry Logic**: Automatic retries with exponential backoff
-- **Progress Tracking**: Beautiful progress bars and status updates
 
-### Performance & Security
-<<<<<<< HEAD
+### Enterprise Features
+- **Policy Enforcement Engine**: Centralized policy management with 5 predefined enterprise policies
+- **Quality Gates**: Configurable thresholds that fail builds when exceeded
+- **Approval Workflows**: Team/role-based approval requirements for sensitive changes
+- **Multi-Stage Enforcement**: Pre-commit, pre-push, pull request, merge, post-merge, and continuous monitoring
+- **Compliance Reporting**: Track violations, trends, and team performance metrics
+- **Configuration Presets**: 8 built-in presets (security, performance, quick, comprehensive, etc.)
+- **Learning Mode**: Feedback system that learns from user input to reduce false positives
+
+### Performance & Intelligence
 - **Parallel Processing**: Multiple review types run concurrently for faster results (6x speedup)
 - **Intelligent Caching**: Hash-based caching with automatic invalidation (50-80% API call reduction)
 - **Local-First Analysis**: AST-based analysis for Python and JavaScript/TypeScript (no API calls required)
+- **API Optimization**: 93.3% reduction in API calls through intelligent batching and chunking
+- **Incremental Analysis**: Only review changed code with `--diff` mode
 - **Custom Rules Engine**: Define team-specific rules with regex patterns (YAML/JSON configuration)
 - **Interactive Mode**: Review findings one-by-one with accept/reject/fix actions
-- **Secrets Detection**: Local regex-based scanning for API keys and credentials (30+ patterns)
-- **GitHub Integration**: Automated PR reviews with inline comments
-- **Cache Statistics**: Real-time hit/miss rates and performance metrics
-=======
-- **Parallel Processing**: Multiple review types run concurrently for faster results
-- **Secrets Detection**: Local regex-based scanning for API keys and credentials (30+ patterns)
-- **Smart Caching**: Reduce API calls and costs with intelligent caching
-- **Local-First**: Secrets scanning and validation happen locally before AI processing
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 
-### Configuration & Integration
-- **Flexible Configuration**: Support for YAML (.reviewr.yml), TOML (.reviewr.toml), and pyproject.toml
+### Integrations
+- **IDE Extensions**: VSCode extension and IntelliJ/JetBrains plugin
+- **CI/CD Platforms**: GitHub Actions, GitLab CI, Azure DevOps, Jenkins, CircleCI, Bitbucket Pipelines
+- **Communication**: Slack, Microsoft Teams, Email notifications
 - **Pre-commit Hooks**: Git pre-commit integration with configurable quality thresholds
-- **VS Code Extension**: Native VS Code integration with Problems panel support
-- **CI/CD Ready**: Examples for GitHub Actions and GitLab CI with SARIF upload support
+- **Web Dashboard**: FastAPI backend with React frontend for metrics, trends, and team analytics
+- **Status Checks**: Automatic commit status updates on GitHub and GitLab
 
-## Example Project Cost 
+## Example Project Cost
 - **Small** (10 files): ~$0.20-0.30
 - **Medium** (50 files): ~$0.90-1.00
 - **Large** (200 files): ~$3.60-4.00
+
+## Key Features
+
+### Auto-Fix Capabilities
+
+Automatically fix common issues with safe application and rollback support:
+
+```bash
+# Preview fixes without applying
+reviewr fix app.py --dry-run
+
+# Apply fixes interactively
+reviewr fix app.py --interactive
+
+# Apply all fixes automatically
+reviewr fix app.py
+```
+
+**Supported Fix Types** (13+):
+- Remove unused imports
+- Fix formatting issues
+- Add missing type hints
+- Fix security vulnerabilities
+- Convert var to let/const
+- Add null checks
+- Fix async/await patterns
+- And more...
+
+### Enterprise Policy Engine
+
+Enforce organization-wide policies with centralized management:
+
+```bash
+# List available policy templates
+reviewr policy list-templates
+
+# Create policy from template
+reviewr policy create security-critical my-security-policy
+
+# Check code against policies
+reviewr policy check --scope pre-commit
+
+# Export/import policies for team sharing
+reviewr policy export ./policies
+reviewr policy import ./policies
+```
+
+**Features**:
+- 5 predefined enterprise policies (security-critical, production-ready, etc.)
+- 7 built-in policy rules (severity, complexity, security, coverage, etc.)
+- Multi-stage enforcement (pre-commit, PR, merge, post-merge, continuous)
+- Flexible actions (block, warn, require-approval, notify, report)
+- Team/role-based approval workflows
+
+### Web Dashboard
+
+Track code quality metrics and trends over time:
+
+```bash
+# Start the dashboard
+reviewr dashboard start
+
+# Upload review results
+reviewr dashboard upload reviewr-report.sarif
+```
+
+**Features**:
+- Trend analysis and quality gates
+- Technical debt tracking
+- Team performance metrics
+- Interactive charts and visualizations
+- AI-powered auto-fix integration
+
+### Configuration Presets
+
+Use predefined configurations for common scenarios:
+
+```bash
+# Use security-focused preset
+reviewr . --preset security --output-format sarif
+
+# Use performance-focused preset
+reviewr . --preset performance --output-format markdown
+
+# List available presets
+reviewr preset list
+
+# Create custom preset
+reviewr preset create my-preset --security --performance --max-critical 0
+```
+
+**Built-in Presets** (8):
+- `security`: Security-focused review
+- `performance`: Performance optimization
+- `quick`: Fast scan for critical issues
+- `comprehensive`: Complete analysis
+- `strict`: Zero tolerance for issues
+- `balanced`: Balanced quality checks
+- `minimal`: Minimal checks
+- `custom`: User-defined presets
+
+### Learning Mode
+
+Improve accuracy over time with feedback:
+
+```bash
+# Enable learning mode
+reviewr . --all --output-format sarif
+
+# Provide feedback on findings
+reviewr learn feedback --finding-id abc123 --feedback false-positive
+
+# View learning statistics
+reviewr learn stats
+```
+
+**Features**:
+- False positive tracking
+- Confidence scoring
+- Pattern learning
+- Team-wide learning
 
 ## Installation
 
@@ -99,12 +230,14 @@ poetry shell
 ### Using pip
 
 ```bash
-<<<<<<< HEAD
 # Basic installation
 pip install -e .
 
 # With GitHub integration
 pip install -e ".[github]"
+
+# With GitLab integration
+pip install -e ".[gitlab]"
 
 # With all extras
 pip install -e ".[all]"
@@ -112,11 +245,6 @@ pip install -e ".[all]"
 
 **Note**: This project requires Python 3.9 or higher.
 
-=======
-pip install -e .
-```
-
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 ## Quick Start
 
 1. **Set up API keys** (choose one or more providers):
@@ -897,7 +1025,6 @@ Run with:
 docker-compose run reviewr
 ```
 
-<<<<<<< HEAD
 ## Local-First Analysis
 
 reviewr includes powerful local analysis capabilities that provide instant feedback without any API calls.
@@ -1086,12 +1213,12 @@ jobs:
 
 ### Features
 
-- ✅ **Automated PR Reviews**: Reviews all changed files automatically
-- ✅ **Inline Comments**: Posts findings as inline comments on specific lines
-- ✅ **Review Status**: Can approve PRs or request changes
-- ✅ **Smart Filtering**: Only comments on changed files
-- ✅ **Rich Summaries**: Posts comprehensive review summaries
-- ✅ **Auto-detection**: Automatically detects PR number and repository
+-  **Automated PR Reviews**: Reviews all changed files automatically
+-  **Inline Comments**: Posts findings as inline comments on specific lines
+-  **Review Status**: Can approve PRs or request changes
+-  **Smart Filtering**: Only comments on changed files
+-  **Rich Summaries**: Posts comprehensive review summaries
+-  **Auto-detection**: Automatically detects PR number and repository
 
 ### Example Output
 
@@ -1124,6 +1251,204 @@ And a summary comment:
 ```
 
 **See [GITHUB_INTEGRATION.md](GITHUB_INTEGRATION.md) for complete documentation.**
+
+## CI/CD Integration
+
+reviewr provides production-ready CI/CD integration for automated code review on every pull request or merge request.
+
+### GitHub Actions
+
+**Quick Setup:**
+
+1. Add your API key as a repository secret (`ANTHROPIC_API_KEY`)
+2. Create `.github/workflows/reviewr.yml`:
+
+```yaml
+name: reviewr Code Review
+on: [pull_request]
+permissions:
+  pull-requests: write
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/reviewr-action
+        with:
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          fail-on-critical: true
+```
+
+**Features:**
+-  Automated PR comments with detailed findings
+-  Commit status checks (pass/fail builds)
+-  Changed files detection (only review what changed)
+-  Configurable failure thresholds
+-  Result artifacts for tracking
+
+### GitLab CI
+
+**Quick Setup:**
+
+1. Add your API key as a CI/CD variable (`ANTHROPIC_API_KEY`)
+2. Add GitLab token as a variable (`GITLAB_TOKEN`)
+3. Include the reviewr template in `.gitlab-ci.yml`:
+
+```yaml
+include:
+  - local: '.gitlab-ci-reviewr.yml'
+```
+
+**Features:**
+-  Automated MR comments with detailed findings
+-  Pipeline status updates
+-  Changed files detection
+-  Configurable failure thresholds
+-  Artifact storage
+
+**See [docs/CI_CD_INTEGRATION.md](docs/CI_CD_INTEGRATION.md) for complete documentation.**
+
+## GitLab Integration
+
+reviewr can automatically review GitLab Merge Requests and post inline comments directly on your MRs!
+
+### Quick Start
+
+```bash
+# Install with GitLab support
+pip install -e ".[gitlab]"
+
+# Set GitLab token
+export GITLAB_TOKEN="your_gitlab_token_here"
+
+# Review an MR (auto-detects MR IID in GitLab CI)
+reviewr-gitlab --all
+
+# Review specific MR
+reviewr-gitlab --mr-iid 123 --all
+
+# Approve if no critical issues
+reviewr-gitlab --all --approve-if-clean
+```
+
+### GitLab CI Setup
+
+Create or update `.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - review
+
+reviewr_mr_review:
+  stage: review
+  image: python:3.11
+  before_script:
+    - pip install -e ".[gitlab]"
+  script:
+    - reviewr-gitlab --all --post-comments --post-summary
+  only:
+    - merge_requests
+  variables:
+    GITLAB_TOKEN: $GITLAB_TOKEN
+    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+```
+
+### Advanced GitLab CI with Auto-Approval
+
+```yaml
+stages:
+  - review
+
+reviewr_mr_review:
+  stage: review
+  image: python:3.11
+  before_script:
+    - pip install -e ".[gitlab]"
+  script:
+    - |
+      reviewr-gitlab \
+        --all \
+        --post-comments \
+        --post-summary \
+        --approve-if-clean
+  only:
+    - merge_requests
+  variables:
+    GITLAB_TOKEN: $GITLAB_TOKEN
+    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+```
+
+### Configuration
+
+**Required Environment Variables:**
+- `GITLAB_TOKEN` or `CI_JOB_TOKEN`: GitLab personal access token or CI job token
+- `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `GOOGLE_API_KEY`: LLM provider API key
+
+**Optional Environment Variables:**
+- `CI_API_V4_URL`: GitLab API URL (defaults to https://gitlab.com/api/v4)
+- `CI_PROJECT_ID`: Project ID (auto-detected in GitLab CI)
+- `CI_MERGE_REQUEST_IID`: MR IID (auto-detected in GitLab CI)
+
+### Features
+
+-  **Automated MR Reviews**: Reviews all changed files automatically
+-  **Inline Comments**: Posts findings as inline discussions on specific lines
+-  **Review Status**: Can approve MRs if no critical issues found
+-  **Smart Filtering**: Only comments on changed files
+-  **Rich Summaries**: Posts comprehensive review summaries
+-  **Auto-detection**: Automatically detects MR IID and project ID in GitLab CI
+
+### Example Output
+
+reviewr posts inline discussions like:
+
+```
+🟠 HIGH: SQL injection vulnerability detected
+
+The user input is directly concatenated into the SQL query.
+
+Suggestion: Use parameterized queries to prevent SQL injection.
+
+Confidence: 95%
+```
+
+And a summary comment:
+
+```markdown
+## 🤖 reviewr Code Review Summary
+
+**Files reviewed**: 5
+**Total findings**: 12
+
+**Findings by severity**: 🔴 2 critical, 🟠 3 high, 🟡 5 medium, 🔵 2 low
+
+**Findings by type**:
+- security: 5
+- performance: 3
+- correctness: 4
+
+⚠️ **This MR has critical or high severity issues that should be addressed.**
+
+---
+*Powered by [reviewr](https://github.com/clay-good/reviewr)*
+```
+
+### GitLab Token Setup
+
+1. **Create a Personal Access Token**:
+   - Go to GitLab → Settings → Access Tokens
+   - Create token with `api` scope
+   - Copy the token
+
+2. **Add to GitLab CI/CD Variables**:
+   - Go to Project → Settings → CI/CD → Variables
+   - Add variable `GITLAB_TOKEN` with your token
+   - Mark as "Masked" and "Protected"
+
+3. **Or use CI_JOB_TOKEN** (simpler but limited):
+   - GitLab CI automatically provides `CI_JOB_TOKEN`
+   - Has limited permissions but works for basic commenting
+   - No setup required!
 
 ## Intelligent Caching
 
@@ -1561,8 +1886,6 @@ reviewr examples/ --all --interactive
 - Different LLM provider or model used
 - Cache entry expires (after 7 days)
 
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 ## Secrets Detection
 
 reviewr includes built-in local secrets detection that scans for hardcoded credentials before sending code to AI.
@@ -1616,18 +1939,126 @@ Remove hardcoded secrets and use environment variables or a secrets management s
 
 ## Supported Languages
 
-- Python
-- JavaScript/TypeScript
-- Java
+### Deep Analysis (31 Specialized Analyzers)
+- **Python**: Security, data flow, type safety, complexity, performance, semantic analysis
+- **JavaScript/TypeScript**: Security, performance, quality analysis (including JSX/TSX)
+- **Go**: Security, performance, concurrency, quality analysis
+- **Rust**: Ownership, safety, performance, quality analysis
+- **Java**: Security, concurrency, performance, quality analysis
+
+### Standard Analysis (AI-Powered)
 - C/C++
 - C#
-- Go
-- Rust
 - Ruby
 - PHP
 - Swift
 - Kotlin
-- And many more...
+- Shell/Bash
+- And 20+ more languages...
+
+## CLI Command Reference
+
+### Main Commands
+
+```bash
+# Core review command
+reviewr <path> --all --output-format sarif
+
+# Auto-fix command
+reviewr fix <path> [--dry-run] [--interactive]
+
+# Policy management
+reviewr policy list-templates
+reviewr policy create <template> <policy-id>
+reviewr policy list [--scope <scope>]
+reviewr policy check [--scope <scope>]
+reviewr policy export <dir>
+reviewr policy import <dir>
+
+# Preset management
+reviewr preset list
+reviewr preset create <name> [options]
+reviewr preset show <name>
+
+# Dashboard
+reviewr dashboard start [--port 8000]
+reviewr dashboard upload <sarif-file>
+
+# Learning mode
+reviewr learn feedback --finding-id <id> --feedback <type>
+reviewr learn stats
+
+# Platform integrations
+reviewr-github --pr-number <num> --all
+reviewr-gitlab --mr-iid <num> --all
+reviewr bitbucket --pr-id <id> --all
+reviewr azure --pr-id <id> --all
+reviewr jenkins --build-id <id> --all
+reviewr circleci --build-num <num> --all
+
+# Communication
+reviewr slack --channel <channel> --all
+reviewr teams --webhook <url> --all
+reviewr email --to <email> --all
+```
+
+### Advanced Options
+
+```bash
+# Security scanning
+--security-scan                    # Enable all security scans
+--scan-vulnerabilities             # Scan for CVEs
+--scan-sast                        # Run SAST rules
+--scan-licenses                    # Check license compliance
+
+# Code metrics
+--metrics                          # Enable all metrics
+--metrics-complexity               # Analyze complexity
+--metrics-duplication              # Detect duplication
+--metrics-debt                     # Estimate technical debt
+
+# Incremental analysis
+--diff                             # Only review changed code
+--diff-base <ref>                  # Base reference (default: HEAD)
+--diff-target <ref>                # Target reference
+
+# Advanced analyzers
+--enable-security-analysis         # Enable security analyzer
+--enable-dataflow-analysis         # Enable data flow analysis
+--enable-type-analysis             # Enable type safety analysis
+--enable-performance-analysis      # Enable performance analyzer
+--enable-semantic-analysis         # Enable semantic analyzer
+```
+
+## Documentation
+
+### Core Documentation
+- [README.md](README.md) - This file
+- [CHANGELOG.md](CHANGELOG.md) - Version history
+- [ROADMAP.md](ROADMAP.md) - Future plans
+- [USAGE_GUIDE.md](USAGE_GUIDE.md) - Comprehensive usage guide
+
+### Feature Documentation
+- [docs/AUTO_FIX_GUIDE.md](docs/AUTO_FIX_GUIDE.md) - Auto-fix capabilities
+- [docs/CONFIGURATION_PRESETS.md](docs/CONFIGURATION_PRESETS.md) - Configuration presets
+- [docs/DASHBOARD_GUIDE.md](docs/DASHBOARD_GUIDE.md) - Web dashboard
+- [docs/ENTERPRISE_POLICY_ENGINE.md](docs/ENTERPRISE_POLICY_ENGINE.md) - Policy enforcement
+- [docs/CI_CD_INTEGRATION.md](docs/CI_CD_INTEGRATION.md) - CI/CD integration
+
+### Integration Documentation
+- [docs/AZURE_DEVOPS_INTEGRATION.md](docs/AZURE_DEVOPS_INTEGRATION.md) - Azure DevOps
+- [docs/BITBUCKET_INTEGRATION.md](docs/BITBUCKET_INTEGRATION.md) - Bitbucket
+- [docs/CIRCLECI_INTEGRATION.md](docs/CIRCLECI_INTEGRATION.md) - CircleCI
+- [docs/EMAIL_INTEGRATION.md](docs/EMAIL_INTEGRATION.md) - Email notifications
+- [docs/JENKINS_INTEGRATION.md](docs/JENKINS_INTEGRATION.md) - Jenkins
+- [docs/SLACK_INTEGRATION.md](docs/SLACK_INTEGRATION.md) - Slack
+- [docs/TEAMS_INTEGRATION.md](docs/TEAMS_INTEGRATION.md) - Microsoft Teams
+
+### Technical Documentation
+- [docs/CODE_METRICS.md](docs/CODE_METRICS.md) - Code metrics analysis
+- [docs/INCREMENTAL_ANALYSIS.md](docs/INCREMENTAL_ANALYSIS.md) - Incremental analysis
+- [docs/INTELLIJ_PLUGIN_IMPLEMENTATION.md](docs/INTELLIJ_PLUGIN_IMPLEMENTATION.md) - IntelliJ plugin
+- [docs/SECURITY_SCANNING.md](docs/SECURITY_SCANNING.md) - Security scanning
 
 ## Troubleshooting
 
@@ -1675,20 +2106,3 @@ If installation fails:
    source venv/bin/activate
    pip install -e .
    ```
-<<<<<<< HEAD
-=======
-
-## Support
-
-For issues, questions, or feature requests, please open an issue on GitHub.
-
-## Acknowledgments
-
-Built with:
-- [Click](https://click.palletsprojects.com/) - CLI framework
-- [Rich](https://rich.readthedocs.io/) - Terminal formatting
-- [Pydantic](https://docs.pydantic.dev/) - Data validation
-- [Anthropic](https://www.anthropic.com/) - Claude API
-- [OpenAI](https://openai.com/) - GPT API
-- [Google](https://ai.google.dev/) - Gemini API
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4

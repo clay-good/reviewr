@@ -1,0 +1,58 @@
+# Security Review Required Policy
+# Require security team approval for changes to sensitive files
+
+id: security-review-required
+config:
+  name: Security Review Required
+  description: Require security team approval for changes to authentication, security, and cryptographic code
+  enabled: true
+  
+  # Apply at pull request stage
+  scope:
+    - pull-request
+  
+  # Require manual approval
+  action: require-approval
+  
+  # Strict enforcement
+  enforcement: strict
+  
+  # Only apply to security-sensitive files
+  file_patterns:
+    - "**/auth/**"
+    - "**/authentication/**"
+    - "**/security/**"
+    - "**/crypto/**"
+    - "**/encryption/**"
+    - "**/*_auth.py"
+    - "**/*_security.py"
+  
+  # Approval requirements
+  approval:
+    required_approvers: 1
+    required_teams:
+      - security
+      - security-engineering
+    allow_self_approval: false
+    timeout_hours: 48
+  
+  # Metadata
+  owner: security-team
+  tags:
+    - security
+    - approval
+    - sensitive
+  priority: 180
+  
+  # Notifications
+  notify_on_violation:
+    - security@company.com
+    - slack://security-reviews
+
+# Rules to apply
+rules:
+  - security-files-zero-issues
+
+created_at: "2025-10-20T10:00:00Z"
+version: 1
+

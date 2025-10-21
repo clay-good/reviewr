@@ -1,0 +1,380 @@
+# CircleCI Configuration Examples for reviewr
+# This file contains multiple examples of how to integrate reviewr into CircleCI workflows
+
+# ============================================================================
+# Example 1: Basic Code Review with Orb
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+workflows:
+  version: 2
+  review:
+    jobs:
+      - reviewr/code-review
+
+# ============================================================================
+# Example 2: Security-Focused Review
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+workflows:
+  version: 2
+  security:
+    jobs:
+      - reviewr/security-scan:
+          context: security-credentials
+
+# ============================================================================
+# Example 3: Parallel Reviews (Security + Quality)
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+workflows:
+  version: 2
+  comprehensive-review:
+    jobs:
+      - reviewr/security-scan:
+          name: security-review
+      - reviewr/quality-check:
+          name: quality-review
+      - reviewr/code-review:
+          name: full-review
+          preset: strict
+          requires:
+            - security-review
+            - quality-review
+
+# ============================================================================
+# Example 4: Custom Review with Specific Parameters
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+workflows:
+  version: 2
+  custom-review:
+    jobs:
+      - reviewr/code-review:
+          python-version: "3.11"
+          preset: strict
+          review-types: "security,performance,correctness"
+          security-scan: true
+          code-metrics: true
+          fail-on-issues: true
+
+# ============================================================================
+# Example 5: Manual Installation and Review (Without Orb)
+# ============================================================================
+
+version: 2.1
+
+jobs:
+  code-review:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      
+      - run:
+          name: Install reviewr
+          command: pip install reviewr
+      
+      - run:
+          name: Run code review
+          command: reviewr circleci review --output review-report.json
+      
+      - store_artifacts:
+          path: review-report.json
+          destination: artifacts/review-report.json
+
+workflows:
+  version: 2
+  review:
+    jobs:
+      - code-review
+
+# ============================================================================
+# Example 6: Branch-Specific Presets
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+workflows:
+  version: 2
+  branch-review:
+    jobs:
+      # Strict review for main branch
+      - reviewr/code-review:
+          name: main-review
+          preset: strict
+          fail-on-issues: true
+          filters:
+            branches:
+              only: main
+      
+      # Quick review for feature branches
+      - reviewr/code-review:
+          name: feature-review
+          preset: quick
+          fail-on-issues: false
+          filters:
+            branches:
+              ignore: main
+
+# ============================================================================
+# Example 7: Scheduled Security Scans
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+workflows:
+  version: 2
+  
+  # Run on every commit
+  commit-review:
+    jobs:
+      - reviewr/code-review:
+          preset: balanced
+  
+  # Run security scan daily at midnight
+  nightly-security:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only: main
+    jobs:
+      - reviewr/security-scan:
+          fail-on-issues: true
+
+# ============================================================================
+# Example 8: Multi-Language Project
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+workflows:
+  version: 2
+  multi-language-review:
+    jobs:
+      # Review Python code
+      - reviewr/code-review:
+          name: python-review
+          path: ./backend
+          preset: strict
+      
+      # Review JavaScript code
+      - reviewr/code-review:
+          name: javascript-review
+          path: ./frontend
+          preset: balanced
+      
+      # Security scan for all code
+      - reviewr/security-scan:
+          name: security-scan
+          path: .
+          requires:
+            - python-review
+            - javascript-review
+
+# ============================================================================
+# Example 9: Integration with Tests
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          command: pytest --junitxml=test-results/junit.xml
+      - store_test_results:
+          path: test-results
+
+workflows:
+  version: 2
+  test-and-review:
+    jobs:
+      - test
+      - reviewr/code-review:
+          requires:
+            - test
+
+# ============================================================================
+# Example 10: Advanced Configuration with Multiple Steps
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+jobs:
+  comprehensive-review:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      
+      # Install reviewr
+      - run:
+          name: Install reviewr
+          command: pip install reviewr
+      
+      # Run security scan
+      - run:
+          name: Security scan
+          command: |
+            reviewr circleci review \
+              --preset security-focused \
+              --security-scan \
+              --output security-report.json
+      
+      # Run code quality check
+      - run:
+          name: Code quality check
+          command: |
+            reviewr circleci review \
+              --preset balanced \
+              --code-metrics \
+              --output quality-report.json
+      
+      # Run performance review
+      - run:
+          name: Performance review
+          command: |
+            reviewr circleci review \
+              --review-type performance \
+              --output performance-report.json
+      
+      # Store all reports
+      - store_artifacts:
+          path: security-report.json
+          destination: artifacts/security-report.json
+      
+      - store_artifacts:
+          path: quality-report.json
+          destination: artifacts/quality-report.json
+      
+      - store_artifacts:
+          path: performance-report.json
+          destination: artifacts/performance-report.json
+
+workflows:
+  version: 2
+  comprehensive:
+    jobs:
+      - comprehensive-review
+
+# ============================================================================
+# Example 11: Conditional Review Based on Changed Files
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+
+jobs:
+  conditional-review:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      
+      - run:
+          name: Install reviewr
+          command: pip install reviewr
+      
+      - run:
+          name: Check for Python changes
+          command: |
+            if git diff --name-only HEAD~1 | grep -q '\.py$'; then
+              echo "Python files changed, running review"
+              reviewr circleci review --preset strict
+            else
+              echo "No Python files changed, skipping review"
+            fi
+
+workflows:
+  version: 2
+  smart-review:
+    jobs:
+      - conditional-review
+
+# ============================================================================
+# Example 12: Review with Slack Notifications
+# ============================================================================
+
+version: 2.1
+
+orbs:
+  reviewr: reviewr/reviewr@1.0.0
+  slack: circleci/slack@4.10.1
+
+jobs:
+  review-with-notifications:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      
+      - run:
+          name: Install reviewr
+          command: pip install reviewr
+      
+      - run:
+          name: Run review
+          command: |
+            reviewr circleci review \
+              --slack \
+              --slack-channel '#code-reviews' \
+              --slack-critical-only
+      
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+      
+      - slack/notify:
+          event: pass
+          template: basic_success_1
+
+workflows:
+  version: 2
+  review-and-notify:
+    jobs:
+      - review-with-notifications:
+          context: slack-secrets
+

@@ -1,0 +1,120 @@
+# Bitbucket Pipelines configuration for reviewr
+# This file demonstrates how to integrate reviewr into your Bitbucket CI/CD pipeline
+
+image: python:3.9
+
+definitions:
+  steps:
+    - step: &code-review
+        name: Code Review with reviewr
+        script:
+          # Install reviewr
+          - pip install reviewr
+          
+          # Run code review on PR
+          - reviewr bitbucket review --all --auto-approve
+        
+        # Optional: Cache pip packages for faster builds
+        caches:
+          - pip
+
+pipelines:
+  # Run on all pull requests
+  pull-requests:
+    '**':
+      - step: *code-review
+  
+  # Optional: Run on specific branches
+  branches:
+    main:
+      - step:
+          name: Full Code Review
+          script:
+            - pip install reviewr
+            - reviewr . --all --output-format markdown
+    
+    develop:
+      - step:
+          name: Security Review
+          script:
+            - pip install reviewr
+            - reviewr . --security --output-format sarif
+
+# Advanced configuration examples:
+
+# Example 1: Review only changed files (incremental analysis)
+# pipelines:
+#   pull-requests:
+#     '**':
+#       - step:
+#           name: Incremental Code Review
+#           script:
+#             - pip install reviewr
+#             - reviewr bitbucket review --all --diff --diff-base origin/main
+
+# Example 2: Different review types for different branches
+# pipelines:
+#   pull-requests:
+#     feature/*:
+#       - step:
+#           name: Feature Review
+#           script:
+#             - pip install reviewr
+#             - reviewr bitbucket review --security --performance
+#     
+#     hotfix/*:
+#       - step:
+#           name: Hotfix Review
+#           script:
+#             - pip install reviewr
+#             - reviewr bitbucket review --security --correctness
+
+# Example 3: Custom configuration file
+# pipelines:
+#   pull-requests:
+#     '**':
+#       - step:
+#           name: Custom Review
+#           script:
+#             - pip install reviewr
+#             - reviewr bitbucket review --config .reviewr.yml
+
+# Example 4: Parallel steps for faster execution
+# pipelines:
+#   pull-requests:
+#     '**':
+#       - parallel:
+#           - step:
+#               name: Security Review
+#               script:
+#                 - pip install reviewr
+#                 - reviewr . --security --local-only
+#           - step:
+#               name: Performance Review
+#               script:
+#                 - pip install reviewr
+#                 - reviewr . --performance --local-only
+
+# Example 5: Bitbucket Server/Data Center
+# pipelines:
+#   pull-requests:
+#     '**':
+#       - step:
+#           name: Code Review (Server)
+#           script:
+#             - pip install reviewr
+#             - reviewr bitbucket review --all --is-server --server-url https://bitbucket.company.com
+
+# Environment variables required:
+# - BITBUCKET_USERNAME: Your Bitbucket username (set in repository settings)
+# - BITBUCKET_APP_PASSWORD: Your Bitbucket app password (set as secured variable)
+# - ANTHROPIC_API_KEY or OPENAI_API_KEY: LLM provider API key (set as secured variable)
+
+# To set secured variables:
+# 1. Go to Repository Settings > Pipelines > Repository variables
+# 2. Add BITBUCKET_APP_PASSWORD as a secured variable
+# 3. Add your LLM provider API key (ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY)
+
+# Note: BITBUCKET_USERNAME, BITBUCKET_PR_ID, and BITBUCKET_COMMIT are automatically
+# provided by Bitbucket Pipelines and don't need to be set manually.
+

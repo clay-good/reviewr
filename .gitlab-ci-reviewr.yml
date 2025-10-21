@@ -1,0 +1,248 @@
+# reviewr GitLab CI Template
+# 
+# This template provides AI-powered code review for GitLab merge requests.
+# 
+# Usage:
+# 1. Copy this file to your repository as `.gitlab-ci.yml` or include it
+# 2. Set your AI provider API key as a CI/CD variable:
+#    - ANTHROPIC_API_KEY (for Claude)
+#    - OPENAI_API_KEY (for OpenAI)
+#    - GEMINI_API_KEY (for Google Gemini)
+# 3. Customize the configuration below as needed
+
+variables:
+  # reviewr configuration
+  REVIEWR_VERSION: "latest"
+  REVIEWR_PROVIDER: "claude"  # claude, openai, or gemini
+  REVIEWR_FAIL_ON_CRITICAL: "true"
+  REVIEWR_HIGH_THRESHOLD: "5"  # Fail if high severity issues exceed this
+  REVIEWR_MAX_FINDINGS: "50"
+  
+  # Python configuration
+  PYTHON_VERSION: "3.11"
+
+stages:
+  - code-review
+
+reviewr:
+  stage: code-review
+  image: python:${PYTHON_VERSION}-slim
+  
+  # Only run on merge requests
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  
+  before_script:
+    - echo "Installing reviewr..."
+    - pip install --quiet reviewr
+    - echo "reviewr installed successfully"
+  
+  script:
+    - echo "Starting code review for MR !${CI_MERGE_REQUEST_IID}"
+    - mkdir -p reviewr-output
+    
+    # Get list of changed files
+    - |
+      echo "Fetching changed files..."
+      git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+      CHANGED_FILES=$(git diff --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD | grep -E '\.(py|js|ts|tsx|go|rs|java)$' || true)
+      
+      if [ -z "$CHANGED_FILES" ]; then
+        echo "No relevant files changed in this MR"
+        exit 0
+      fi
+      
+      echo "Changed files:"
+      echo "$CHANGED_FILES"
+    
+    # Run reviewr analysis
+    - |
+      echo "Running reviewr analysis..."
+      reviewr analyze $CHANGED_FILES \
+        --all \
+        --output-format json \
+        > reviewr-output/results.json || true
+      
+      if [ ! -f reviewr-output/results.json ] || [ ! -s reviewr-output/results.json ]; then
+        echo "No results generated"
+        exit 0
+      fi
+    
+    # Parse results
+    - |
+      echo "Parsing results..."
+      TOTAL_ISSUES=$(python3 -c "import json; data=json.load(open('reviewr-output/results.json')); print(len(data.get('findings', [])))")
+      CRITICAL_ISSUES=$(python3 -c "import json; data=json.load(open('reviewr-output/results.json')); print(len([f for f in data.get('findings', []) if f.get('severity', '').lower() == 'critical']))")
+      HIGH_ISSUES=$(python3 -c "import json; data=json.load(open('reviewr-output/results.json')); print(len([f for f in data.get('findings', []) if f.get('severity', '').lower() == 'high']))")
+      MEDIUM_ISSUES=$(python3 -c "import json; data=json.load(open('reviewr-output/results.json')); print(len([f for f in data.get('findings', []) if f.get('severity', '').lower() == 'medium']))")
+      
+      echo "Analysis complete:"
+      echo "  Total issues: $TOTAL_ISSUES"
+      echo "  Critical: $CRITICAL_ISSUES"
+      echo "  High: $HIGH_ISSUES"
+      echo "  Medium: $MEDIUM_ISSUES"
+      
+      # Save counts for later use
+      echo "$TOTAL_ISSUES" > reviewr-output/total_issues.txt
+      echo "$CRITICAL_ISSUES" > reviewr-output/critical_issues.txt
+      echo "$HIGH_ISSUES" > reviewr-output/high_issues.txt
+    
+    # Generate MR comment
+    - |
+      echo "Generating MR comment..."
+      python3 << 'EOFPYTHON'
+      import json
+      import os
+      
+      # Read results
+      with open('reviewr-output/results.json', 'r') as f:
+          result_data = json.load(f)
+      
+      # Read counts
+      with open('reviewr-output/total_issues.txt', 'r') as f:
+          total = int(f.read().strip())
+      with open('reviewr-output/critical_issues.txt', 'r') as f:
+          critical = int(f.read().strip())
+      with open('reviewr-output/high_issues.txt', 'r') as f:
+          high = int(f.read().strip())
+      
+      medium = len([f for f in result_data.get('findings', []) if f.get('severity', '').lower() == 'medium'])
+      low = len([f for f in result_data.get('findings', []) if f.get('severity', '').lower() == 'low'])
+      info = len([f for f in result_data.get('findings', []) if f.get('severity', '').lower() == 'info'])
+      
+      # Determine status
+      if critical > 0:
+          status = "🔴 **Action Required**"
+      elif high > 0:
+          status = "🟠 **Review Recommended**"
+      elif medium > 0:
+          status = "🟡 **Minor Issues Found**"
+      elif total > 0:
+          status = "🔵 **Looks Good**"
+      else:
+          status = "✅ **All Clear**"
+      
+      # Generate comment
+      comment = f"""## 🤖 reviewr Code Review
+
+### {status}
+
+| Metric | Value |
+|--------|-------|
+| Total Issues | {total} |
+"""
+      
+      if critical > 0:
+          comment += f"| 🔴 Critical | {critical} |\n"
+      if high > 0:
+          comment += f"| 🟠 High | {high} |\n"
+      if medium > 0:
+          comment += f"| 🟡 Medium | {medium} |\n"
+      if low > 0:
+          comment += f"| 🔵 Low | {low} |\n"
+      if info > 0:
+          comment += f"| ⚪ Info | {info} |\n"
+      
+      if total == 0:
+          comment += "\n### ✨ Excellent Work!\n\nNo issues detected. Your code looks great! 🎉\n"
+      else:
+          # Show top issues
+          comment += "\n### 🚨 Top Issues\n\n"
+          
+          # Sort findings by severity
+          severity_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3, 'info': 4}
+          findings = sorted(
+              result_data.get('findings', []),
+              key=lambda f: severity_order.get(f.get('severity', 'info').lower(), 4)
+          )
+          
+          # Show top 10 findings
+          for i, finding in enumerate(findings[:10]):
+              severity = finding.get('severity', 'info')
+              emoji = {'critical': '🔴', 'high': '🟠', 'medium': '🟡', 'low': '🔵', 'info': '⚪'}.get(severity.lower(), '⚪')
+              file_path = finding.get('file_path', 'unknown')
+              line_start = finding.get('line_start', 0)
+              line_end = finding.get('line_end', 0)
+              message = finding.get('message', 'No description')
+              
+              comment += f"#### {emoji} {severity.title()}\n\n"
+              comment += f"**📄 File:** `{file_path}` (Lines {line_start}-{line_end})\n\n"
+              comment += f"**Issue:** {message}\n\n"
+              
+              if finding.get('suggestion'):
+                  comment += f"💡 **Suggestion:** {finding['suggestion']}\n\n"
+              
+              comment += "---\n\n"
+          
+          if len(findings) > 10:
+              comment += f"*... and {len(findings) - 10} more issues*\n\n"
+      
+      comment += "\n---\n\n"
+      comment += "*Powered by [reviewr](https://github.com/clay-good/reviewr) - AI-powered code review* 🚀\n"
+      
+      # Save comment
+      with open('reviewr-output/comment.md', 'w') as f:
+          f.write(comment)
+      
+      print("Comment generated successfully")
+      EOFPYTHON
+    
+    # Post comment to MR
+    - |
+      if [ -f reviewr-output/comment.md ]; then
+        echo "Posting comment to MR..."
+        
+        COMMENT_BODY=$(cat reviewr-output/comment.md | jq -Rs .)
+        
+        # Check if reviewr comment already exists
+        EXISTING_COMMENT_ID=$(curl --silent --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes" \
+          | jq -r '.[] | select(.body | contains("🤖 reviewr Code Review")) | .id' | head -n 1)
+        
+        if [ -n "$EXISTING_COMMENT_ID" ]; then
+          echo "Updating existing comment (ID: $EXISTING_COMMENT_ID)"
+          curl --request PUT --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "{\"body\": $COMMENT_BODY}" \
+            "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes/$EXISTING_COMMENT_ID"
+        else
+          echo "Creating new comment"
+          curl --request POST --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "{\"body\": $COMMENT_BODY}" \
+            "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
+        fi
+        
+        echo "Comment posted successfully"
+      fi
+    
+    # Check failure conditions
+    - |
+      CRITICAL_ISSUES=$(cat reviewr-output/critical_issues.txt)
+      HIGH_ISSUES=$(cat reviewr-output/high_issues.txt)
+      
+      if [ "$REVIEWR_FAIL_ON_CRITICAL" = "true" ] && [ "$CRITICAL_ISSUES" -gt 0 ]; then
+        echo "❌ Pipeline failed: $CRITICAL_ISSUES critical issues found"
+        exit 1
+      fi
+      
+      if [ "$REVIEWR_HIGH_THRESHOLD" -gt 0 ] && [ "$HIGH_ISSUES" -gt "$REVIEWR_HIGH_THRESHOLD" ]; then
+        echo "❌ Pipeline failed: $HIGH_ISSUES high severity issues exceed threshold of $REVIEWR_HIGH_THRESHOLD"
+        exit 1
+      fi
+      
+      echo "✅ Pipeline passed quality checks"
+  
+  artifacts:
+    when: always
+    paths:
+      - reviewr-output/
+    expire_in: 30 days
+    reports:
+      # You can add JUnit XML report here if reviewr supports it
+      # junit: reviewr-output/junit.xml
+  
+  # Allow failure for info/low severity issues
+  allow_failure:
+    exit_codes: 0
+

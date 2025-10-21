@@ -21,8 +21,7 @@
     "static analysis"
   ],
   "activationEvents": [
-    "onCommand:reviewr.reviewCurrentFile",
-    "onCommand:reviewr.reviewWorkspace"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -30,12 +29,20 @@
       {
         "command": "reviewr.reviewCurrentFile",
         "title": "Review Current File",
-        "category": "reviewr"
+        "category": "reviewr",
+        "icon": "$(shield)"
       },
       {
         "command": "reviewr.reviewWorkspace",
         "title": "Review Entire Workspace",
-        "category": "reviewr"
+        "category": "reviewr",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "reviewr.clearDiagnostics",
+        "title": "Clear All Diagnostics",
+        "category": "reviewr",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -69,7 +76,8 @@
         "reviewr.cliPath": {
           "type": "string",
           "default": "reviewr",
-          "description": "Path to the reviewr CLI executable"
+          "description": "Path to the reviewr CLI executable",
+          "scope": "machine-overridable"
         },
         "reviewr.reviewTypes": {
           "type": "array",
@@ -83,7 +91,7 @@
         "reviewr.useAllReviewTypes": {
           "type": "boolean",
           "default": true,
-          "description": "Use --all flag to run all review types"
+          "description": "Use --all flag to run all review types (includes deep analysis)"
         },
         "reviewr.autoReview": {
           "type": "boolean",
@@ -94,6 +102,26 @@
           "type": "boolean",
           "default": true,
           "description": "Clear previous reviewr problems before running a new review"
+        },
+        "reviewr.enableCache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Cache analysis results for unchanged files (1 minute TTL)"
+        },
+        "reviewr.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show reviewr status in the status bar"
+        },
+        "reviewr.enableHover": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show detailed information on hover"
+        },
+        "reviewr.enableCodeActions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable quick fix code actions"
         }
       }
     }

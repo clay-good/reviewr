@@ -1,0 +1,198 @@
+<idea-plugin>
+    <id>com.reviewr.intellij</id>
+    <name>Reviewr</name>
+    <vendor email="support@reviewr.dev" url="https://reviewr.dev">Reviewr</vendor>
+
+    <description><![CDATA[
+        <h1>Reviewr - AI-Powered Code Review</h1>
+        <p>
+        Reviewr brings world-class AI-powered code review directly into your IDE.
+        Get instant feedback on security, performance, correctness, and code quality
+        as you write code.
+        </p>
+        <h2>Features:</h2>
+        <ul>
+            <li>Real-time code analysis with 21 specialized analyzers</li>
+            <li>Support for Python, JavaScript/TypeScript, Go, Rust, and Java</li>
+            <li>Security vulnerability detection</li>
+            <li>Performance optimization suggestions</li>
+            <li>Code quality and maintainability checks</li>
+            <li>AI-powered auto-fix capabilities</li>
+            <li>Inline warnings and quick fixes</li>
+            <li>Comprehensive metrics and reporting</li>
+        </ul>
+    ]]></description>
+
+    <!-- Product and plugin compatibility requirements -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+    <depends optional="true" config-file="reviewr-java.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="reviewr-python.xml">com.intellij.modules.python</depends>
+    <depends optional="true" config-file="reviewr-javascript.xml">JavaScript</depends>
+    <depends optional="true" config-file="reviewr-go.xml">org.jetbrains.plugins.go</depends>
+    <depends optional="true" config-file="reviewr-rust.xml">org.rust.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Application-level settings -->
+        <applicationConfigurable 
+            parentId="tools" 
+            instance="com.reviewr.intellij.settings.ReviewrConfigurable"
+            id="com.reviewr.intellij.settings.ReviewrConfigurable"
+            displayName="Reviewr"/>
+        
+        <applicationService 
+            serviceImplementation="com.reviewr.intellij.settings.ReviewrSettings"/>
+
+        <!-- External annotator for real-time analysis -->
+        <externalAnnotator 
+            language="Python" 
+            implementationClass="com.reviewr.intellij.annotator.ReviewrAnnotator"/>
+        <externalAnnotator 
+            language="JavaScript" 
+            implementationClass="com.reviewr.intellij.annotator.ReviewrAnnotator"/>
+        <externalAnnotator 
+            language="TypeScript" 
+            implementationClass="com.reviewr.intellij.annotator.ReviewrAnnotator"/>
+        <externalAnnotator 
+            language="go" 
+            implementationClass="com.reviewr.intellij.annotator.ReviewrAnnotator"/>
+        <externalAnnotator 
+            language="Rust" 
+            implementationClass="com.reviewr.intellij.annotator.ReviewrAnnotator"/>
+        <externalAnnotator 
+            language="JAVA" 
+            implementationClass="com.reviewr.intellij.annotator.ReviewrAnnotator"/>
+
+        <!-- Local inspections -->
+        <localInspection 
+            language="Python"
+            shortName="ReviewrPythonInspection"
+            displayName="Reviewr Python Analysis"
+            groupName="Reviewr"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.reviewr.intellij.inspection.ReviewrInspection"/>
+        
+        <localInspection 
+            language="JavaScript"
+            shortName="ReviewrJavaScriptInspection"
+            displayName="Reviewr JavaScript Analysis"
+            groupName="Reviewr"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.reviewr.intellij.inspection.ReviewrInspection"/>
+        
+        <localInspection 
+            language="TypeScript"
+            shortName="ReviewrTypeScriptInspection"
+            displayName="Reviewr TypeScript Analysis"
+            groupName="Reviewr"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.reviewr.intellij.inspection.ReviewrInspection"/>
+        
+        <localInspection 
+            language="go"
+            shortName="ReviewrGoInspection"
+            displayName="Reviewr Go Analysis"
+            groupName="Reviewr"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.reviewr.intellij.inspection.ReviewrInspection"/>
+        
+        <localInspection 
+            language="Rust"
+            shortName="ReviewrRustInspection"
+            displayName="Reviewr Rust Analysis"
+            groupName="Reviewr"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.reviewr.intellij.inspection.ReviewrInspection"/>
+        
+        <localInspection 
+            language="JAVA"
+            shortName="ReviewrJavaInspection"
+            displayName="Reviewr Java Analysis"
+            groupName="Reviewr"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="com.reviewr.intellij.inspection.ReviewrInspection"/>
+
+        <!-- Tool window -->
+        <toolWindow 
+            id="Reviewr" 
+            anchor="bottom" 
+            icon="/icons/reviewr.svg"
+            factoryClass="com.reviewr.intellij.toolwindow.ReviewrToolWindowFactory"/>
+
+        <!-- Intention actions (quick fixes) -->
+        <intentionAction>
+            <className>com.reviewr.intellij.intention.ApplyReviewrFixIntention</className>
+            <category>Reviewr</category>
+        </intentionAction>
+
+        <!-- File editor manager listener for analysis triggers -->
+        <fileEditorManagerListener 
+            implementation="com.reviewr.intellij.listener.ReviewrFileEditorListener"/>
+
+        <!-- Notification group -->
+        <notificationGroup 
+            id="Reviewr Notifications" 
+            displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <!-- Main menu actions -->
+        <group id="ReviewrMenu" text="Reviewr" description="Reviewr code review actions">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            
+            <action 
+                id="ReviewrAnalyzeFile" 
+                class="com.reviewr.intellij.action.AnalyzeFileAction"
+                text="Analyze Current File"
+                description="Run Reviewr analysis on the current file"
+                icon="/icons/reviewr.svg">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt R"/>
+            </action>
+            
+            <action 
+                id="ReviewrAnalyzeProject" 
+                class="com.reviewr.intellij.action.AnalyzeProjectAction"
+                text="Analyze Entire Project"
+                description="Run Reviewr analysis on the entire project"
+                icon="/icons/reviewr.svg"/>
+            
+            <action 
+                id="ReviewrClearCache" 
+                class="com.reviewr.intellij.action.ClearCacheAction"
+                text="Clear Analysis Cache"
+                description="Clear Reviewr analysis cache"/>
+            
+            <separator/>
+            
+            <action 
+                id="ReviewrSettings" 
+                class="com.reviewr.intellij.action.OpenSettingsAction"
+                text="Settings..."
+                description="Open Reviewr settings"/>
+        </group>
+
+        <!-- Context menu actions -->
+        <action 
+            id="ReviewrAnalyzeFileContext" 
+            class="com.reviewr.intellij.action.AnalyzeFileAction"
+            text="Analyze with Reviewr"
+            description="Run Reviewr analysis on this file"
+            icon="/icons/reviewr.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+
+    <projectListeners>
+        <listener 
+            class="com.reviewr.intellij.listener.ReviewrProjectListener"
+            topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </projectListeners>
+</idea-plugin>
+

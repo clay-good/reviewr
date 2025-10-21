@@ -10,12 +10,9 @@ from .chunker import get_chunker
 from ..utils.language_detector import detect_language
 from ..utils.file_discovery import discover_files
 from ..utils.secrets_scanner import SecretsScanner
-<<<<<<< HEAD
 from ..utils.cache import IntelligentCache
 from ..analysis.analyzer_factory import AnalyzerFactory
 from ..rules import RulesEngine
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 
 
 @dataclass
@@ -64,55 +61,53 @@ class ReviewResult:
 
 class ReviewOrchestrator:
     """Orchestrates the code review process."""
-<<<<<<< HEAD
 
     def __init__(
         self,
-        provider: LLMProvider,
+        provider: Optional[LLMProvider],
         config: ReviewrConfig,
         verbose: int = 0,
         use_cache: bool = True,
         use_local_analysis: bool = True,
-        rules_engine: Optional[RulesEngine] = None
+        rules_engine: Optional[RulesEngine] = None,
+        analyzer_config: Optional[Any] = None,
+        diff_analyzer: Optional[Any] = None,
+        diff_base: Optional[str] = None,
+        diff_target: Optional[str] = None
     ):
-=======
-    
-    def __init__(self, provider: LLMProvider, config: ReviewrConfig, verbose: int = 0):
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
         """
         Initialize the orchestrator.
 
         Args:
-            provider: LLM provider to use
+            provider: LLM provider to use (None for local-only mode)
             config: Configuration
             verbose: Verbosity level
-<<<<<<< HEAD
             use_cache: Whether to use intelligent caching (default: True)
             use_local_analysis: Whether to use local analysis (default: True)
             rules_engine: Optional custom rules engine
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
+            analyzer_config: Optional configuration for advanced analyzers
+            diff_analyzer: Optional diff analyzer for incremental analysis
+            diff_base: Base reference for diff (e.g., 'HEAD', 'main')
+            diff_target: Target reference for diff (None = working directory)
         """
         self.provider = provider
         self.config = config
         self.verbose = verbose
-<<<<<<< HEAD
         self.use_cache = use_cache
         self.use_local_analysis = use_local_analysis
         self.rules_engine = rules_engine
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
+        self.analyzer_config = analyzer_config
+        self.diff_analyzer = diff_analyzer
+        self.diff_base = diff_base
+        self.diff_target = diff_target
         self.chunker = get_chunker(
             config.chunking.strategy.value,
             overlap_lines=config.chunking.overlap // 50  # Rough conversion
         )
         self.secrets_scanner = SecretsScanner()
-<<<<<<< HEAD
         self.cache = IntelligentCache() if use_cache else None
         self.local_analysis_stats = {'findings': 0, 'files_analyzed': 0}
         self.custom_rules_stats = {'findings': 0, 'files_analyzed': 0}
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
     
     async def review_path(
         self,
@@ -120,23 +115,25 @@ class ReviewOrchestrator:
         review_types: List[ReviewType],
         language: Optional[str] = None,
         include_patterns: Optional[List[str]] = None,
-        exclude_patterns: Optional[List[str]] = None
+        exclude_patterns: Optional[List[str]] = None,
+        max_concurrent_files: int = 5
     ) -> ReviewResult:
         """
         Review code at the specified path.
-        
+
         Args:
             path: Path to file or directory
             review_types: Types of reviews to perform
             language: Optional language override
             include_patterns: File patterns to include
             exclude_patterns: File patterns to exclude
-            
+            max_concurrent_files: Maximum number of files to review concurrently
+
         Returns:
             ReviewResult with findings
         """
         path_obj = Path(path)
-        
+
         # Discover files to review
         if path_obj.is_file():
             files = [path_obj]
@@ -146,14 +143,41 @@ class ReviewOrchestrator:
                 include_patterns=include_patterns,
                 exclude_patterns=exclude_patterns
             )
-        
+
+        # Filter to only changed files if using diff mode
+        if self.diff_analyzer:
+            try:
+                changed_files = self.diff_analyzer.get_changed_files(
+                    base_ref=self.diff_base,
+                    target_ref=self.diff_target,
+                    repo_path=path_obj if path_obj.is_dir() else path_obj.parent
+                )
+
+                # Convert to absolute paths for comparison
+                changed_paths = {Path(f).resolve() for f in changed_files}
+                files = [f for f in files if f.resolve() in changed_paths]
+
+                if self.verbose > 0:
+                    print(f"Diff mode: Reviewing {len(files)} changed file(s)")
+            except Exception as e:
+                if self.verbose > 0:
+                    print(f"Warning: Failed to get diff, reviewing all files: {e}")
+
         if not files:
             return ReviewResult()
-        
-        # Review files
+
+        # Review files in parallel with concurrency limit
         all_findings = []
         total_chunks = 0
-        
+
+        # Create semaphore for rate limiting
+        semaphore = asyncio.Semaphore(max_concurrent_files)
+
+        async def review_with_limit(file_path):
+            """Review a file with concurrency limit."""
+            async with semaphore:
+                return await self._review_file(file_path, review_types, language)
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -164,31 +188,31 @@ class ReviewOrchestrator:
                 f"Reviewing {len(files)} file(s)...",
                 total=len(files)
             )
-            
-            for file_path in files:
+
+            # Create tasks for all files
+            review_tasks = [review_with_limit(file_path) for file_path in files]
+
+            # Process files in parallel
+            for coro in asyncio.as_completed(review_tasks):
                 try:
-                    findings = await self._review_file(
-                        file_path,
-                        review_types,
-                        language
-                    )
+                    findings = await coro
                     all_findings.extend(findings)
                     total_chunks += 1  # Simplified for now
-                    
+
                 except Exception as e:
                     if self.verbose:
-                        print(f"Error reviewing {file_path}: {e}")
-                
+                        print(f"Error reviewing file: {e}")
+
                 progress.update(task, advance=1)
-        
+
         # Create result
         result = ReviewResult(
             findings=all_findings,
             files_reviewed=len(files),
             total_chunks=total_chunks,
-            provider_stats=self.provider.get_stats()
+            provider_stats=self.provider.get_stats() if self.provider else {}
         )
-        
+
         return result
     
     async def _review_file(
@@ -198,9 +222,8 @@ class ReviewOrchestrator:
         language_override: Optional[str] = None
     ) -> List[ReviewFinding]:
         """Review a single file."""
-<<<<<<< HEAD
-        # Check cache first
-        if self.cache:
+        # Check cache first (only if provider is available)
+        if self.cache and self.provider:
             review_type_names = [rt.value for rt in review_types]
             cached_findings = self.cache.get(
                 file_path,
@@ -218,12 +241,30 @@ class ReviewOrchestrator:
             if self.verbose >= 2:
                 print(f"Cache miss for {file_path}")
 
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
-        # Read file content
+        # Read file content (use diff-based content if available)
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+            if self.diff_analyzer:
+                # Get only changed content with context
+                changed_content = self.diff_analyzer.get_changed_content(
+                    str(file_path),
+                    base_ref=self.diff_base,
+                    target_ref=self.diff_target,
+                    repo_path=file_path.parent
+                )
+
+                if changed_content:
+                    content = changed_content
+                    if self.verbose >= 2:
+                        print(f"Using diff-based content for {file_path}")
+                else:
+                    # No changes detected, skip file
+                    if self.verbose >= 2:
+                        print(f"No changes in {file_path}, skipping")
+                    return []
+            else:
+                # Read full file content
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
         except UnicodeDecodeError:
             # Skip binary files
             if self.verbose:
@@ -233,11 +274,7 @@ class ReviewOrchestrator:
             if self.verbose:
                 print(f"Error reading {file_path}: {e}")
             return []
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
         # Detect language
         language = language_override or detect_language(file_path, content)
 
@@ -246,11 +283,11 @@ class ReviewOrchestrator:
                 print(f"Could not detect language for: {file_path}")
             return []
 
-<<<<<<< HEAD
         # Run local analysis first (fast, no API calls)
         local_findings = []
         if self.use_local_analysis and AnalyzerFactory.supports_language(language):
-            analyzer = AnalyzerFactory.get_analyzer(language)
+            # Pass analyzer_config if available
+            analyzer = AnalyzerFactory.get_analyzer(language, self.analyzer_config)
             if analyzer:
                 local_analysis_results = analyzer.analyze(str(file_path), content)
                 # Convert local findings to ReviewFinding format
@@ -277,8 +314,6 @@ class ReviewOrchestrator:
                 if self.verbose >= 2:
                     print(f"Custom rules found {len(custom_rules_findings)} issue(s) in {file_path}")
 
-=======
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
         # Scan for secrets before sending to AI
         secrets_matches = self.secrets_scanner.scan_content(content, str(file_path))
 
@@ -313,27 +348,17 @@ class ReviewOrchestrator:
             language,
             self.config.chunking.max_chunk_size
         )
-        
-        # Review each chunk - process review types in parallel for better performance
+
+        # Review each chunk - OPTIMIZED: Single API call per chunk with all review types
+        # Skip AI review if provider is None (local-only mode)
         all_findings = []
 
-        for chunk in chunks:
-            try:
-                # Run different review types in parallel
-                review_tasks = []
-                for review_type in review_types:
-                    task = self.provider.review_code(chunk, [review_type])
-                    review_tasks.append(task)
-
-                # Gather all results concurrently
-                results = await asyncio.gather(*review_tasks, return_exceptions=True)
-
-                # Process results
-                for result in results:
-                    if isinstance(result, Exception):
-                        if self.verbose:
-                            print(f"Error in parallel review for {file_path}: {result}")
-                        continue
+        if self.provider:
+            for chunk in chunks:
+                try:
+                    # OPTIMIZATION: Pass all review types in a single API call
+                    # This reduces API calls by 66% (for 3 review types: 3 calls -> 1 call)
+                    result = await self.provider.review_code(chunk, review_types)
 
                     # Filter by confidence threshold
                     filtered_findings = [
@@ -343,27 +368,21 @@ class ReviewOrchestrator:
 
                     all_findings.extend(filtered_findings)
 
-            except Exception as e:
-                if self.verbose:
-                    print(f"Error reviewing chunk in {file_path}: {e}")
+                except Exception as e:
+                    if self.verbose:
+                        print(f"Error reviewing chunk in {file_path}: {e}")
 
-<<<<<<< HEAD
         # Add secret findings, local analysis findings, and custom rules findings to the results
         all_findings.extend(secret_findings)
         all_findings.extend(local_findings)
         all_findings.extend(custom_rules_findings)
-=======
-        # Add secret findings to the results
-        all_findings.extend(secret_findings)
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4
 
         # Limit findings per file
         if len(all_findings) > self.config.review.max_findings_per_file:
             all_findings = all_findings[:self.config.review.max_findings_per_file]
 
-<<<<<<< HEAD
-        # Store in cache for future use
-        if self.cache:
+        # Store in cache for future use (only if provider is available)
+        if self.cache and self.provider:
             review_type_names = [rt.value for rt in review_types]
             # Convert findings to dicts for caching
             findings_dicts = [
@@ -408,8 +427,3 @@ class ReviewOrchestrator:
     def get_custom_rules_stats(self) -> Dict[str, Any]:
         """Get custom rules statistics."""
         return self.custom_rules_stats.copy()
-
-=======
-        return all_findings
-
->>>>>>> 9142a626e7c17e9750e46f0bd63dca202a22eff4

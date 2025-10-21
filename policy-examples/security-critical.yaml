@@ -1,0 +1,46 @@
+# Security Critical Policy
+# Zero tolerance for security issues in all code
+
+id: security-critical
+config:
+  name: Security Critical
+  description: Zero tolerance for critical security issues - blocks commits and PRs with any security vulnerabilities
+  enabled: true
+  
+  # Apply at pre-commit and pull request stages
+  scope:
+    - pre-commit
+    - pull-request
+  
+  # Block operations that violate this policy
+  action: block
+  
+  # Strict enforcement - no exceptions
+  enforcement: strict
+  
+  # Thresholds - zero tolerance
+  max_critical_issues: 0
+  max_high_issues: 0
+  max_medium_issues: 5
+  
+  # Metadata
+  owner: security-team
+  tags:
+    - security
+    - compliance
+    - critical
+  priority: 200
+  
+  # Notifications
+  notify_on_violation:
+    - security@company.com
+    - slack://security-alerts
+
+# Rules to apply
+rules:
+  - severity-strict
+  - security-zero-tolerance
+
+created_at: "2025-10-20T10:00:00Z"
+version: 1
+

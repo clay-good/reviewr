@@ -134,65 +134,109 @@ class TerminalFormatter(OutputFormatter):
     def _get_severity_emoji(self, severity: str) -> str:
         """Get symbol for severity level."""
         symbols = {
-            'critical': '[CRITICAL]',
-            'high': '[HIGH]',
-            'medium': '[MEDIUM]',
-            'low': '[LOW]',
-            'info': '[INFO]',
+            'critical': '🔴 [CRITICAL]',
+            'high': '🟠 [HIGH]',
+            'medium': '🟡 [MEDIUM]',
+            'low': '🔵 [LOW]',
+            'info': '⚪ [INFO]',
         }
-        return symbols.get(severity, '[INFO]')
+        return symbols.get(severity, '⚪ [INFO]')
+
+    def _get_category_icon(self, category: str) -> str:
+        """Get icon for finding category."""
+        icons = {
+            'security': '🔒',
+            'dataflow': '🌊',
+            'complexity': '🧩',
+            'type_safety': '🏷️',
+            'performance': '⚡',
+            'semantic': '🧠',
+            'technical_debt': '💳',
+            'syntax': '❌',
+            'smell': '👃',
+            'dead_code': '💀',
+            'imports': '📦',
+        }
+        return icons.get(category, '📋')
 
 
 class MarkdownFormatter(OutputFormatter):
     """Format output as Markdown."""
-    
+
     def format_result(self, result: 'ReviewResult') -> str:
         """Format result as Markdown."""
         lines = []
-        
-        lines.append("# Code Review Report\n")
-        
+
+        lines.append("# 🤖 Code Review Report\n")
+
         # Summary
-        lines.append("## Summary\n")
+        lines.append("## 📊 Summary\n")
         lines.append(f"- **Files Reviewed**: {result.files_reviewed}")
         lines.append(f"- **Total Issues**: {len(result.findings)}\n")
-        
+
         # Count by severity
         by_severity = result.get_findings_by_severity()
         severity_counts = []
         for severity in ['critical', 'high', 'medium', 'low', 'info']:
             count = len(by_severity[severity])
             if count > 0:
-                severity_counts.append(f"**{severity.title()}**: {count}")
-        
+                emoji = self._get_severity_emoji(severity).split()[0]  # Get just the emoji
+                severity_counts.append(f"{emoji} **{severity.title()}**: {count}")
+
         if severity_counts:
             lines.append("- " + " | ".join(severity_counts))
-        
+
         lines.append("")
+
+        # Count by category
+        by_category = self._group_by_category(result.findings)
+        if by_category:
+            lines.append("### 🏷️ By Category\n")
+            for category, findings in sorted(by_category.items(), key=lambda x: -len(x[1])):
+                icon = self._get_category_icon(category)
+                lines.append(f"- {icon} **{category.replace('_', ' ').title()}**: {len(findings)}")
+            lines.append("")
         
         # Findings
         if result.findings:
-            lines.append("## Findings\n")
-            
+            lines.append("## 🔍 Findings\n")
+
             for severity in ['critical', 'high', 'medium', 'low', 'info']:
                 findings = by_severity[severity]
                 if not findings:
                     continue
-                
+
                 emoji = self._get_severity_emoji(severity)
-                lines.append(f"### {emoji} {severity.upper()}\n")
-                
+                lines.append(f"### {emoji}\n")
+
                 for finding in findings:
-                    lines.append(f"#### {finding.type.value.title()}")
-                    lines.append(f"**File**: `{finding.file_path}` | **Lines**: {finding.line_start}-{finding.line_end}\n")
-                    lines.append(f"**Description**: {finding.message}\n")
-                    
+                    # Get category icon if finding has category attribute
+                    category_icon = ""
+                    if hasattr(finding, 'category'):
+                        category_icon = self._get_category_icon(finding.category) + " "
+
+                    # Use type.value if it's an enum, otherwise use string directly
+                    finding_type = finding.type.value if hasattr(finding.type, 'value') else str(finding.type)
+
+                    lines.append(f"#### {category_icon}{finding_type.replace('_', ' ').title()}")
+                    lines.append(f"**File**: `{finding.file_path}` | **Lines**: {finding.line_start}-{finding.line_end}")
+
+                    # Add category if available
+                    if hasattr(finding, 'category') and finding.category:
+                        lines.append(f"**Category**: {finding.category.replace('_', ' ').title()}")
+
+                    lines.append(f"\n**Description**: {finding.message}\n")
+
                     if finding.suggestion:
-                        lines.append(f"**Suggestion**: {finding.suggestion}\n")
-                    
+                        lines.append(f"💡 **Suggestion**: {finding.suggestion}\n")
+
+                    # Add metric information if available
+                    if hasattr(finding, 'metric_name') and finding.metric_name:
+                        lines.append(f"📊 **Metric**: {finding.metric_name} = {finding.metric_value}\n")
+
                     lines.append("")
         else:
-            lines.append("## ✓ No Issues Found\n")
+            lines.append("## ✅ No Issues Found\n")
         
         # Statistics
         if result.provider_stats:
@@ -203,17 +247,45 @@ class MarkdownFormatter(OutputFormatter):
             lines.append("")
         
         return "\n".join(lines)
-    
+
     def _get_severity_emoji(self, severity: str) -> str:
         """Get symbol for severity level."""
         symbols = {
-            'critical': '[CRITICAL]',
-            'high': '[HIGH]',
-            'medium': '[MEDIUM]',
-            'low': '[LOW]',
-            'info': '[INFO]',
+            'critical': '🔴 CRITICAL',
+            'high': '🟠 HIGH',
+            'medium': '🟡 MEDIUM',
+            'low': '🔵 LOW',
+            'info': '⚪ INFO',
         }
-        return symbols.get(severity, '[INFO]')
+        return symbols.get(severity, '⚪ INFO')
+
+    def _get_category_icon(self, category: str) -> str:
+        """Get icon for finding category."""
+        icons = {
+            'security': '🔒',
+            'dataflow': '🌊',
+            'complexity': '🧩',
+            'type_safety': '🏷️',
+            'performance': '⚡',
+            'semantic': '🧠',
+            'technical_debt': '💳',
+            'syntax': '❌',
+            'smell': '👃',
+            'dead_code': '💀',
+            'imports': '📦',
+        }
+        return icons.get(category, '📋')
+
+    def _group_by_category(self, findings: List) -> Dict[str, List]:
+        """Group findings by category."""
+        by_category = {}
+        for finding in findings:
+            if hasattr(finding, 'category'):
+                category = finding.category or 'general'  # Handle None category
+                if category not in by_category:
+                    by_category[category] = []
+                by_category[category].append(finding)
+        return by_category
 
 
 class SarifFormatter(OutputFormatter):
@@ -473,12 +545,14 @@ class HtmlFormatter(OutputFormatter):
         .severity-medium { border-left-color: #f39c12; }
         .severity-low { border-left-color: #3498db; }
         .severity-info { border-left-color: #95a5a6; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; font-weight: bold; text-transform: uppercase; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; font-weight: bold; text-transform: uppercase; margin-left: 5px; }
         .badge-critical { background: #e74c3c; color: white; }
         .badge-high { background: #e67e22; color: white; }
         .badge-medium { background: #f39c12; color: white; }
         .badge-low { background: #3498db; color: white; }
         .badge-info { background: #95a5a6; color: white; }
+        .category-badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 0.75em; background: #ecf0f1; color: #2c3e50; margin-left: 5px; }
+        .metric-info { background: #fff3cd; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 0.9em; border-left: 3px solid #ffc107; }
         .stats { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
         .stat-item { text-align: center; }
@@ -524,7 +598,19 @@ class HtmlFormatter(OutputFormatter):
                 for finding in findings:
                     html_parts.append(f'        <div class="finding severity-{severity}">')
                     html_parts.append('            <div class="finding-header">')
-                    html_parts.append(f'                <div class="finding-title">{self._escape_html(finding.type.value.title())}</div>')
+
+                    # Get category icon if available
+                    category_icon = ""
+                    category_badge = ""
+                    if hasattr(finding, 'category') and finding.category:
+                        category_icon = self._get_category_icon(finding.category) + " "
+                        category_name = finding.category.replace('_', ' ').title()
+                        category_badge = f'<span class="category-badge">{category_icon}{category_name}</span>'
+
+                    # Get finding type
+                    finding_type = finding.type.value if hasattr(finding.type, 'value') else str(finding.type)
+
+                    html_parts.append(f'                <div class="finding-title">{self._escape_html(finding_type.replace("_", " ").title())}{category_badge}</div>')
                     html_parts.append(f'                <span class="badge badge-{severity}">{severity}</span>')
                     html_parts.append('            </div>')
                     html_parts.append(f'            <div class="finding-meta">📄 {self._escape_html(finding.file_path)} | Lines {finding.line_start}-{finding.line_end} | Confidence: {finding.confidence:.0%}</div>')
@@ -532,6 +618,10 @@ class HtmlFormatter(OutputFormatter):
 
                     if finding.suggestion:
                         html_parts.append(f'            <div class="finding-suggestion"><strong>💡 Suggestion:</strong> {self._escape_html(finding.suggestion)}</div>')
+
+                    # Add metric information if available
+                    if hasattr(finding, 'metric_name') and finding.metric_name:
+                        html_parts.append(f'            <div class="metric-info"><strong>📊 Metric:</strong> {self._escape_html(finding.metric_name)} = {finding.metric_value}</div>')
 
                     html_parts.append('        </div>')
         else:
@@ -564,6 +654,23 @@ class HtmlFormatter(OutputFormatter):
                 .replace('>', '&gt;')
                 .replace('"', '&quot;')
                 .replace("'", '&#39;'))
+
+    def _get_category_icon(self, category: str) -> str:
+        """Get icon for finding category."""
+        icons = {
+            'security': '🔒',
+            'dataflow': '🌊',
+            'complexity': '🧩',
+            'type_safety': '🏷️',
+            'performance': '⚡',
+            'semantic': '🧠',
+            'technical_debt': '💳',
+            'syntax': '❌',
+            'smell': '👃',
+            'dead_code': '💀',
+            'imports': '📦',
+        }
+        return icons.get(category, '📋')
 
 
 class JunitFormatter(OutputFormatter):

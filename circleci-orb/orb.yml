@@ -1,0 +1,332 @@
+version: 2.1
+
+description: |
+  reviewr - AI-powered code review for CircleCI
+  
+  Integrate automated code reviews into your CircleCI workflows with reviewr.
+  This orb provides commands and jobs for running code reviews, security scans,
+  and quality checks with AI-powered analysis.
+  
+  Source: https://github.com/reviewr/reviewr
+  Documentation: https://reviewr.dev/docs/circleci
+
+display:
+  home_url: https://reviewr.dev
+  source_url: https://github.com/reviewr/reviewr
+
+orbs:
+  python: circleci/python@2.1.1
+
+executors:
+  default:
+    description: Default Python executor
+    parameters:
+      python-version:
+        type: string
+        default: "3.10"
+        description: Python version to use
+    docker:
+      - image: cimg/python:<<parameters.python-version>>
+    resource_class: medium
+
+commands:
+  install:
+    description: Install reviewr
+    parameters:
+      version:
+        type: string
+        default: "latest"
+        description: reviewr version to install
+    steps:
+      - run:
+          name: Install reviewr
+          command: |
+            if [ "<<parameters.version>>" = "latest" ]; then
+              pip install reviewr
+            else
+              pip install reviewr==<<parameters.version>>
+            fi
+
+  review:
+    description: Run code review
+    parameters:
+      path:
+        type: string
+        default: "."
+        description: Path to review
+      preset:
+        type: enum
+        enum: ["balanced", "strict", "quick", "security-focused"]
+        default: "balanced"
+        description: Review preset
+      review-types:
+        type: string
+        default: ""
+        description: Comma-separated list of review types (security,performance,correctness,maintainability,architecture,standards)
+      security-scan:
+        type: boolean
+        default: false
+        description: Run security scanning
+      code-metrics:
+        type: boolean
+        default: false
+        description: Calculate code metrics
+      output-file:
+        type: string
+        default: "review-report.json"
+        description: Output file for review report
+      fail-on-issues:
+        type: boolean
+        default: true
+        description: Fail build if critical or high issues found
+    steps:
+      - run:
+          name: Run code review
+          command: |
+            REVIEW_CMD="reviewr circleci review <<parameters.path>> \
+              --preset <<parameters.preset>> \
+              --output <<parameters.output-file>>"
+            
+            <<# parameters.review-types >>
+            REVIEW_TYPES="<<parameters.review-types>>"
+            if [ -n "$REVIEW_TYPES" ]; then
+              IFS=',' read -ra TYPES <<< "$REVIEW_TYPES"
+              for type in "${TYPES[@]}"; do
+                REVIEW_CMD="$REVIEW_CMD --review-type $type"
+              done
+            fi
+            <</ parameters.review-types >>
+            
+            <<# parameters.security-scan >>
+            REVIEW_CMD="$REVIEW_CMD --security-scan"
+            <</ parameters.security-scan >>
+            
+            <<# parameters.code-metrics >>
+            REVIEW_CMD="$REVIEW_CMD --code-metrics"
+            <</ parameters.code-metrics >>
+            
+            echo "Running: $REVIEW_CMD"
+            
+            <<# parameters.fail-on-issues >>
+            $REVIEW_CMD
+            <</ parameters.fail-on-issues >>
+            
+            <<^ parameters.fail-on-issues >>
+            $REVIEW_CMD || true
+            <</ parameters.fail-on-issues >>
+
+  publish-results:
+    description: Publish review results as artifacts
+    parameters:
+      report-file:
+        type: string
+        default: "review-report.json"
+        description: Review report file to publish
+      test-results-dir:
+        type: string
+        default: ""
+        description: Optional test results directory
+    steps:
+      - store_artifacts:
+          path: <<parameters.report-file>>
+          destination: artifacts/<<parameters.report-file>>
+      
+      - when:
+          condition: <<parameters.test-results-dir>>
+          steps:
+            - store_test_results:
+                path: <<parameters.test-results-dir>>
+
+jobs:
+  code-review:
+    description: Run code review job
+    parameters:
+      python-version:
+        type: string
+        default: "3.10"
+        description: Python version to use
+      reviewr-version:
+        type: string
+        default: "latest"
+        description: reviewr version to install
+      path:
+        type: string
+        default: "."
+        description: Path to review
+      preset:
+        type: enum
+        enum: ["balanced", "strict", "quick", "security-focused"]
+        default: "balanced"
+        description: Review preset
+      review-types:
+        type: string
+        default: ""
+        description: Comma-separated list of review types
+      security-scan:
+        type: boolean
+        default: false
+        description: Run security scanning
+      code-metrics:
+        type: boolean
+        default: false
+        description: Calculate code metrics
+      output-file:
+        type: string
+        default: "review-report.json"
+        description: Output file for review report
+      fail-on-issues:
+        type: boolean
+        default: true
+        description: Fail build if critical or high issues found
+    executor:
+      name: default
+      python-version: <<parameters.python-version>>
+    steps:
+      - checkout
+      - install:
+          version: <<parameters.reviewr-version>>
+      - review:
+          path: <<parameters.path>>
+          preset: <<parameters.preset>>
+          review-types: <<parameters.review-types>>
+          security-scan: <<parameters.security-scan>>
+          code-metrics: <<parameters.code-metrics>>
+          output-file: <<parameters.output-file>>
+          fail-on-issues: <<parameters.fail-on-issues>>
+      - publish-results:
+          report-file: <<parameters.output-file>>
+
+  security-scan:
+    description: Run security-focused code review
+    parameters:
+      python-version:
+        type: string
+        default: "3.10"
+        description: Python version to use
+      reviewr-version:
+        type: string
+        default: "latest"
+        description: reviewr version to install
+      path:
+        type: string
+        default: "."
+        description: Path to review
+      output-file:
+        type: string
+        default: "security-report.json"
+        description: Output file for security report
+      fail-on-issues:
+        type: boolean
+        default: true
+        description: Fail build if critical or high issues found
+    executor:
+      name: default
+      python-version: <<parameters.python-version>>
+    steps:
+      - checkout
+      - install:
+          version: <<parameters.reviewr-version>>
+      - review:
+          path: <<parameters.path>>
+          preset: "security-focused"
+          review-types: "security"
+          security-scan: true
+          output-file: <<parameters.output-file>>
+          fail-on-issues: <<parameters.fail-on-issues>>
+      - publish-results:
+          report-file: <<parameters.output-file>>
+
+  quality-check:
+    description: Run code quality check
+    parameters:
+      python-version:
+        type: string
+        default: "3.10"
+        description: Python version to use
+      reviewr-version:
+        type: string
+        default: "latest"
+        description: reviewr version to install
+      path:
+        type: string
+        default: "."
+        description: Path to review
+      output-file:
+        type: string
+        default: "quality-report.json"
+        description: Output file for quality report
+      fail-on-issues:
+        type: boolean
+        default: false
+        description: Fail build if critical or high issues found
+    executor:
+      name: default
+      python-version: <<parameters.python-version>>
+    steps:
+      - checkout
+      - install:
+          version: <<parameters.reviewr-version>>
+      - review:
+          path: <<parameters.path>>
+          preset: "balanced"
+          review-types: "correctness,maintainability"
+          code-metrics: true
+          output-file: <<parameters.output-file>>
+          fail-on-issues: <<parameters.fail-on-issues>>
+      - publish-results:
+          report-file: <<parameters.output-file>>
+
+examples:
+  basic-review:
+    description: Basic code review workflow
+    usage:
+      version: 2.1
+      orbs:
+        reviewr: reviewr/reviewr@1.0.0
+      workflows:
+        review:
+          jobs:
+            - reviewr/code-review
+
+  security-scan:
+    description: Security-focused review
+    usage:
+      version: 2.1
+      orbs:
+        reviewr: reviewr/reviewr@1.0.0
+      workflows:
+        security:
+          jobs:
+            - reviewr/security-scan
+
+  parallel-reviews:
+    description: Run multiple review types in parallel
+    usage:
+      version: 2.1
+      orbs:
+        reviewr: reviewr/reviewr@1.0.0
+      workflows:
+        comprehensive-review:
+          jobs:
+            - reviewr/security-scan
+            - reviewr/quality-check
+            - reviewr/code-review:
+                preset: strict
+
+  custom-review:
+    description: Custom review with specific parameters
+    usage:
+      version: 2.1
+      orbs:
+        reviewr: reviewr/reviewr@1.0.0
+      workflows:
+        custom:
+          jobs:
+            - reviewr/code-review:
+                python-version: "3.11"
+                preset: strict
+                review-types: "security,performance,correctness"
+                security-scan: true
+                code-metrics: true
+                fail-on-issues: true
+

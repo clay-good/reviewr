@@ -1,0 +1,58 @@
+# Production Ready Policy
+# Strict quality requirements for production branches
+
+id: production-ready
+config:
+  name: Production Ready
+  description: Strict quality requirements for production code - enforces high standards before merging to main branches
+  enabled: true
+  
+  # Apply at pull request and merge stages
+  scope:
+    - pull-request
+    - merge
+  
+  # Block merges that don't meet standards
+  action: block
+  
+  # Strict enforcement
+  enforcement: strict
+  
+  # Only apply to production branches
+  branches:
+    - main
+    - master
+    - production
+    - release/*
+  
+  # Thresholds
+  max_critical_issues: 0
+  max_high_issues: 0
+  max_medium_issues: 5
+  max_complexity: 15
+  min_test_coverage: 0.8
+  
+  # Metadata
+  owner: platform-team
+  tags:
+    - production
+    - quality
+    - release
+  priority: 150
+  
+  # Notifications
+  notify_on_violation:
+    - platform@company.com
+  notify_on_override:
+    - audit@company.com
+
+# Rules to apply
+rules:
+  - severity-strict
+  - security-zero-tolerance
+  - complexity-strict
+  - coverage-80
+
+created_at: "2025-10-20T10:00:00Z"
+version: 1
+
