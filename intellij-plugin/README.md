@@ -34,15 +34,15 @@ AI-powered code review plugin for IntelliJ IDEA and other JetBrains IDEs.
 
 1. Clone the repository
 2. Build the plugin:
-   ```bash
-   cd intellij-plugin
-   ./gradlew buildPlugin
-   ```
+ ```bash
+ cd intellij-plugin
+ ./gradlew buildPlugin
+ ```
 3. Install the plugin:
-   - Open Settings/Preferences → Plugins
-   - Click ⚙️ → Install Plugin from Disk
-   - Select `build/distributions/reviewr-1.0.0.zip`
-   - Restart IDE
+ - Open Settings/Preferences → Plugins
+ - Click → Install Plugin from Disk
+ - Select `build/distributions/reviewr-1.0.0.zip`
+ - Restart IDE
 
 ## Configuration
 
@@ -157,7 +157,7 @@ export PUBLISH_TOKEN="your-jetbrains-marketplace-token"
 
 ## Implementation Status
 
-### ✅ Completed
+### Completed
 
 - [x] Gradle build configuration
 - [x] Plugin descriptor (plugin.xml)
@@ -166,7 +166,7 @@ export PUBLISH_TOKEN="your-jetbrains-marketplace-token"
 - [x] Settings (ReviewrSettings.java)
 - [x] Documentation
 
-### 📝 To Be Implemented
+### To Be Implemented
 
 - [ ] ReviewrAnnotator.java - Real-time annotator
 - [ ] ReviewrInspection.java - On-demand inspection
@@ -215,4 +215,3 @@ Same as reviewr main project.
 - GitHub Issues: https://github.com/yourusername/reviewr/issues
 - Documentation: https://reviewr.dev/docs
 - Email: support@reviewr.dev
-

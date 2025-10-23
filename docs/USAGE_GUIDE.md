@@ -42,16 +42,16 @@ analyzer = SecurityAnalyzer()
 # Analyze code
 code = """
 def get_user(user_id):
-    query = f"SELECT * FROM users WHERE id = {user_id}"
-    cursor.execute(query)
+ query = f"SELECT * FROM users WHERE id = {user_id}"
+ cursor.execute(query)
 """
 
 findings = analyzer.analyze('example.py', code)
 
 # Process findings
 for finding in findings:
-    print(f"{finding.severity}: {finding.message}")
-    print(f"  Line {finding.line_start}: {finding.suggestion}")
+ print(f"{finding.severity}: {finding.message}")
+ print(f" Line {finding.line_start}: {finding.suggestion}")
 ```
 
 **Detects**:
@@ -78,9 +78,9 @@ code = """
 from flask import request
 
 def process_request():
-    user_input = request.args.get('id')
-    query = f"SELECT * FROM users WHERE id = {user_input}"
-    cursor.execute(query)
+ user_input = request.args.get('id')
+ query = f"SELECT * FROM users WHERE id = {user_input}"
+ cursor.execute(query)
 """
 
 findings = analyzer.analyze('example.py', code)
@@ -104,19 +104,19 @@ analyzer = ComplexityAnalyzer()
 
 code = """
 def complex_function(x, y, z):
-    if x > 0:
-        if y > 0:
-            if z > 0:
-                return x + y + z
-    return 0
+ if x > 0:
+ if y > 0:
+ if z > 0:
+ return x + y + z
+ return 0
 """
 
 findings = analyzer.analyze('example.py', code)
 
 # Check metrics
 for finding in findings:
-    if finding.metric_name:
-        print(f"{finding.metric_name}: {finding.metric_value}")
+ if finding.metric_name:
+ print(f"{finding.metric_name}: {finding.metric_value}")
 ```
 
 **Calculates**:
@@ -138,11 +138,11 @@ from reviewr.analysis.type_analyzer import TypeAnalyzer
 analyzer = TypeAnalyzer()
 
 code = """
-def process_data(items=[]):  # Mutable default!
-    result = ""
-    for item in items:
-        result += str(item)
-    return result
+def process_data(items=[]): # Mutable default!
+ result = ""
+ for item in items:
+ result += str(item)
+ return result
 """
 
 findings = analyzer.analyze('example.py', code)
@@ -168,12 +168,12 @@ analyzer = PerformanceAnalyzer()
 
 code = """
 def get_user_posts(user_ids):
-    posts = []
-    for user_id in user_ids:
-        # N+1 query pattern!
-        user_posts = db.query("SELECT * FROM posts WHERE user_id = ?", user_id)
-        posts.extend(user_posts)
-    return posts
+ posts = []
+ for user_id in user_ids:
+ # N+1 query pattern!
+ user_posts = db.query("SELECT * FROM posts WHERE user_id = ?", user_id)
+ posts.extend(user_posts)
+ return posts
 """
 
 findings = analyzer.analyze('example.py', code)
@@ -199,9 +199,9 @@ analyzer = SemanticAnalyzer()
 
 code = """
 def read_file(filename):
-    f = open(filename, 'r')  # Resource leak!
-    data = f.read()
-    return data
+ f = open(filename, 'r') # Resource leak!
+ data = f.read()
+ return data
 """
 
 findings = analyzer.analyze('example.py', code)
@@ -228,34 +228,34 @@ from reviewr.analysis.semantic_analyzer import SemanticAnalyzer
 
 # Initialize all analyzers
 analyzers = [
-    SecurityAnalyzer(),
-    DataFlowAnalyzer(),
-    ComplexityAnalyzer(),
-    TypeAnalyzer(),
-    PerformanceAnalyzer(),
-    SemanticAnalyzer()
+ SecurityAnalyzer(),
+ DataFlowAnalyzer(),
+ ComplexityAnalyzer(),
+ TypeAnalyzer(),
+ PerformanceAnalyzer(),
+ SemanticAnalyzer()
 ]
 
 # Read code to analyze
 with open('mycode.py', 'r') as f:
-    code = f.read()
+ code = f.read()
 
 # Run all analyzers
 all_findings = []
 for analyzer in analyzers:
-    findings = analyzer.analyze('mycode.py', code)
-    all_findings.extend(findings)
+ findings = analyzer.analyze('mycode.py', code)
+ all_findings.extend(findings)
 
 # Group by severity
 by_severity = {}
 for finding in all_findings:
-    by_severity.setdefault(finding.severity, []).append(finding)
+ by_severity.setdefault(finding.severity, []).append(finding)
 
 # Print summary
 print(f"Total issues: {len(all_findings)}")
 for severity in ['critical', 'high', 'medium', 'low', 'info']:
-    if severity in by_severity:
-        print(f"  {severity.upper()}: {len(by_severity[severity])}")
+ if severity in by_severity:
+ print(f" {severity.upper()}: {len(by_severity[severity])}")
 ```
 
 ---
@@ -269,16 +269,16 @@ Each finding has the following attributes:
 ```python
 @dataclass
 class LocalFinding:
-    file_path: str              # Path to the file
-    line_start: int             # Starting line number
-    line_end: int               # Ending line number
-    severity: str               # 'critical', 'high', 'medium', 'low', 'info'
-    category: str               # 'security', 'dataflow', 'complexity', etc.
-    message: str                # Description of the issue
-    suggestion: Optional[str]   # How to fix it
-    code_snippet: Optional[str] # Code excerpt
-    metric_value: Optional[float]  # Numeric metric (if applicable)
-    metric_name: Optional[str]     # Name of the metric
+ file_path: str # Path to the file
+ line_start: int # Starting line number
+ line_end: int # Ending line number
+ severity: str # 'critical', 'high', 'medium', 'low', 'info'
+ category: str # 'security', 'dataflow', 'complexity', etc.
+ message: str # Description of the issue
+ suggestion: Optional[str] # How to fix it
+ code_snippet: Optional[str] # Code excerpt
+ metric_value: Optional[float] # Numeric metric (if applicable)
+ metric_name: Optional[str] # Name of the metric
 ```
 
 ### Severity Levels
@@ -312,9 +312,9 @@ from reviewr.analysis.complexity_analyzer import ComplexityAnalyzer
 
 # Custom thresholds
 analyzer = ComplexityAnalyzer()
-analyzer.cyclomatic_threshold = 15  # Default: 10
-analyzer.cognitive_threshold = 20   # Default: 15
-analyzer.maintainability_threshold = 60  # Default: 65
+analyzer.cyclomatic_threshold = 15 # Default: 10
+analyzer.cognitive_threshold = 20 # Default: 15
+analyzer.maintainability_threshold = 60 # Default: 65
 ```
 
 ### Filtering Findings
@@ -388,13 +388,13 @@ name: Code Analysis
 on: [push, pull_request]
 
 jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run reviewr analysis
-        run: |
-          python3 demo_complete_analysis.py
+ analyze:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v2
+ - name: Run reviewr analysis
+ run: |
+ python3 demo_complete_analysis.py
 ```
 
 ---
@@ -441,5 +441,4 @@ pip install -e .
 4. **Integrate**: Add to your development workflow
 5. **Customize**: Adjust thresholds and filters for your needs
 
-Happy analyzing! 🚀
-
+Happy analyzing! 

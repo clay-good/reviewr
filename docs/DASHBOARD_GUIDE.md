@@ -1,4 +1,4 @@
-# 📊 reviewr Dashboard Guide
+# reviewr Dashboard Guide
 
 Comprehensive guide to the reviewr web dashboard for tracking code quality metrics and trends.
 
@@ -22,12 +22,12 @@ Comprehensive guide to the reviewr web dashboard for tracking code quality metri
 
 The reviewr dashboard provides a web-based interface for:
 
-✅ **Tracking code quality** - Monitor issues, trends, and metrics over time  
-✅ **Project management** - Manage multiple projects in one place  
-✅ **Review history** - View all past code reviews and findings  
-✅ **Analytics** - Visualize trends and identify patterns  
-✅ **Team insights** - Track team performance and code quality  
-✅ **REST API** - Programmatic access to all data  
+ **Tracking code quality** - Monitor issues, trends, and metrics over time 
+ **Project management** - Manage multiple projects in one place 
+ **Review history** - View all past code reviews and findings 
+ **Analytics** - Visualize trends and identify patterns 
+ **Team insights** - Track team performance and code quality 
+ **REST API** - Programmatic access to all data 
 
 ### Features
 
@@ -161,26 +161,26 @@ db = DatabaseManager()
 
 # Add review
 review = db.add_review(
-    project_name="my-app",
-    commit_sha="abc123",
-    branch="main",
-    pr_number=42,
-    author="developer",
-    provider="claude"
+ project_name="my-app",
+ commit_sha="abc123",
+ branch="main",
+ pr_number=42,
+ author="developer",
+ provider="claude"
 )
 
 # Add findings
 for finding in findings:
-    db.add_finding(
-        review_id=review.id,
-        type=finding.type,
-        severity=finding.severity,
-        file_path=finding.file_path,
-        line_start=finding.line_start,
-        line_end=finding.line_end,
-        message=finding.message,
-        confidence=finding.confidence
-    )
+ db.add_finding(
+ review_id=review.id,
+ type=finding.type,
+ severity=finding.severity,
+ file_path=finding.file_path,
+ line_start=finding.line_start,
+ line_end=finding.line_end,
+ message=finding.message,
+ confidence=finding.confidence
+ )
 
 # Update review status
 session = db.get_session()
@@ -214,10 +214,10 @@ POST /api/projects
 Content-Type: application/json
 
 {
-  "name": "my-app",
-  "repository_url": "https://github.com/user/repo",
-  "description": "My application",
-  "language": "python"
+ "name": "my-app",
+ "repository_url": "https://github.com/user/repo",
+ "description": "My application",
+ "language": "python"
 }
 ```
 
@@ -239,12 +239,12 @@ POST /api/reviews
 Content-Type: application/json
 
 {
-  "project_name": "my-app",
-  "commit_sha": "abc123",
-  "branch": "main",
-  "pr_number": 42,
-  "author": "developer",
-  "provider": "claude"
+ "project_name": "my-app",
+ "commit_sha": "abc123",
+ "branch": "main",
+ "pr_number": 42,
+ "author": "developer",
+ "provider": "claude"
 }
 ```
 
@@ -264,9 +264,9 @@ PATCH /api/reviews/{review_id}
 Content-Type: application/json
 
 {
-  "status": "completed",
-  "total_findings": 10,
-  "critical_findings": 2
+ "status": "completed",
+ "total_findings": 10,
+ "critical_findings": 2
 }
 ```
 
@@ -278,15 +278,15 @@ POST /api/findings
 Content-Type: application/json
 
 {
-  "review_id": 1,
-  "type": "security",
-  "severity": "high",
-  "category": "sql_injection",
-  "file_path": "app.py",
-  "line_start": 10,
-  "line_end": 15,
-  "message": "SQL injection vulnerability",
-  "confidence": 0.95
+ "review_id": 1,
+ "type": "security",
+ "severity": "high",
+ "category": "sql_injection",
+ "file_path": "app.py",
+ "line_start": 10,
+ "line_end": 15,
+ "message": "SQL injection vulnerability",
+ "confidence": 0.95
 }
 ```
 
@@ -305,12 +305,12 @@ GET /api/metrics/overview
 Response:
 ```json
 {
-  "total_projects": 5,
-  "total_reviews": 100,
-  "total_findings": 500,
-  "avg_findings_per_review": 5.0,
-  "critical_findings": 10,
-  "high_findings": 50
+ "total_projects": 5,
+ "total_reviews": 100,
+ "total_findings": 500,
+ "avg_findings_per_review": 5.0,
+ "critical_findings": 10,
+ "high_findings": 50
 }
 ```
 
@@ -322,18 +322,18 @@ GET /api/metrics/trends/{project_id}?days=30
 Response:
 ```json
 {
-  "total_issues": [
-    {"date": "2024-01-01", "value": 10},
-    {"date": "2024-01-02", "value": 8}
-  ],
-  "critical_issues": [
-    {"date": "2024-01-01", "value": 2},
-    {"date": "2024-01-02", "value": 1}
-  ],
-  "overall_score": [
-    {"date": "2024-01-01", "value": 85.0},
-    {"date": "2024-01-02", "value": 90.0}
-  ]
+ "total_issues": [
+ {"date": "2024-01-01", "value": 10},
+ {"date": "2024-01-02", "value": 8}
+ ],
+ "critical_issues": [
+ {"date": "2024-01-01", "value": 2},
+ {"date": "2024-01-02", "value": 1}
+ ],
+ "overall_score": [
+ {"date": "2024-01-01", "value": 85.0},
+ {"date": "2024-01-02", "value": 90.0}
+ ]
 }
 ```
 
@@ -423,31 +423,31 @@ name: Code Review with Dashboard
 on: [pull_request]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run reviewr
-        run: |
-          reviewr src/ --all --output-format json > results.json
-      
-      - name: Send to Dashboard
-        run: |
-          python scripts/send_to_dashboard.py results.json
-        env:
-          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ 
+ - name: Run reviewr
+ run: |
+ reviewr src/ --all --output-format json > results.json
+ 
+ - name: Send to Dashboard
+ run: |
+ python scripts/send_to_dashboard.py results.json
+ env:
+ DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
 ```
 
 #### GitLab CI
 
 ```yaml
 code_review:
-  script:
-    - reviewr src/ --all --output-format json > results.json
-    - python scripts/send_to_dashboard.py results.json
-  variables:
-    DASHBOARD_URL: $DASHBOARD_URL
+ script:
+ - reviewr src/ --all --output-format json > results.json
+ - python scripts/send_to_dashboard.py results.json
+ variables:
+ DASHBOARD_URL: $DASHBOARD_URL
 ```
 
 ### Python Integration
@@ -461,22 +461,22 @@ db = DatabaseManager("sqlite:///reviewr.db")
 
 # Create review
 review = db.add_review(
-    project_name="my-app",
-    commit_sha="abc123",
-    provider="claude"
+ project_name="my-app",
+ commit_sha="abc123",
+ provider="claude"
 )
 
 # Add findings
 for finding in findings:
-    db.add_finding(
-        review_id=review.id,
-        type=finding.type.value,
-        severity=finding.severity,
-        file_path=finding.file_path,
-        line_start=finding.line_start,
-        line_end=finding.line_end,
-        message=finding.message
-    )
+ db.add_finding(
+ review_id=review.id,
+ type=finding.type.value,
+ severity=finding.severity,
+ file_path=finding.file_path,
+ line_start=finding.line_start,
+ line_end=finding.line_end,
+ message=finding.message
+ )
 ```
 
 ---
@@ -508,33 +508,33 @@ docker run -p 8000:8000 -v $(pwd)/data:/app/data reviewr-dashboard
 ### Production Deployment
 
 1. **Use PostgreSQL**
-   ```bash
-   export DATABASE_URL="postgresql://user:pass@localhost/reviewr"
-   ```
+ ```bash
+ export DATABASE_URL="postgresql://user:pass@localhost/reviewr"
+ ```
 
 2. **Add Authentication**
-   - Implement JWT authentication
-   - Add user management
-   - Configure CORS properly
+ - Implement JWT authentication
+ - Add user management
+ - Configure CORS properly
 
 3. **Use Reverse Proxy**
-   ```nginx
-   server {
-       listen 80;
-       server_name dashboard.example.com;
-       
-       location / {
-           proxy_pass http://localhost:8000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
+ ```nginx
+ server {
+ listen 80;
+ server_name dashboard.example.com;
+ 
+ location / {
+ proxy_pass http://localhost:8000;
+ proxy_set_header Host $host;
+ proxy_set_header X-Real-IP $remote_addr;
+ }
+ }
+ ```
 
 4. **Enable HTTPS**
-   ```bash
-   certbot --nginx -d dashboard.example.com
-   ```
+ ```bash
+ certbot --nginx -d dashboard.example.com
+ ```
 
 ---
 
@@ -575,17 +575,16 @@ lsof -ti:8000 | xargs kill -9
 **Solution:** Configure CORS in `api.py`:
 ```python
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://your-frontend.com"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+ CORSMiddleware,
+ allow_origins=["https://your-frontend.com"],
+ allow_credentials=True,
+ allow_methods=["*"],
+ allow_headers=["*"],
 )
 ```
 
 ---
 
-**Built by world-class engineers** 🌟
+**Built by world-class engineers** 
 
-**Status:** ✅ Production Ready
-
+**Status:** Production Ready

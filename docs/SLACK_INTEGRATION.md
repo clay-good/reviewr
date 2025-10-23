@@ -38,9 +38,9 @@ export SLACK_CHANNEL='#code-reviews'
 1. Go to https://api.slack.com/apps
 2. Create a new app or select existing
 3. Add Bot Token Scopes:
-   - `chat:write` - Post messages
-   - `chat:write.public` - Post to public channels
-   - `reactions:write` - Add reactions
+ - `chat:write` - Post messages
+ - `chat:write.public` - Post to public channels
+ - `reactions:write` - Add reactions
 4. Install app to workspace
 5. Copy the Bot User OAuth Token
 
@@ -87,9 +87,9 @@ reviewr slack setup --bot-token xoxb-your-bot-token --channel #code-reviews
 
 # Custom username and icon
 reviewr slack setup \
-  --webhook-url https://hooks.slack.com/services/YOUR/WEBHOOK/URL \
-  --username "Code Review Bot" \
-  --icon-emoji ":robot_face:"
+ --webhook-url https://hooks.slack.com/services/YOUR/WEBHOOK/URL \
+ --username "Code Review Bot" \
+ --icon-emoji ":robot_face:"
 ```
 
 **Options:**
@@ -189,27 +189,27 @@ Total Findings: 23
 Duration: 45s
 
 Severity Breakdown:
-🔴 Critical: 2
+ Critical: 2
 🟠 High: 5
 🟡 Medium: 10
-🔵 Low: 4
-ℹ️ Info: 2
+ Low: 4
+ℹ Info: 2
 ```
 
 ### Critical Alert
 
 ```
-🚨 Critical Issues Detected
+ Critical Issues Detected
 
 SQL Injection
 File: `app.py`
 Line: 42
-Severity: 🔴 CRITICAL
+Severity: CRITICAL
 
 Command Injection
 File: `utils.py`
 Line: 100
-Severity: 🔴 CRITICAL
+Severity: CRITICAL
 
 ...and 3 more critical issues
 ```
@@ -241,76 +241,76 @@ name: Code Review
 on: [pull_request]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      
-      - name: Install reviewr
-        run: pip install reviewr
-      
-      - name: Run review with Slack notification
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_CHANNEL: '#code-reviews'
-        run: |
-          reviewr . --all --output-format sarif --slack --slack-critical-only
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ 
+ - name: Set up Python
+ uses: actions/setup-python@v4
+ with:
+ python-version: '3.9'
+ 
+ - name: Install reviewr
+ run: pip install reviewr
+ 
+ - name: Run review with Slack notification
+ env:
+ ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+ SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+ SLACK_CHANNEL: '#code-reviews'
+ run: |
+ reviewr . --all --output-format sarif --slack --slack-critical-only
 ```
 
 ### GitLab CI
 
 ```yaml
 code_review:
-  stage: test
-  script:
-    - pip install reviewr
-    - reviewr . --all --output-format sarif --slack --slack-critical-only
-  variables:
-    SLACK_WEBHOOK_URL: $SLACK_WEBHOOK_URL
-    SLACK_CHANNEL: '#code-reviews'
+ stage: test
+ script:
+ - pip install reviewr
+ - reviewr . --all --output-format sarif --slack --slack-critical-only
+ variables:
+ SLACK_WEBHOOK_URL: $SLACK_WEBHOOK_URL
+ SLACK_CHANNEL: '#code-reviews'
 ```
 
 ### Bitbucket Pipelines
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Code Review
-          script:
-            - pip install reviewr
-            - reviewr . --all --output-format sarif --slack --slack-critical-only
-          variables:
-            SLACK_WEBHOOK_URL: $SLACK_WEBHOOK_URL
-            SLACK_CHANNEL: '#code-reviews'
+ pull-requests:
+ '**':
+ - step:
+ name: Code Review
+ script:
+ - pip install reviewr
+ - reviewr . --all --output-format sarif --slack --slack-critical-only
+ variables:
+ SLACK_WEBHOOK_URL: $SLACK_WEBHOOK_URL
+ SLACK_CHANNEL: '#code-reviews'
 ```
 
 ### Jenkins
 
 ```groovy
 pipeline {
-    agent any
-    
-    environment {
-        SLACK_WEBHOOK_URL = credentials('slack-webhook-url')
-        SLACK_CHANNEL = '#code-reviews'
-    }
-    
-    stages {
-        stage('Code Review') {
-            steps {
-                sh 'pip install reviewr'
-                sh 'reviewr . --all --output-format sarif --slack --slack-critical-only'
-            }
-        }
-    }
+ agent any
+ 
+ environment {
+ SLACK_WEBHOOK_URL = credentials('slack-webhook-url')
+ SLACK_CHANNEL = '#code-reviews'
+ }
+ 
+ stages {
+ stage('Code Review') {
+ steps {
+ sh 'pip install reviewr'
+ sh 'reviewr . --all --output-format sarif --slack --slack-critical-only'
+ }
+ }
+ }
 }
 ```
 
@@ -320,19 +320,19 @@ Use Slack integration programmatically:
 
 ```python
 from reviewr.integrations.slack import (
-    SlackClient,
-    SlackConfig,
-    SlackFormatter,
-    post_review_summary,
-    post_critical_alert
+ SlackClient,
+ SlackConfig,
+ SlackFormatter,
+ post_review_summary,
+ post_critical_alert
 )
 
 # Configure Slack
 config = SlackConfig(
-    webhook_url='https://hooks.slack.com/services/YOUR/WEBHOOK/URL',
-    channel='#code-reviews',
-    username='reviewr',
-    icon_emoji=':robot_face:'
+ webhook_url='https://hooks.slack.com/services/YOUR/WEBHOOK/URL',
+ channel='#code-reviews',
+ username='reviewr',
+ icon_emoji=':robot_face:'
 )
 
 # Post review summary
@@ -341,21 +341,21 @@ post_review_summary(review_result, config)
 # Post critical alert
 critical_findings = [f for f in review_result.findings if f['severity'] == 'critical']
 if critical_findings:
-    post_critical_alert(critical_findings, config)
+ post_critical_alert(critical_findings, config)
 
 # Custom message
 client = SlackClient(config)
 client.post_message(
-    text="Custom notification",
-    blocks=[
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "*Custom notification*\n\nThis is a custom message."
-            }
-        }
-    ]
+ text="Custom notification",
+ blocks=[
+ {
+ "type": "section",
+ "text": {
+ "type": "mrkdwn",
+ "text": "*Custom notification*\n\nThis is a custom message."
+ }
+ }
+ ]
 )
 ```
 
@@ -418,4 +418,3 @@ For issues or questions:
 - GitHub Issues: https://github.com/yourusername/reviewr/issues
 - Documentation: https://reviewr.dev/docs/slack
 - Slack Community: https://reviewr-community.slack.com
-

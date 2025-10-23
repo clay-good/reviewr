@@ -19,17 +19,17 @@ reviewr provides **configuration presets** - predefined configurations for commo
 
 Configuration presets provide:
 
-- ✅ **Quick Start** - Get started with sensible defaults
-- ✅ **Best Practices** - Configurations tuned for specific use cases
-- ✅ **Consistency** - Standardize reviews across your team
-- ✅ **Flexibility** - Override preset values as needed
-- ✅ **Extensibility** - Create custom presets for your team
+- **Quick Start** - Get started with sensible defaults
+- **Best Practices** - Configurations tuned for specific use cases
+- **Consistency** - Standardize reviews across your team
+- **Flexibility** - Override preset values as needed
+- **Extensibility** - Create custom presets for your team
 
 ---
 
 ## Built-in Presets
 
-### 🔒 **security**
+### **security**
 
 **Focus:** Security vulnerabilities, injections, authentication issues
 
@@ -52,7 +52,7 @@ reviewr app.py --preset security
 
 ---
 
-### ⚡ **performance**
+### **performance**
 
 **Focus:** Performance bottlenecks, inefficiencies, optimization opportunities
 
@@ -75,7 +75,7 @@ reviewr app.py --preset performance
 
 ---
 
-### 🚀 **quick**
+### **quick**
 
 **Focus:** Fast review focusing on critical issues only
 
@@ -98,7 +98,7 @@ reviewr app.py --preset quick
 
 ---
 
-### 📋 **comprehensive**
+### **comprehensive**
 
 **Focus:** All review types and analyzers
 
@@ -121,7 +121,7 @@ reviewr app.py --preset comprehensive
 
 ---
 
-### 🧹 **maintainability**
+### **maintainability**
 
 **Focus:** Code quality, complexity, documentation, best practices
 
@@ -143,7 +143,7 @@ reviewr app.py --preset maintainability
 
 ---
 
-### 🔗 **pre-commit**
+### **pre-commit**
 
 **Focus:** Fast, focused on blocking issues for pre-commit hooks
 
@@ -167,7 +167,7 @@ reviewr app.py --preset pre-commit
 
 ---
 
-### 🔄 **ci-cd**
+### **ci-cd**
 
 **Focus:** Balanced review for CI/CD pipelines and pull requests
 
@@ -192,7 +192,7 @@ reviewr app.py --preset ci-cd
 
 ---
 
-### 🔐 **strict**
+### **strict**
 
 **Focus:** Zero tolerance for issues
 
@@ -267,14 +267,14 @@ Create custom presets for your team's specific needs:
 
 ```bash
 reviewr preset create my-team-standard \
-  --description "Team standard review configuration" \
-  --review-types security,maintainability,standards \
-  --min-severity medium \
-  --fail-on-critical \
-  --fail-on-high-threshold 3 \
-  --enabled-analyzers security,complexity,semantic \
-  --output-format markdown \
-  --output ./presets/my-team-standard.yml
+ --description "Team standard review configuration" \
+ --review-types security,maintainability,standards \
+ --min-severity medium \
+ --fail-on-critical \
+ --fail-on-high-threshold 3 \
+ --enabled-analyzers security,complexity,semantic \
+ --output-format markdown \
+ --output ./presets/my-team-standard.yml
 ```
 
 ### Custom Preset File Format
@@ -285,14 +285,14 @@ reviewr preset create my-team-standard \
 name: my-team-standard
 description: Team standard review configuration
 review_types:
-  - security
-  - maintainability
-  - standards
+ - security
+ - maintainability
+ - standards
 min_severity: medium
 enabled_analyzers:
-  - security
-  - complexity
-  - semantic
+ - security
+ - complexity
+ - semantic
 disabled_analyzers: []
 max_findings: null
 fail_on_critical: true
@@ -300,22 +300,22 @@ fail_on_high_threshold: 3
 custom_rules: null
 output_format: markdown
 additional_options:
-  check_documentation: true
-  check_test_coverage: true
+ check_documentation: true
+ check_test_coverage: true
 ```
 
 **JSON Format:**
 
 ```json
 {
-  "name": "my-team-standard",
-  "description": "Team standard review configuration",
-  "review_types": ["security", "maintainability", "standards"],
-  "min_severity": "medium",
-  "enabled_analyzers": ["security", "complexity", "semantic"],
-  "fail_on_critical": true,
-  "fail_on_high_threshold": 3,
-  "output_format": "markdown"
+ "name": "my-team-standard",
+ "description": "Team standard review configuration",
+ "review_types": ["security", "maintainability", "standards"],
+ "min_severity": "medium",
+ "enabled_analyzers": ["security", "complexity", "semantic"],
+ "fail_on_critical": true,
+ "fail_on_high_threshold": 3,
+ "output_format": "markdown"
 }
 ```
 
@@ -391,8 +391,8 @@ reviewr . --preset security --output-format html > security-report.html
 # .git/hooks/pre-commit
 #!/bin/bash
 reviewr $(git diff --cached --name-only --diff-filter=ACM | grep '\.py$') \
-  --preset pre-commit \
-  --output-format sarif
+ --preset pre-commit \
+ --output-format sarif
 ```
 
 ### Example 3: CI/CD Pipeline
@@ -400,8 +400,8 @@ reviewr $(git diff --cached --name-only --diff-filter=ACM | grep '\.py$') \
 ```yaml
 # .github/workflows/review.yml
 - name: Code Review
-  run: |
-    reviewr . --preset ci-cd --output-format sarif > results.sarif
+ run: |
+ reviewr . --preset ci-cd --output-format sarif > results.sarif
 ```
 
 ### Example 4: Team Standard
@@ -409,11 +409,11 @@ reviewr $(git diff --cached --name-only --diff-filter=ACM | grep '\.py$') \
 ```bash
 # Create team preset
 reviewr preset create team-standard \
-  --description "Our team's standard review" \
-  --review-types security,performance,maintainability \
-  --min-severity medium \
-  --fail-on-critical \
-  --output .reviewr/team-standard.yml
+ --description "Our team's standard review" \
+ --review-types security,performance,maintainability \
+ --min-severity medium \
+ --fail-on-critical \
+ --output .reviewr/team-standard.yml
 
 # Use in reviews
 reviewr . --preset team-standard --custom-presets-dir .reviewr
@@ -468,5 +468,4 @@ reviewr app.py --preset security --min-severity high
 
 ---
 
-**Built by a world-class software engineer** 🌟
-
+**Built by a world-class software engineer** 

@@ -24,24 +24,24 @@ The CircleCI integration enables **reviewr** to:
 
 ## Features
 
-### ✅ CircleCI Orb
+### CircleCI Orb
 - **Reusable Configuration**: Pre-built commands and jobs
 - **Parameterized**: Customizable presets, review types, and options
 - **Multiple Executors**: Python 3.8, 3.9, 3.10, 3.11 support
 - **Easy Integration**: One-line workflow integration
 
-### ✅ Artifact Publishing
+### Artifact Publishing
 - **Review Reports**: Publish JSON reports as artifacts
 - **Test Results**: Integrate with CircleCI test results
 - **SARIF Format**: Support for SARIF security reports
 
-### ✅ Flexible Workflows
+### Flexible Workflows
 - **Basic Review**: Simple code review workflow
 - **Security Scan**: Security-focused review
 - **Quality Check**: Code quality and metrics
 - **Parallel Execution**: Run multiple reviews in parallel
 
-### ✅ Auto-Detection
+### Auto-Detection
 - **Project Detection**: Automatic project slug detection
 - **Workflow Context**: Read workflow ID and job number
 - **Environment Variables**: Full CircleCI environment support
@@ -56,13 +56,13 @@ The CircleCI integration enables **reviewr** to:
 version: 2.1
 
 orbs:
-  reviewr: reviewr/reviewr@1.0.0
+ reviewr: reviewr/reviewr@1.0.0
 
 workflows:
-  version: 2
-  review:
-    jobs:
-      - reviewr/code-review
+ version: 2
+ review:
+ jobs:
+ - reviewr/code-review
 ```
 
 2. **Add CircleCI API token and AI provider credentials:**
@@ -81,26 +81,26 @@ Go to Project Settings → Environment Variables and add:
 version: 2.1
 
 jobs:
-  code-review:
-    docker:
-      - image: cimg/python:3.10
-    steps:
-      - checkout
-      - run:
-          name: Install reviewr
-          command: pip install reviewr
-      - run:
-          name: Run code review
-          command: reviewr circleci review --output review-report.json
-      - store_artifacts:
-          path: review-report.json
-          destination: artifacts/review-report.json
+ code-review:
+ docker:
+ - image: cimg/python:3.10
+ steps:
+ - checkout
+ - run:
+ name: Install reviewr
+ command: pip install reviewr
+ - run:
+ name: Run code review
+ command: reviewr circleci review --output review-report.json
+ - store_artifacts:
+ path: review-report.json
+ destination: artifacts/review-report.json
 
 workflows:
-  version: 2
-  review:
-    jobs:
-      - code-review
+ version: 2
+ review:
+ jobs:
+ - code-review
 ```
 
 2. **Add environment variables** (same as Option 1)
@@ -228,13 +228,13 @@ reviewr circleci workflow-info
 version: 2.1
 
 orbs:
-  reviewr: reviewr/reviewr@1.0.0
+ reviewr: reviewr/reviewr@1.0.0
 
 workflows:
-  version: 2
-  review:
-    jobs:
-      - reviewr/code-review
+ version: 2
+ review:
+ jobs:
+ - reviewr/code-review
 ```
 
 ### Security Scan
@@ -243,13 +243,13 @@ workflows:
 version: 2.1
 
 orbs:
-  reviewr: reviewr/reviewr@1.0.0
+ reviewr: reviewr/reviewr@1.0.0
 
 workflows:
-  version: 2
-  security:
-    jobs:
-      - reviewr/security-scan
+ version: 2
+ security:
+ jobs:
+ - reviewr/security-scan
 ```
 
 ### Custom Configuration
@@ -258,19 +258,19 @@ workflows:
 version: 2.1
 
 orbs:
-  reviewr: reviewr/reviewr@1.0.0
+ reviewr: reviewr/reviewr@1.0.0
 
 workflows:
-  version: 2
-  custom-review:
-    jobs:
-      - reviewr/code-review:
-          python-version: "3.11"
-          preset: strict
-          review-types: "security,performance,correctness"
-          security-scan: true
-          code-metrics: true
-          fail-on-issues: true
+ version: 2
+ custom-review:
+ jobs:
+ - reviewr/code-review:
+ python-version: "3.11"
+ preset: strict
+ review-types: "security,performance,correctness"
+ security-scan: true
+ code-metrics: true
+ fail-on-issues: true
 ```
 
 ### Parallel Reviews
@@ -279,22 +279,22 @@ workflows:
 version: 2.1
 
 orbs:
-  reviewr: reviewr/reviewr@1.0.0
+ reviewr: reviewr/reviewr@1.0.0
 
 workflows:
-  version: 2
-  comprehensive-review:
-    jobs:
-      - reviewr/security-scan:
-          name: security-review
-      - reviewr/quality-check:
-          name: quality-review
-      - reviewr/code-review:
-          name: full-review
-          preset: strict
-          requires:
-            - security-review
-            - quality-review
+ version: 2
+ comprehensive-review:
+ jobs:
+ - reviewr/security-scan:
+ name: security-review
+ - reviewr/quality-check:
+ name: quality-review
+ - reviewr/code-review:
+ name: full-review
+ preset: strict
+ requires:
+ - security-review
+ - quality-review
 ```
 
 ### Branch-Specific Presets
@@ -303,29 +303,29 @@ workflows:
 version: 2.1
 
 orbs:
-  reviewr: reviewr/reviewr@1.0.0
+ reviewr: reviewr/reviewr@1.0.0
 
 workflows:
-  version: 2
-  branch-review:
-    jobs:
-      # Strict review for main branch
-      - reviewr/code-review:
-          name: main-review
-          preset: strict
-          fail-on-issues: true
-          filters:
-            branches:
-              only: main
-      
-      # Quick review for feature branches
-      - reviewr/code-review:
-          name: feature-review
-          preset: quick
-          fail-on-issues: false
-          filters:
-            branches:
-              ignore: main
+ version: 2
+ branch-review:
+ jobs:
+ # Strict review for main branch
+ - reviewr/code-review:
+ name: main-review
+ preset: strict
+ fail-on-issues: true
+ filters:
+ branches:
+ only: main
+ 
+ # Quick review for feature branches
+ - reviewr/code-review:
+ name: feature-review
+ preset: quick
+ fail-on-issues: false
+ filters:
+ branches:
+ ignore: main
 ```
 
 ### Scheduled Security Scans
@@ -334,28 +334,28 @@ workflows:
 version: 2.1
 
 orbs:
-  reviewr: reviewr/reviewr@1.0.0
+ reviewr: reviewr/reviewr@1.0.0
 
 workflows:
-  version: 2
-  
-  # Run on every commit
-  commit-review:
-    jobs:
-      - reviewr/code-review:
-          preset: balanced
-  
-  # Run security scan daily at midnight
-  nightly-security:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only: main
-    jobs:
-      - reviewr/security-scan:
-          fail-on-issues: true
+ version: 2
+ 
+ # Run on every commit
+ commit-review:
+ jobs:
+ - reviewr/code-review:
+ preset: balanced
+ 
+ # Run security scan daily at midnight
+ nightly-security:
+ triggers:
+ - schedule:
+ cron: "0 0 * * *"
+ filters:
+ branches:
+ only: main
+ jobs:
+ - reviewr/security-scan:
+ fail-on-issues: true
 ```
 
 ## Advanced Usage
@@ -364,11 +364,11 @@ workflows:
 
 ```bash
 reviewr circleci review \
-  --review-type security \
-  --review-type performance \
-  --review-type correctness \
-  --security-scan \
-  --code-metrics
+ --review-type security \
+ --review-type performance \
+ --review-type correctness \
+ --security-scan \
+ --code-metrics
 ```
 
 ### Using Presets
@@ -391,9 +391,9 @@ reviewr circleci review --preset security-focused --security-scan
 
 ```bash
 reviewr circleci review \
-  --slack \
-  --slack-channel '#code-reviews' \
-  --slack-critical-only
+ --slack \
+ --slack-channel '#code-reviews' \
+ --slack-critical-only
 ```
 
 ## Troubleshooting
@@ -441,4 +441,3 @@ reviewr circleci review \
 - [Code Metrics Guide](CODE_METRICS.md)
 - [Slack Integration](SLACK_INTEGRATION.md)
 - [CI/CD Best Practices](CI_CD_BEST_PRACTICES.md)
-

@@ -26,24 +26,24 @@ The Email Reports integration enables **reviewr** to:
 
 ## Features
 
-### ✅ Multiple Email Providers
+### Multiple Email Providers
 - **SMTP**: Standard SMTP server (Gmail, Outlook, custom)
 - **SendGrid**: SendGrid API for reliable delivery
 - **AWS SES**: Amazon Simple Email Service for scalability
 
-### ✅ HTML Email Templates
+### HTML Email Templates
 - **Responsive Design**: Mobile-friendly HTML templates
 - **Inline CSS**: Compatible with all email clients
-- **Severity Colors**: Color-coded severity levels (🔴 🟠 🟡 🟢)
+- **Severity Colors**: Color-coded severity levels ( 🟠 🟡 🟢)
 - **Rich Formatting**: Tables, gradients, and professional styling
 
-### ✅ Report Types
+### Report Types
 - **Review Summary**: Complete review results with statistics
 - **Critical Alerts**: Immediate notifications for critical issues
 - **Digest Reports**: Daily/weekly summaries of multiple reviews
 - **Custom Reports**: Flexible template system
 
-### ✅ Advanced Features
+### Advanced Features
 - **Multiple Recipients**: Send to multiple email addresses
 - **CC/BCC Support**: Carbon copy and blind carbon copy
 - **Attachments**: Attach JSON, PDF, or SARIF files
@@ -54,8 +54,8 @@ The Email Reports integration enables **reviewr** to:
 ### Option 1: Using SMTP (Gmail Example)
 
 1. **Enable App Password for Gmail:**
-   - Go to https://myaccount.google.com/apppasswords
-   - Generate an app password
+ - Go to https://myaccount.google.com/apppasswords
+ - Generate an app password
 
 2. **Set environment variables:**
 
@@ -75,15 +75,15 @@ reviewr . --output review-results.json
 
 # Send email
 reviewr email send review-results.json \
-  --to recipient@example.com \
-  --project-name "My Project"
+ --to recipient@example.com \
+ --project-name "My Project"
 ```
 
 ### Option 2: Using SendGrid
 
 1. **Create SendGrid account and API key:**
-   - Sign up at https://signup.sendgrid.com/
-   - Create API key at https://app.sendgrid.com/settings/api_keys
+ - Sign up at https://signup.sendgrid.com/
+ - Create API key at https://app.sendgrid.com/settings/api_keys
 
 2. **Set environment variables:**
 
@@ -97,16 +97,16 @@ export SENDGRID_API_KEY='your-api-key'
 ```bash
 reviewr . --output review-results.json
 reviewr email send review-results.json \
-  --to recipient@example.com \
-  --provider sendgrid \
-  --project-name "My Project"
+ --to recipient@example.com \
+ --provider sendgrid \
+ --project-name "My Project"
 ```
 
 ### Option 3: Using AWS SES
 
 1. **Set up AWS SES and verify email:**
-   - Go to https://console.aws.amazon.com/ses/
-   - Verify your email address or domain
+ - Go to https://console.aws.amazon.com/ses/
+ - Verify your email address or domain
 
 2. **Set environment variables:**
 
@@ -122,9 +122,9 @@ export AWS_SECRET_ACCESS_KEY='your-secret-key'
 ```bash
 reviewr . --output review-results.json
 reviewr email send review-results.json \
-  --to recipient@example.com \
-  --provider aws_ses \
-  --project-name "My Project"
+ --to recipient@example.com \
+ --provider aws_ses \
+ --project-name "My Project"
 ```
 
 ## Configuration
@@ -224,40 +224,40 @@ reviewr email send <results_file> [OPTIONS]
 ```bash
 # Send to single recipient
 reviewr email send review-results.json \
-  --to developer@example.com \
-  --project-name "My App"
+ --to developer@example.com \
+ --project-name "My App"
 
 # Send to multiple recipients with CC
 reviewr email send review-results.json \
-  --to developer1@example.com \
-  --to developer2@example.com \
-  --cc manager@example.com \
-  --project-name "My App"
+ --to developer1@example.com \
+ --to developer2@example.com \
+ --cc manager@example.com \
+ --project-name "My App"
 
 # Send only critical findings
 reviewr email send review-results.json \
-  --to security@example.com \
-  --critical-only \
-  --project-name "My App"
+ --to security@example.com \
+ --critical-only \
+ --project-name "My App"
 
 # Include repository URL
 reviewr email send review-results.json \
-  --to team@example.com \
-  --project-name "My App" \
-  --repository-url "https://github.com/myorg/myapp"
+ --to team@example.com \
+ --project-name "My App" \
+ --repository-url "https://github.com/myorg/myapp"
 
 # Attach JSON file
 reviewr email send review-results.json \
-  --to team@example.com \
-  --attach-json \
-  --project-name "My App"
+ --to team@example.com \
+ --attach-json \
+ --project-name "My App"
 
 # Use SendGrid
 reviewr email send review-results.json \
-  --to team@example.com \
-  --provider sendgrid \
-  --sendgrid-api-key "your-api-key" \
-  --project-name "My App"
+ --to team@example.com \
+ --provider sendgrid \
+ --sendgrid-api-key "your-api-key" \
+ --project-name "My App"
 ```
 
 ### `reviewr email setup`
@@ -282,12 +282,12 @@ reviewr email setup [OPTIONS]
 
 ```bash
 reviewr email setup \
-  --provider smtp \
-  --from-email "your-email@gmail.com" \
-  --smtp-host "smtp.gmail.com" \
-  --smtp-port 587 \
-  --smtp-username "your-email@gmail.com" \
-  --smtp-password "your-app-password"
+ --provider smtp \
+ --from-email "your-email@gmail.com" \
+ --smtp-host "smtp.gmail.com" \
+ --smtp-port 587 \
+ --smtp-username "your-email@gmail.com" \
+ --smtp-password "your-app-password"
 ```
 
 ### `reviewr email test`
@@ -330,15 +330,15 @@ The review summary template displays:
 **Example:**
 
 ```
-📊 Code Review Report
+ Code Review Report
 My Project
 
-🔴 Critical Issues Found
+ Critical Issues Found
 Review Date: 2024-01-15 10:30:00
 
 Summary
 Total Issues: 5
-🔴 Critical: 2
+ Critical: 2
 🟠 High: 1
 🟡 Medium: 1
 🟢 Low: 1
@@ -352,7 +352,7 @@ Findings
 ### Critical Alert Template
 
 The critical alert template displays:
-- Alert header with 🚨 emoji
+- Alert header with emoji
 - Issue title and severity
 - File and line number
 - Description
@@ -362,12 +362,12 @@ The critical alert template displays:
 **Example:**
 
 ```
-🚨 Critical Issue Detected
+ Critical Issue Detected
 My Project
 
-🔴 SQL Injection Vulnerability
+ SQL Injection Vulnerability
 
-Severity: 🔴 CRITICAL
+Severity: CRITICAL
 Type: security
 File: app.py
 Line: 42
@@ -399,50 +399,50 @@ name: Code Review
 on: [pull_request]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install reviewr
-        run: pip install reviewr
-      
-      - name: Run code review
-        run: reviewr . --output review-results.json
-      
-      - name: Send email report
-        env:
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-        run: |
-          reviewr email send review-results.json \
-            --to team@example.com \
-            --project-name "${{ github.repository }}" \
-            --repository-url "${{ github.server_url }}/${{ github.repository }}"
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ 
+ - name: Install reviewr
+ run: pip install reviewr
+ 
+ - name: Run code review
+ run: reviewr . --output review-results.json
+ 
+ - name: Send email report
+ env:
+ EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+ SMTP_HOST: ${{ secrets.SMTP_HOST }}
+ SMTP_PORT: ${{ secrets.SMTP_PORT }}
+ SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+ SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+ run: |
+ reviewr email send review-results.json \
+ --to team@example.com \
+ --project-name "${{ github.repository }}" \
+ --repository-url "${{ github.server_url }}/${{ github.repository }}"
 ```
 
 ### GitLab CI
 
 ```yaml
 code_review:
-  stage: test
-  script:
-    - pip install reviewr
-    - reviewr . --output review-results.json
-    - |
-      reviewr email send review-results.json \
-        --to team@example.com \
-        --project-name "$CI_PROJECT_NAME" \
-        --repository-url "$CI_PROJECT_URL"
-  variables:
-    EMAIL_FROM: $EMAIL_FROM
-    SMTP_HOST: $SMTP_HOST
-    SMTP_PORT: $SMTP_PORT
-    SMTP_USERNAME: $SMTP_USERNAME
-    SMTP_PASSWORD: $SMTP_PASSWORD
+ stage: test
+ script:
+ - pip install reviewr
+ - reviewr . --output review-results.json
+ - |
+ reviewr email send review-results.json \
+ --to team@example.com \
+ --project-name "$CI_PROJECT_NAME" \
+ --repository-url "$CI_PROJECT_URL"
+ variables:
+ EMAIL_FROM: $EMAIL_FROM
+ SMTP_HOST: $SMTP_HOST
+ SMTP_PORT: $SMTP_PORT
+ SMTP_USERNAME: $SMTP_USERNAME
+ SMTP_PASSWORD: $SMTP_PASSWORD
 ```
 
 ## Scheduled Reports
@@ -460,8 +460,8 @@ reviewr /path/to/project2 --output /tmp/project2-results.json
 
 # Send digest email
 reviewr email send /tmp/project1-results.json \
-  --to team@example.com \
-  --project-name "Daily Code Review Digest"
+ --to team@example.com \
+ --project-name "Daily Code Review Digest"
 
 # Clean up
 rm /tmp/*-results.json
@@ -536,4 +536,3 @@ Add to crontab:
 - [Microsoft Teams Integration](TEAMS_INTEGRATION.md)
 - [CI/CD Best Practices](CI_CD_BEST_PRACTICES.md)
 - [Security Scanning Guide](SECURITY_SCANNING.md)
-

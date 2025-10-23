@@ -91,8 +91,8 @@ Review only staged changes before committing:
 reviewr . --diff --diff-base HEAD --local-only --security --performance
 
 if [ $? -ne 0 ]; then
-    echo "Code review found issues. Commit aborted."
-    exit 1
+ echo "Code review found issues. Commit aborted."
+ exit 1
 fi
 ```
 
@@ -105,27 +105,27 @@ name: Code Review
 on: pull_request
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Fetch full history for diff
-      
-      - name: Review PR Changes
-        run: |
-          reviewr . \
-            --diff \
-            --diff-base origin/${{ github.base_ref }} \
-            --security \
-            --performance \
-            --output-format sarif \
-            > reviewr-results.sarif
-      
-      - name: Upload Results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: reviewr-results.sarif
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ with:
+ fetch-depth: 0 # Fetch full history for diff
+ 
+ - name: Review PR Changes
+ run: |
+ reviewr . \
+ --diff \
+ --diff-base origin/${{ github.base_ref }} \
+ --security \
+ --performance \
+ --output-format sarif \
+ > reviewr-results.sarif
+ 
+ - name: Upload Results
+ uses: github/codeql-action/upload-sarif@v2
+ with:
+ sarif_file: reviewr-results.sarif
 ```
 
 ### Example 3: GitLab CI MR Review
@@ -134,17 +134,17 @@ Review only MR changes:
 
 ```yaml
 code_review:
-  stage: test
-  script:
-    - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-    - reviewr . 
-        --diff 
-        --diff-base origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME 
-        --security 
-        --performance 
-        --output-format markdown
-  only:
-    - merge_requests
+ stage: test
+ script:
+ - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+ - reviewr . 
+ --diff 
+ --diff-base origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME 
+ --security 
+ --performance 
+ --output-format markdown
+ only:
+ - merge_requests
 ```
 
 ### Example 4: Review Last Commit
@@ -180,9 +180,9 @@ Time: 45.2 seconds
 ```bash
 $ time reviewr large_project/ --diff --local-only --all
 
-Files reviewed: 3  # Only changed files
-Total findings: 8  # Only findings in changed code
-Time: 4.1 seconds  # 11x faster!
+Files reviewed: 3 # Only changed files
+Total findings: 8 # Only findings in changed code
+Time: 4.1 seconds # 11x faster!
 ```
 
 ## Best Practices
@@ -233,10 +233,10 @@ The diff mode integrates seamlessly with GitHub PR reviews:
 
 ```bash
 reviewr github review \
-  --pr $PR_NUMBER \
-  --diff \
-  --diff-base origin/$BASE_BRANCH \
-  --auto-approve
+ --pr $PR_NUMBER \
+ --diff \
+ --diff-base origin/$BASE_BRANCH \
+ --auto-approve
 ```
 
 ### GitLab Integration
@@ -245,10 +245,10 @@ Similarly for GitLab MR reviews:
 
 ```bash
 reviewr gitlab review \
-  --mr $MR_NUMBER \
-  --diff \
-  --diff-base origin/$TARGET_BRANCH \
-  --auto-approve
+ --mr $MR_NUMBER \
+ --diff \
+ --diff-base origin/$TARGET_BRANCH \
+ --auto-approve
 ```
 
 ## Technical Details
@@ -268,15 +268,15 @@ Context lines are included before and after each change to provide the analyzer 
 ```python
 # Context before (5 lines)
 def existing_function():
-    return "unchanged"
+ return "unchanged"
 
 # Changed section
-def new_function():  # NEW
-    return "new"     # NEW
+def new_function(): # NEW
+ return "new" # NEW
 
 # Context after (5 lines)
 def another_function():
-    return "also unchanged"
+ return "also unchanged"
 ```
 
 ### Line Number Mapping
@@ -322,19 +322,19 @@ reviewr . --diff --diff-context 10
 
 ## FAQ
 
-**Q: Can I use diff mode without git?**  
+**Q: Can I use diff mode without git?** 
 A: No, diff mode requires a git repository to detect changes.
 
-**Q: Does diff mode work with AI review?**  
+**Q: Does diff mode work with AI review?** 
 A: Yes! Diff mode works with both local-only and AI-powered reviews.
 
-**Q: How much does diff mode reduce costs?**  
+**Q: How much does diff mode reduce costs?** 
 A: Typically 70-90% reduction in API calls for PR reviews, depending on the size of changes.
 
-**Q: Can I review changes across multiple branches?**  
+**Q: Can I review changes across multiple branches?** 
 A: Yes, use `--diff-base branch1 --diff-target branch2`
 
-**Q: Does diff mode affect accuracy?**  
+**Q: Does diff mode affect accuracy?** 
 A: No, with proper context lines (5-10), accuracy is maintained while dramatically reducing review time.
 
 ## See Also
@@ -343,4 +343,3 @@ A: No, with proper context lines (5-10), accuracy is maintained while dramatical
 - [CI/CD Integration](CI_CD_INTEGRATION.md) - Set up diff mode in pipelines
 - [GitHub Integration](GITHUB_INTEGRATION.md) - PR reviews with diff mode
 - [GitLab Integration](GITLAB_INTEGRATION.md) - MR reviews with diff mode
-

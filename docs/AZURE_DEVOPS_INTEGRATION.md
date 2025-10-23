@@ -24,25 +24,25 @@ The Azure DevOps integration enables **reviewr** to:
 
 ## Features
 
-### ✅ Pull Request Reviews
+### Pull Request Reviews
 - **Summary Comments**: Post comprehensive review summaries with severity breakdown
 - **Inline Comments**: Post comments on specific lines with file context
 - **Thread Support**: Create comment threads for discussions
 
-### ✅ Voting System
+### Voting System
 - **Auto-Approval**: Automatically approve PRs with no critical/high issues
 - **Vote Options**: APPROVED, APPROVED_WITH_SUGGESTIONS, NO_VOTE, WAITING_FOR_AUTHOR, REJECTED
 
-### ✅ Build Status
+### Build Status
 - **Status Updates**: Update commit status (succeeded, failed, pending, error)
 - **Custom Context**: Set custom status context/name
 - **CI/CD Integration**: Integrate with Azure Pipelines build status
 
-### ✅ Work Item Linking
+### Work Item Linking
 - **Automatic Linking**: Link PRs to work items (user stories, bugs, tasks)
 - **Traceability**: Maintain traceability between code changes and work items
 
-### ✅ Deployment Support
+### Deployment Support
 - **Azure DevOps Services**: Full support for dev.azure.com
 - **Azure DevOps Server**: Support for on-premises installations
 
@@ -54,9 +54,9 @@ The Azure DevOps integration enables **reviewr** to:
 2. Click **New Token**
 3. Set name: `reviewr`
 4. Select scopes:
-   - **Code**: Read & Write
-   - **Pull Request Threads**: Read & Write
-   - **Build**: Read & Execute
+ - **Code**: Read & Write
+ - **Pull Request Threads**: Read & Write
+ - **Build**: Read & Execute
 5. Click **Create** and copy the token
 
 ### 2. Set Environment Variables
@@ -72,10 +72,10 @@ export AZURE_DEVOPS_REPO='your-repository'
 
 ```bash
 reviewr azure setup \
-  --pat $AZURE_DEVOPS_PAT \
-  --organization $AZURE_DEVOPS_ORG \
-  --project $AZURE_DEVOPS_PROJECT \
-  --repository $AZURE_DEVOPS_REPO
+ --pat $AZURE_DEVOPS_PAT \
+ --organization $AZURE_DEVOPS_ORG \
+ --project $AZURE_DEVOPS_PROJECT \
+ --repository $AZURE_DEVOPS_REPO
 ```
 
 ### 4. Review a Pull Request
@@ -168,10 +168,10 @@ reviewr azure setup [OPTIONS]
 
 ```bash
 reviewr azure setup \
-  --pat YOUR_PAT \
-  --organization myorg \
-  --project myproject \
-  --repository myrepo
+ --pat YOUR_PAT \
+ --organization myorg \
+ --project myproject \
+ --repository myrepo
 ```
 
 ### `reviewr azure status`
@@ -197,15 +197,15 @@ reviewr azure status [OPTIONS]
 ```bash
 # Update status to succeeded
 reviewr azure status \
-  --commit-id abc123 \
-  --state succeeded \
-  --description "Code review passed"
+ --commit-id abc123 \
+ --state succeeded \
+ --description "Code review passed"
 
 # Update status to failed
 reviewr azure status \
-  --commit-id abc123 \
-  --state failed \
-  --description "Critical issues found"
+ --commit-id abc123 \
+ --state failed \
+ --description "Critical issues found"
 ```
 
 ### `reviewr azure link-work-item`
@@ -238,83 +238,83 @@ Create `.azure-pipelines/azure-pipelines.yml`:
 
 ```yaml
 trigger:
-  - main
+ - main
 
 pr:
-  - main
+ - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+ vmImage: 'ubuntu-latest'
 
 variables:
-  - group: reviewr-config  # Contains AZURE_DEVOPS_PAT
+ - group: reviewr-config # Contains AZURE_DEVOPS_PAT
 
 steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.9'
-  
-  - script: pip install reviewr
-    displayName: 'Install reviewr'
-  
-  - script: reviewr azure review --auto-approve
-    displayName: 'Code Review'
-    env:
-      AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
-    condition: eq(variables['Build.Reason'], 'PullRequest')
+ - task: UsePythonVersion@0
+ inputs:
+ versionSpec: '3.9'
+ 
+ - script: pip install reviewr
+ displayName: 'Install reviewr'
+ 
+ - script: reviewr azure review --auto-approve
+ displayName: 'Code Review'
+ env:
+ AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+ condition: eq(variables['Build.Reason'], 'PullRequest')
 ```
 
 ### Advanced Configuration
 
 ```yaml
 stages:
-  - stage: CodeReview
-    jobs:
-      - job: ReviewCode
-        steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '3.9'
-          
-          - script: pip install reviewr
-            displayName: 'Install reviewr'
-          
-          - script: |
-              reviewr azure review \
-                --review-type security correctness maintainability \
-                --security-scan \
-                --code-metrics \
-                --auto-approve
-            displayName: 'Comprehensive Review'
-            env:
-              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
-          
-          - script: |
-              reviewr azure status \
-                --commit-id $(Build.SourceVersion) \
-                --state succeeded \
-                --description "Review passed"
-            displayName: 'Update Status'
-            env:
-              AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
-            condition: succeeded()
+ - stage: CodeReview
+ jobs:
+ - job: ReviewCode
+ steps:
+ - task: UsePythonVersion@0
+ inputs:
+ versionSpec: '3.9'
+ 
+ - script: pip install reviewr
+ displayName: 'Install reviewr'
+ 
+ - script: |
+ reviewr azure review \
+ --review-type security correctness maintainability \
+ --security-scan \
+ --code-metrics \
+ --auto-approve
+ displayName: 'Comprehensive Review'
+ env:
+ AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+ 
+ - script: |
+ reviewr azure status \
+ --commit-id $(Build.SourceVersion) \
+ --state succeeded \
+ --description "Review passed"
+ displayName: 'Update Status'
+ env:
+ AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+ condition: succeeded()
 ```
 
 ### Work Item Linking
 
 ```yaml
 - script: |
-    # Extract work item ID from branch name
-    WORK_ITEM_ID=$(echo "$(System.PullRequest.SourceBranch)" | grep -oP '\d+' | head -1)
-    
-    if [ -n "$WORK_ITEM_ID" ]; then
-      reviewr azure review --auto-approve --work-item $WORK_ITEM_ID
-    else
-      reviewr azure review --auto-approve
-    fi
-  displayName: 'Review with Work Item Linking'
-  env:
-    AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
+ # Extract work item ID from branch name
+ WORK_ITEM_ID=$(echo "$(System.PullRequest.SourceBranch)" | grep -oP '\d+' | head -1)
+ 
+ if [ -n "$WORK_ITEM_ID" ]; then
+ reviewr azure review --auto-approve --work-item $WORK_ITEM_ID
+ else
+ reviewr azure review --auto-approve
+ fi
+ displayName: 'Review with Work Item Linking'
+ env:
+ AZURE_DEVOPS_PAT: $(AZURE_DEVOPS_PAT)
 ```
 
 ## Advanced Usage
@@ -324,17 +324,17 @@ stages:
 ```bash
 # Security-focused review
 reviewr azure review \
-  --review-type security \
-  --security-scan \
-  --check-vulnerabilities \
-  --check-licenses
+ --review-type security \
+ --security-scan \
+ --check-vulnerabilities \
+ --check-licenses
 
 # Code quality review
 reviewr azure review \
-  --review-type correctness maintainability \
-  --code-metrics \
-  --check-complexity \
-  --check-duplication
+ --review-type correctness maintainability \
+ --code-metrics \
+ --check-complexity \
+ --check-duplication
 ```
 
 ### Using Presets
@@ -354,10 +354,10 @@ reviewr azure review --preset quick
 
 ```bash
 reviewr azure review \
-  --auto-approve \
-  --slack \
-  --slack-channel '#code-reviews' \
-  --slack-critical-only
+ --auto-approve \
+ --slack \
+ --slack-channel '#code-reviews' \
+ --slack-critical-only
 ```
 
 ## Troubleshooting
@@ -376,9 +376,9 @@ reviewr azure review \
 
 ```bash
 reviewr azure review \
-  --organization myorg \
-  --project myproject \
-  --repository myrepo
+ --organization myorg \
+ --project myproject \
+ --repository myrepo
 ```
 
 ### PR ID Detection Errors
@@ -424,4 +424,3 @@ reviewr azure review
 - [Code Metrics Guide](CODE_METRICS.md)
 - [Slack Integration](SLACK_INTEGRATION.md)
 - [CI/CD Best Practices](CI_CD_BEST_PRACTICES.md)
-

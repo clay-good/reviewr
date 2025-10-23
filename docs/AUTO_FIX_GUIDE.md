@@ -1,4 +1,4 @@
-# 🔧 Auto-Fix Guide
+# Auto-Fix Guide
 
 Comprehensive guide to reviewr's automatic code fixing capabilities.
 
@@ -21,12 +21,12 @@ Comprehensive guide to reviewr's automatic code fixing capabilities.
 
 reviewr can automatically fix many common code issues detected during analysis. The auto-fix system:
 
-✅ **Safe by default** - Only applies fixes marked as safe  
-✅ **Backup & rollback** - Creates backups before making changes  
-✅ **Syntax validation** - Validates code after applying fixes  
-✅ **Interactive mode** - Ask for confirmation before each fix  
-✅ **Dry run mode** - Preview changes without applying them  
-✅ **Confidence scoring** - Each fix has a confidence score (0.0-1.0)  
+- **Safe by default** - Only applies fixes marked as safe
+- **Backup & rollback** - Creates backups before making changes
+- **Syntax validation** - Validates code after applying fixes
+- **Interactive mode** - Ask for confirmation before each fix
+- **Dry run mode** - Preview changes without applying them
+- **Confidence scoring** - Each fix has a confidence score (0.0-1.0)
 
 ---
 
@@ -70,31 +70,31 @@ reviewr fix rollback
 
 | Issue | Fix | Confidence | Safe |
 |-------|-----|------------|------|
-| Unused imports | Remove import statement | 95% | ✅ |
-| `== None` comparison | Replace with `is None` | 95% | ✅ |
-| `!= None` comparison | Replace with `is not None` | 95% | ✅ |
-| Bare `except:` | Replace with `except Exception:` | 90% | ✅ |
-| `% formatting` | Convert to f-string | 80% | ✅ |
-| `.format()` | Convert to f-string | 85% | ✅ |
-| Mutable default args | Replace with `None` | 70% | ⚠️ |
-| String concatenation in loops | Suggest list + join | 60% | ⚠️ |
+| Unused imports | Remove import statement | 95% | |
+| `== None` comparison | Replace with `is None` | 95% | |
+| `!= None` comparison | Replace with `is not None` | 95% | |
+| Bare `except:` | Replace with `except Exception:` | 90% | |
+| `% formatting` | Convert to f-string | 80% | |
+| `.format()` | Convert to f-string | 85% | |
+| Mutable default args | Replace with `None` | 70% | |
+| String concatenation in loops | Suggest list + join | 60% | |
 
 ### JavaScript/TypeScript Fixes
 
 | Issue | Fix | Confidence | Safe |
 |-------|-----|------------|------|
-| `var` declaration | Replace with `const` | 90% | ✅ |
-| `var` (reassigned) | Replace with `let` | 95% | ✅ |
-| `==` comparison | Replace with `===` | 95% | ✅ |
-| `!=` comparison | Replace with `!==` | 95% | ✅ |
-| String concatenation | Convert to template literal | 85% | ✅ |
-| Function expression | Convert to arrow function | 80% | ✅ |
-| `obj && obj.prop` | Replace with `obj?.prop` | 90% | ✅ |
-| `value \|\| default` | Replace with `value ?? default` | 75% | ⚠️ |
+| `var` declaration | Replace with `const` | 90% | |
+| `var` (reassigned) | Replace with `let` | 95% | |
+| `==` comparison | Replace with `===` | 95% | |
+| `!=` comparison | Replace with `!==` | 95% | |
+| String concatenation | Convert to template literal | 85% | |
+| Function expression | Convert to arrow function | 80% | |
+| `obj && obj.prop` | Replace with `obj?.prop` | 90% | |
+| `value \|\| default` | Replace with `value ?? default` | 75% | |
 
 **Legend:**
-- ✅ **Safe** - Can be applied automatically without risk
-- ⚠️ **Requires Review** - May change behavior, review recommended
+- **Safe** - Can be applied automatically without risk
+- **Requires Review** - May change behavior, review recommended
 
 ---
 
@@ -240,36 +240,36 @@ reviewr fix apply src/ --safe-only --verbose
 
 **Output:**
 ```
-🔍 Analyzing code at src/...
-✓ Found 15 issues
+ Analyzing code at src/...
+ Found 15 issues
 📖 Loading file contents...
-🔧 Generating fixes...
-✓ Generated 8 fixes
+ Generating fixes...
+ Generated 8 fixes
 
 Fix Summary
 ┏━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━┓
-┃ Category    ┃ Count ┃ Safe ┃ Avg Confidence ┃
+┃ Category ┃ Count ┃ Safe ┃ Avg Confidence ┃
 ┡━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━┩
-│ imports     │     3 │    3 │            95% │
-│ correctness │     4 │    4 │            93% │
-│ style       │     1 │    1 │            85% │
+│ imports │ 3 │ 3 │ 95% │
+│ correctness │ 4 │ 4 │ 93% │
+│ style │ 1 │ 1 │ 85% │
 └─────────────┴───────┴──────┴────────────────┘
 
-⚡ Applying fixes...
-✅ Remove unused import: Fix applied successfully
-✅ Use 'is None': Fix applied successfully
-✅ Replace bare except: Fix applied successfully
+ Applying fixes...
+ Remove unused import: Fix applied successfully
+ Use 'is None': Fix applied successfully
+ Replace bare except: Fix applied successfully
 ...
 
 ================================================================================
 Results:
-  ✓ Success: 8
-  ✗ Failed: 0
-  ⏭ Skipped: 0
+ Success: 8
+ Failed: 0
+ ⏭ Skipped: 0
 ================================================================================
 
 💾 Backups saved to: .reviewr_backups
-   To rollback: reviewr fix rollback --backup-dir .reviewr_backups
+ To rollback: reviewr fix rollback --backup-dir .reviewr_backups
 ```
 
 ### Example 2: Interactive Mode
@@ -292,11 +292,10 @@ import os
 
 New code:
 
-
 Explanation: Removing unused imports improves code clarity and reduces namespace pollution.
 
 Apply this fix? [y/N]: y
-✅ Remove unused import: Fix applied successfully
+ Remove unused import: Fix applied successfully
 
 ================================================================================
 Fix: Use 'is None'
@@ -313,7 +312,7 @@ if user is None:
 Explanation: Use 'is' for singleton comparisons (None, True, False) instead of '=='.
 
 Apply this fix? [y/N]: y
-✅ Use 'is None': Fix applied successfully
+ Use 'is None': Fix applied successfully
 ```
 
 ### Example 3: Dry Run
@@ -325,28 +324,28 @@ reviewr fix apply src/ --dry-run --verbose
 
 **Output:**
 ```
-🔍 Analyzing code at src/...
-✓ Found 12 issues
-🔧 Generating fixes...
-✓ Generated 6 fixes
+ Analyzing code at src/...
+ Found 12 issues
+ Generating fixes...
+ Generated 6 fixes
 
 Dry run mode - no changes will be made
 
 Fix 1/6:
-  File: src/app.py:1
-  Category: imports
-  Description: Remove unused import
-  Confidence: 95%
-  Safe: ✓
-  Explanation: Removing unused imports improves code clarity
+ File: src/app.py:1
+ Category: imports
+ Description: Remove unused import
+ Confidence: 95%
+ Safe: 
+ Explanation: Removing unused imports improves code clarity
 
 Fix 2/6:
-  File: src/app.py:15
-  Category: correctness
-  Description: Use 'is None'
-  Confidence: 95%
-  Safe: ✓
-  Explanation: Use 'is' for singleton comparisons
+ File: src/app.py:15
+ Category: correctness
+ Description: Use 'is None'
+ Confidence: 95%
+ Safe: 
+ Explanation: Use 'is' for singleton comparisons
 ...
 ```
 
@@ -420,31 +419,31 @@ reviewr fix apply src/ --verbose
 ## Best Practices
 
 1. **Start with dry run**: Always preview changes first
-   ```bash
-   reviewr fix apply src/ --dry-run
-   ```
+ ```bash
+ reviewr fix apply src/ --dry-run
+ ```
 
 2. **Use safe-only for automation**: In CI/CD, only apply safe fixes
-   ```bash
-   reviewr fix apply src/ --safe-only --min-confidence 0.9
-   ```
+ ```bash
+ reviewr fix apply src/ --safe-only --min-confidence 0.9
+ ```
 
 3. **Interactive for important code**: Use interactive mode for critical files
-   ```bash
-   reviewr fix apply src/core/ --interactive
-   ```
+ ```bash
+ reviewr fix apply src/core/ --interactive
+ ```
 
 4. **Keep backups**: Don't delete `.reviewr_backups/` until you're sure
-   ```bash
-   # Backups are safe to delete after verification
-   rm -rf .reviewr_backups/
-   ```
+ ```bash
+ # Backups are safe to delete after verification
+ rm -rf .reviewr_backups/
+ ```
 
 5. **Test after fixing**: Always run tests after applying fixes
-   ```bash
-   reviewr fix apply src/ --safe-only
-   pytest  # or your test command
-   ```
+ ```bash
+ reviewr fix apply src/ --safe-only
+ pytest # or your test command
+ ```
 
 ---
 
@@ -454,34 +453,33 @@ reviewr fix apply src/ --verbose
 
 ```yaml
 - name: Auto-fix code issues
-  run: |
-    reviewr fix apply src/ --safe-only --min-confidence 0.9
-    
+ run: |
+ reviewr fix apply src/ --safe-only --min-confidence 0.9
+ 
 - name: Commit fixes
-  run: |
-    git config user.name "reviewr-bot"
-    git config user.email "bot@reviewr.dev"
-    git add -A
-    git commit -m "Auto-fix: Apply safe code fixes" || true
-    git push
+ run: |
+ git config user.name "reviewr-bot"
+ git config user.email "bot@reviewr.dev"
+ git add -A
+ git commit -m "Auto-fix: Apply safe code fixes" || true
+ git push
 ```
 
 ### GitLab CI
 
 ```yaml
 auto-fix:
-  script:
-    - reviewr fix apply src/ --safe-only --min-confidence 0.9
-    - git config user.name "reviewr-bot"
-    - git config user.email "bot@reviewr.dev"
-    - git add -A
-    - git commit -m "Auto-fix: Apply safe code fixes" || true
-    - git push
+ script:
+ - reviewr fix apply src/ --safe-only --min-confidence 0.9
+ - git config user.name "reviewr-bot"
+ - git config user.email "bot@reviewr.dev"
+ - git add -A
+ - git commit -m "Auto-fix: Apply safe code fixes" || true
+ - git push
 ```
 
 ---
 
-**Built by world-class engineers** 🌟
+**Built by world-class engineers** 
 
-**Status:** ✅ Production Ready
-
+**Status:** Production Ready

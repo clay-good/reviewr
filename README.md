@@ -382,55 +382,55 @@ Configuration is loaded from multiple sources with the following precedence (hig
 ```yaml
 # .reviewr.yml
 providers:
-  claude:
-    api_key: ${ANTHROPIC_API_KEY}
-    model: claude-sonnet-4-20250514
-    max_tokens: 8192
-    temperature: 0.0
-    timeout: 60
+ claude:
+ api_key: ${ANTHROPIC_API_KEY}
+ model: claude-sonnet-4-20250514
+ max_tokens: 8192
+ temperature: 0.0
+ timeout: 60
 
-  openai:
-    api_key: ${OPENAI_API_KEY}
-    model: gpt-4-turbo-preview
-    max_tokens: 4096
-    temperature: 0.0
-    timeout: 60
+ openai:
+ api_key: ${OPENAI_API_KEY}
+ model: gpt-4-turbo-preview
+ max_tokens: 4096
+ temperature: 0.0
+ timeout: 60
 
-  gemini:
-    api_key: ${GOOGLE_API_KEY}
-    model: gemini-pro
-    max_tokens: 4096
-    temperature: 0.0
-    timeout: 60
+ gemini:
+ api_key: ${GOOGLE_API_KEY}
+ model: gemini-pro
+ max_tokens: 4096
+ temperature: 0.0
+ timeout: 60
 
 default_provider: claude
 
 review:
-  default_types:
-    - security
-    - performance
-  severity_threshold: medium
-  max_findings_per_file: 50
-  confidence_threshold: 0.5
+ default_types:
+ - security
+ - performance
+ severity_threshold: medium
+ max_findings_per_file: 50
+ confidence_threshold: 0.5
 
 chunking:
-  max_chunk_size: 3000
-  overlap: 200
-  strategy: ast_aware
-  context_lines: 10
+ max_chunk_size: 3000
+ overlap: 200
+ strategy: ast_aware
+ context_lines: 10
 
 cache:
-  directory: ~/.cache/reviewr
-  ttl: 86400  # 24 hours
-  max_size_mb: 500
-  enabled: true
+ directory: ~/.cache/reviewr
+ ttl: 86400 # 24 hours
+ max_size_mb: 500
+ enabled: true
 
 rate_limiting:
-  requests_per_minute: 60
-  requests_per_hour: null  # optional
-  retry_max_attempts: 3
-  retry_backoff: exponential
-  initial_retry_delay: 1.0
+ requests_per_minute: 60
+ requests_per_hour: null # optional
+ retry_max_attempts: 3
+ retry_backoff: exponential
+ initial_retry_delay: 1.0
 ```
 
 ### Supported Models
@@ -566,67 +566,67 @@ Create `.github/workflows/reviewr.yml`:
 name: Code Review with reviewr
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+ pull_request:
+ types: [opened, synchronize, reopened]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - name: Checkout code
+ uses: actions/checkout@v3
+ with:
+ fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+ - name: Set up Python
+ uses: actions/setup-python@v4
+ with:
+ python-version: '3.9'
 
-      - name: Install reviewr
-        run: |
-          pip install -e .
+ - name: Install reviewr
+ run: |
+ pip install -e .
 
-      - name: Run reviewr on changed files
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-        run: |
-          # Get list of changed files
-          git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
+ - name: Run reviewr on changed files
+ env:
+ ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+ OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+ GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+ run: |
+ # Get list of changed files
+ git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
 
-          # Review each changed file (generates both SARIF and Markdown)
-          while IFS= read -r file; do
-            if [ -f "$file" ]; then
-              echo "Reviewing $file"
-              reviewr review "$file" --security --performance --correctness
-            fi
-          done < changed_files.txt
+ # Review each changed file (generates both SARIF and Markdown)
+ while IFS= read -r file; do
+ if [ -f "$file" ]; then
+ echo "Reviewing $file"
+ reviewr review "$file" --security --performance --correctness
+ fi
+ done < changed_files.txt
 
-      - name: Upload SARIF results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
-        if: always()
-        with:
-          sarif_file: reviewr-report.sarif
-          category: reviewr
+ - name: Upload SARIF results to GitHub
+ uses: github/codeql-action/upload-sarif@v2
+ if: always()
+ with:
+ sarif_file: reviewr-report.sarif
+ category: reviewr
 
-      - name: Comment PR with review
-        uses: actions/github-script@v6
-        if: always()
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            if (fs.existsSync('reviewr-report.md')) {
-              const report = fs.readFileSync('reviewr-report.md', 'utf8');
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: '## Code Review Report\n\n' + report
-              });
-            }
+ - name: Comment PR with review
+ uses: actions/github-script@v6
+ if: always()
+ with:
+ github-token: ${{ secrets.GITHUB_TOKEN }}
+ script: |
+ const fs = require('fs');
+ if (fs.existsSync('reviewr-report.md')) {
+ const report = fs.readFileSync('reviewr-report.md', 'utf8');
+ github.rest.issues.createComment({
+ issue_number: context.issue.number,
+ owner: context.repo.owner,
+ repo: context.repo.repo,
+ body: '## Code Review Report\n\n' + report
+ });
+ }
 ```
 
 #### Advanced GitHub Actions with Annotations
@@ -637,75 +637,75 @@ For inline annotations on pull requests:
 name: Advanced Code Review
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+ pull_request:
+ types: [opened, synchronize, reopened]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      checks: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+ review:
+ runs-on: ubuntu-latest
+ permissions:
+ contents: read
+ pull-requests: write
+ checks: write
+ steps:
+ - name: Checkout code
+ uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+ - name: Set up Python
+ uses: actions/setup-python@v4
+ with:
+ python-version: '3.9'
 
-      - name: Install reviewr
-        run: pip install -e .
+ - name: Install reviewr
+ run: pip install -e .
 
-      - name: Run security review
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          reviewr review . --security
+ - name: Run security review
+ env:
+ ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+ run: |
+ reviewr review . --security
 
-      - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
-        if: always()
-        with:
-          sarif_file: reviewr-report.sarif
-          category: reviewr-security
+ - name: Upload SARIF to GitHub Security
+ uses: github/codeql-action/upload-sarif@v2
+ if: always()
+ with:
+ sarif_file: reviewr-report.sarif
+ category: reviewr-security
 
-      - name: Upload review reports as artifacts
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: review-reports
-          path: |
-            reviewr-report.sarif
-            reviewr-report.md
+ - name: Upload review reports as artifacts
+ uses: actions/upload-artifact@v3
+ if: always()
+ with:
+ name: review-reports
+ path: |
+ reviewr-report.sarif
+ reviewr-report.md
 
-      - name: Post review summary
-        uses: actions/github-script@v6
-        if: always()
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            if (fs.existsSync('reviewr-report.md')) {
-              const report = fs.readFileSync('reviewr-report.md', 'utf8');
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: report
-              });
-            }
+ - name: Post review summary
+ uses: actions/github-script@v6
+ if: always()
+ with:
+ github-token: ${{ secrets.GITHUB_TOKEN }}
+ script: |
+ const fs = require('fs');
+ if (fs.existsSync('reviewr-report.md')) {
+ const report = fs.readFileSync('reviewr-report.md', 'utf8');
+ await github.rest.issues.createComment({
+ issue_number: context.issue.number,
+ owner: context.repo.owner,
+ repo: context.repo.repo,
+ body: report
+ });
+ }
 ```
 
 #### GitHub Actions Configuration Tips
 
 1. **Store API keys as secrets**: Go to repository Settings > Secrets and variables > Actions
 2. **Add secrets**:
-   - `ANTHROPIC_API_KEY`
-   - `OPENAI_API_KEY`
-   - `GOOGLE_API_KEY`
+ - `ANTHROPIC_API_KEY`
+ - `OPENAI_API_KEY`
+ - `GOOGLE_API_KEY`
 3. **Customize review types**: Adjust the `--security --performance` flags based on your needs
 4. **Filter file types**: Add file extension filters to review only specific languages
 5. **Set up branch protection**: Require the reviewr check to pass before merging
@@ -720,43 +720,43 @@ Create or update `.gitlab-ci.yml`:
 
 ```yaml
 stages:
-  - review
+ - review
 
 code_review:
-  stage: review
-  image: python:3.9
-  before_script:
-    - pip install -e .
-  script:
-    - |
-      # Get list of changed files in merge request
-      git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-      git diff --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD > changed_files.txt
+ stage: review
+ image: python:3.9
+ before_script:
+ - pip install -e .
+ script:
+ - |
+ # Get list of changed files in merge request
+ git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+ git diff --name-only origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD > changed_files.txt
 
-      # Review changed files (generates both SARIF and Markdown)
-      while IFS= read -r file; do
-        if [ -f "$file" ]; then
-          echo "Reviewing $file"
-          reviewr review "$file" --security --performance --correctness
-        fi
-      done < changed_files.txt
+ # Review changed files (generates both SARIF and Markdown)
+ while IFS= read -r file; do
+ if [ -f "$file" ]; then
+ echo "Reviewing $file"
+ reviewr review "$file" --security --performance --correctness
+ fi
+ done < changed_files.txt
 
-      # Display summary
-      echo "Review completed. Reports generated:"
-      ls -la reviewr-report.*
-  artifacts:
-    paths:
-      - reviewr-report.sarif
-      - reviewr-report.md
-    reports:
-      sast: reviewr-report.sarif
-    expire_in: 1 week
-  only:
-    - merge_requests
-  variables:
-    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
-    OPENAI_API_KEY: $OPENAI_API_KEY
-    GOOGLE_API_KEY: $GOOGLE_API_KEY
+ # Display summary
+ echo "Review completed. Reports generated:"
+ ls -la reviewr-report.*
+ artifacts:
+ paths:
+ - reviewr-report.sarif
+ - reviewr-report.md
+ reports:
+ sast: reviewr-report.sarif
+ expire_in: 1 week
+ only:
+ - merge_requests
+ variables:
+ ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+ OPENAI_API_KEY: $OPENAI_API_KEY
+ GOOGLE_API_KEY: $GOOGLE_API_KEY
 ```
 
 #### Advanced GitLab CI with MR Comments
@@ -765,59 +765,59 @@ For posting review comments directly to merge requests:
 
 ```yaml
 stages:
-  - review
-  - report
+ - review
+ - report
 
 code_review:
-  stage: review
-  image: python:3.9
-  before_script:
-    - pip install -e .
-  script:
-    - reviewr review . --all
-  artifacts:
-    paths:
-      - reviewr-report.sarif
-      - reviewr-report.md
-    reports:
-      sast: reviewr-report.sarif
-    expire_in: 1 week
-  only:
-    - merge_requests
-  variables:
-    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+ stage: review
+ image: python:3.9
+ before_script:
+ - pip install -e .
+ script:
+ - reviewr review . --all
+ artifacts:
+ paths:
+ - reviewr-report.sarif
+ - reviewr-report.md
+ reports:
+ sast: reviewr-report.sarif
+ expire_in: 1 week
+ only:
+ - merge_requests
+ variables:
+ ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
 
 post_review_comment:
-  stage: report
-  image: alpine:latest
-  before_script:
-    - apk add --no-cache curl jq
-  script:
-    - |
-      if [ -f "reviewr-report.md" ]; then
-        REPORT=$(cat reviewr-report.md)
-        curl --request POST \
-          --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
-          --header "Content-Type: application/json" \
-          --data "{\"body\": \"## Code Review Report\n\n$REPORT\"}" \
-          "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
-      fi
-  dependencies:
-    - code_review
-  only:
-    - merge_requests
-  variables:
-    GITLAB_TOKEN: $GITLAB_TOKEN
+ stage: report
+ image: alpine:latest
+ before_script:
+ - apk add --no-cache curl jq
+ script:
+ - |
+ if [ -f "reviewr-report.md" ]; then
+ REPORT=$(cat reviewr-report.md)
+ curl --request POST \
+ --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \
+ --header "Content-Type: application/json" \
+ --data "{\"body\": \"## Code Review Report\n\n$REPORT\"}" \
+ "$CI_API_V4_URL/projects/$CI_PROJECT_ID/merge_requests/$CI_MERGE_REQUEST_IID/notes"
+ fi
+ dependencies:
+ - code_review
+ only:
+ - merge_requests
+ variables:
+ GITLAB_TOKEN: $GITLAB_TOKEN
 ```
 
 #### GitLab CI Configuration Tips
 
 1. **Store API keys as CI/CD variables**: Go to Settings > CI/CD > Variables
 2. **Add variables**:
-   - `ANTHROPIC_API_KEY` (masked, protected)
-   - `OPENAI_API_KEY` (masked, protected)
-   - `GOOGLE_API_KEY` (masked, protected)
-   - `GITLAB_TOKEN` (for posting comments, needs `api` scope)
+ - `ANTHROPIC_API_KEY` (masked, protected)
+ - `OPENAI_API_KEY` (masked, protected)
+ - `GOOGLE_API_KEY` (masked, protected)
+ - `GITLAB_TOKEN` (for posting comments, needs `api` scope)
 3. **Use protected variables**: Enable "Protected" for production branches
 4. **Customize review scope**: Adjust review types and file patterns
 5. **Set up merge request approvals**: Require review completion before merging
@@ -838,26 +838,26 @@ pip install pre-commit
 
 ```yaml
 repos:
-  - repo: local
-    hooks:
-      # Full review (security + correctness)
-      - id: reviewr
-        name: reviewr code review
-        entry: reviewr-pre-commit
-        language: system
-        types: [python, javascript, typescript, java, go, rust]
-        pass_filenames: true
-        require_serial: true
-        stages: [commit]
+ - repo: local
+ hooks:
+ # Full review (security + correctness)
+ - id: reviewr
+ name: reviewr code review
+ entry: reviewr-pre-commit
+ language: system
+ types: [python, javascript, typescript, java, go, rust]
+ pass_filenames: true
+ require_serial: true
+ stages: [commit]
 
-      # Secrets scanner (fast, no AI required)
-      - id: reviewr-secrets
-        name: reviewr secrets scanner
-        entry: reviewr-pre-commit --secrets-only
-        language: system
-        types: [text]
-        pass_filenames: true
-        stages: [commit]
+ # Secrets scanner (fast, no AI required)
+ - id: reviewr-secrets
+ name: reviewr secrets scanner
+ entry: reviewr-pre-commit --secrets-only
+ language: system
+ types: [text]
+ pass_filenames: true
+ stages: [commit]
 ```
 
 3. **Install the hooks**:
@@ -945,11 +945,11 @@ Open VS Code Settings (Ctrl+, / Cmd+,) and search for "reviewr":
 
 ```json
 {
-  "reviewr.cliPath": "reviewr",
-  "reviewr.useAllReviewTypes": true,
-  "reviewr.reviewTypes": ["security", "performance", "correctness"],
-  "reviewr.autoReview": false,
-  "reviewr.clearProblemsOnReview": true
+ "reviewr.cliPath": "reviewr",
+ "reviewr.useAllReviewTypes": true,
+ "reviewr.reviewTypes": ["security", "performance", "correctness"],
+ "reviewr.autoReview": false,
+ "reviewr.clearProblemsOnReview": true
 }
 ```
 
@@ -995,9 +995,9 @@ docker build -t reviewr:latest .
 
 # Run reviewr in container
 docker run --rm \
-  -v $(pwd):/code \
-  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
-  reviewr:latest review /code --security
+ -v $(pwd):/code \
+ -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+ reviewr:latest review /code --security
 ```
 
 #### Docker Compose
@@ -1008,15 +1008,15 @@ Create `docker-compose.yml`:
 version: '3.8'
 
 services:
-  reviewr:
-    build: .
-    volumes:
-      - ./code:/code
-    environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-    command: review /code --all
+ reviewr:
+ build: .
+ volumes:
+ - ./code:/code
+ environment:
+ - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+ - OPENAI_API_KEY=${OPENAI_API_KEY}
+ - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+ command: review /code --all
 ```
 
 Run with:
@@ -1124,26 +1124,26 @@ Tokens used: 15,234
 ```python
 # High complexity detected
 def complex_function(x, y, z):
-    if x > 0:
-        if y > 0:
-            if z > 0:
-                if x > 10:
-                    if y > 10:
-                        return "too complex"
+ if x > 0:
+ if y > 0:
+ if z > 0:
+ if x > 10:
+ if y > 10:
+ return "too complex"
 # → Function has cyclomatic complexity of 6 (target: <10)
 
 # Mutable default argument detected
 def append_to_list(item, lst=[]):
-    lst.append(item)
-    return lst
+ lst.append(item)
+ return lst
 # → Use None as default: def func(item, lst=None): lst = lst or []
 
 # Unused import detected
-import os  # Never used
+import os # Never used
 import sys
 
 def main():
-    print(sys.version)
+ print(sys.version)
 # → Remove unused import 'os'
 ```
 
@@ -1181,44 +1181,44 @@ Create `.github/workflows/reviewr-pr.yml`:
 name: reviewr PR Review
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+ pull_request:
+ types: [opened, synchronize, reopened]
 
 permissions:
-  contents: read
-  pull-requests: write
+ contents: read
+ pull-requests: write
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - uses: actions/setup-python@v5
+ with:
+ python-version: '3.11'
 
-      - name: Install reviewr
-        run: pip install -e ".[github]"
+ - name: Install reviewr
+ run: pip install -e ".[github]"
 
-      - name: Review PR
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          reviewr-github \
-            --pr-number ${{ github.event.pull_request.number }} \
-            --all \
-            --request-changes-on-critical
+ - name: Review PR
+ env:
+ GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+ run: |
+ reviewr-github \
+ --pr-number ${{ github.event.pull_request.number }} \
+ --all \
+ --request-changes-on-critical
 ```
 
 ### Features
 
--  **Automated PR Reviews**: Reviews all changed files automatically
--  **Inline Comments**: Posts findings as inline comments on specific lines
--  **Review Status**: Can approve PRs or request changes
--  **Smart Filtering**: Only comments on changed files
--  **Rich Summaries**: Posts comprehensive review summaries
--  **Auto-detection**: Automatically detects PR number and repository
+- **Automated PR Reviews**: Reviews all changed files automatically
+- **Inline Comments**: Posts findings as inline comments on specific lines
+- **Review Status**: Can approve PRs or request changes
+- **Smart Filtering**: Only comments on changed files
+- **Rich Summaries**: Posts comprehensive review summaries
+- **Auto-detection**: Automatically detects PR number and repository
 
 ### Example Output
 
@@ -1237,17 +1237,17 @@ Confidence: 95%
 And a summary comment:
 
 ```markdown
-## 🤖 reviewr Code Review Summary
+## reviewr Code Review Summary
 
 **Files reviewed**: 5
 **Total findings**: 12
 
 **Findings by severity**:
-🔴 2 critical, 🟠 3 high, 🟡 4 medium, 🔵 3 low
+ 2 critical, 🟠 3 high, 🟡 4 medium, 3 low
 
 **Local analysis**: 8 issues found (no API calls)
 
-⚠️ **This PR has critical or high severity issues that should be addressed.**
+ **This PR has critical or high severity issues that should be addressed.**
 ```
 
 **See [GITHUB_INTEGRATION.md](GITHUB_INTEGRATION.md) for complete documentation.**
@@ -1267,24 +1267,24 @@ reviewr provides production-ready CI/CD integration for automated code review on
 name: reviewr Code Review
 on: [pull_request]
 permissions:
-  pull-requests: write
+ pull-requests: write
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/reviewr-action
-        with:
-          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          fail-on-critical: true
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - uses: ./.github/actions/reviewr-action
+ with:
+ api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+ fail-on-critical: true
 ```
 
 **Features:**
--  Automated PR comments with detailed findings
--  Commit status checks (pass/fail builds)
--  Changed files detection (only review what changed)
--  Configurable failure thresholds
--  Result artifacts for tracking
+- Automated PR comments with detailed findings
+- Commit status checks (pass/fail builds)
+- Changed files detection (only review what changed)
+- Configurable failure thresholds
+- Result artifacts for tracking
 
 ### GitLab CI
 
@@ -1296,15 +1296,15 @@ jobs:
 
 ```yaml
 include:
-  - local: '.gitlab-ci-reviewr.yml'
+ - local: '.gitlab-ci-reviewr.yml'
 ```
 
 **Features:**
--  Automated MR comments with detailed findings
--  Pipeline status updates
--  Changed files detection
--  Configurable failure thresholds
--  Artifact storage
+- Automated MR comments with detailed findings
+- Pipeline status updates
+- Changed files detection
+- Configurable failure thresholds
+- Artifact storage
 
 **See [docs/CI_CD_INTEGRATION.md](docs/CI_CD_INTEGRATION.md) for complete documentation.**
 
@@ -1337,45 +1337,45 @@ Create or update `.gitlab-ci.yml`:
 
 ```yaml
 stages:
-  - review
+ - review
 
 reviewr_mr_review:
-  stage: review
-  image: python:3.11
-  before_script:
-    - pip install -e ".[gitlab]"
-  script:
-    - reviewr-gitlab --all --post-comments --post-summary
-  only:
-    - merge_requests
-  variables:
-    GITLAB_TOKEN: $GITLAB_TOKEN
-    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+ stage: review
+ image: python:3.11
+ before_script:
+ - pip install -e ".[gitlab]"
+ script:
+ - reviewr-gitlab --all --post-comments --post-summary
+ only:
+ - merge_requests
+ variables:
+ GITLAB_TOKEN: $GITLAB_TOKEN
+ ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
 ```
 
 ### Advanced GitLab CI with Auto-Approval
 
 ```yaml
 stages:
-  - review
+ - review
 
 reviewr_mr_review:
-  stage: review
-  image: python:3.11
-  before_script:
-    - pip install -e ".[gitlab]"
-  script:
-    - |
-      reviewr-gitlab \
-        --all \
-        --post-comments \
-        --post-summary \
-        --approve-if-clean
-  only:
-    - merge_requests
-  variables:
-    GITLAB_TOKEN: $GITLAB_TOKEN
-    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+ stage: review
+ image: python:3.11
+ before_script:
+ - pip install -e ".[gitlab]"
+ script:
+ - |
+ reviewr-gitlab \
+ --all \
+ --post-comments \
+ --post-summary \
+ --approve-if-clean
+ only:
+ - merge_requests
+ variables:
+ GITLAB_TOKEN: $GITLAB_TOKEN
+ ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
 ```
 
 ### Configuration
@@ -1391,12 +1391,12 @@ reviewr_mr_review:
 
 ### Features
 
--  **Automated MR Reviews**: Reviews all changed files automatically
--  **Inline Comments**: Posts findings as inline discussions on specific lines
--  **Review Status**: Can approve MRs if no critical issues found
--  **Smart Filtering**: Only comments on changed files
--  **Rich Summaries**: Posts comprehensive review summaries
--  **Auto-detection**: Automatically detects MR IID and project ID in GitLab CI
+- **Automated MR Reviews**: Reviews all changed files automatically
+- **Inline Comments**: Posts findings as inline discussions on specific lines
+- **Review Status**: Can approve MRs if no critical issues found
+- **Smart Filtering**: Only comments on changed files
+- **Rich Summaries**: Posts comprehensive review summaries
+- **Auto-detection**: Automatically detects MR IID and project ID in GitLab CI
 
 ### Example Output
 
@@ -1415,19 +1415,19 @@ Confidence: 95%
 And a summary comment:
 
 ```markdown
-## 🤖 reviewr Code Review Summary
+## reviewr Code Review Summary
 
 **Files reviewed**: 5
 **Total findings**: 12
 
-**Findings by severity**: 🔴 2 critical, 🟠 3 high, 🟡 5 medium, 🔵 2 low
+**Findings by severity**: 2 critical, 🟠 3 high, 🟡 5 medium, 2 low
 
 **Findings by type**:
 - security: 5
 - performance: 3
 - correctness: 4
 
-⚠️ **This MR has critical or high severity issues that should be addressed.**
+ **This MR has critical or high severity issues that should be addressed.**
 
 ---
 *Powered by [reviewr](https://github.com/clay-good/reviewr)*
@@ -1436,19 +1436,19 @@ And a summary comment:
 ### GitLab Token Setup
 
 1. **Create a Personal Access Token**:
-   - Go to GitLab → Settings → Access Tokens
-   - Create token with `api` scope
-   - Copy the token
+ - Go to GitLab → Settings → Access Tokens
+ - Create token with `api` scope
+ - Copy the token
 
 2. **Add to GitLab CI/CD Variables**:
-   - Go to Project → Settings → CI/CD → Variables
-   - Add variable `GITLAB_TOKEN` with your token
-   - Mark as "Masked" and "Protected"
+ - Go to Project → Settings → CI/CD → Variables
+ - Add variable `GITLAB_TOKEN` with your token
+ - Mark as "Masked" and "Protected"
 
 3. **Or use CI_JOB_TOKEN** (simpler but limited):
-   - GitLab CI automatically provides `CI_JOB_TOKEN`
-   - Has limited permissions but works for basic commenting
-   - No setup required!
+ - GitLab CI automatically provides `CI_JOB_TOKEN`
+ - Has limited permissions but works for basic commenting
+ - No setup required!
 
 ## Intelligent Caching
 
@@ -1474,11 +1474,11 @@ reviewr includes an intelligent caching system that dramatically reduces API cal
 ```bash
 # First run - cache miss, calls API
 reviewr app.py --security --output-format sarif
-# ⏱️  Takes 5 seconds
+# ⏱ Takes 5 seconds
 
 # Second run - cache hit, instant results!
 reviewr app.py --security --output-format sarif
-# ⚡ Takes <1 second
+# Takes <1 second
 
 # Disable caching when needed
 reviewr app.py --security --output-format sarif --no-cache
@@ -1486,7 +1486,7 @@ reviewr app.py --security --output-format sarif --no-cache
 # Cache is automatically invalidated when file changes
 echo "# new code" >> app.py
 reviewr app.py --security --output-format sarif
-# ⏱️  Cache miss, calls API again
+# ⏱ Cache miss, calls API again
 ```
 
 ### Cache Statistics
@@ -1535,53 +1535,53 @@ Rules can be defined in YAML or JSON format:
 
 ```yaml
 rules:
-  - id: no-hardcoded-api-keys
-    name: No Hardcoded API Keys
-    description: Detect hardcoded API keys in code
-    pattern: '(api[_-]?key|apikey)\s*=\s*["\'][^"\']+["\']'
-    severity: critical
-    message: Hardcoded API key detected
-    suggestion: Use environment variables or a secrets manager
-    languages:
-      - python
-      - javascript
-      - typescript
-    enabled: true
-    case_sensitive: false
-    multiline: false
+ - id: no-hardcoded-api-keys
+ name: No Hardcoded API Keys
+ description: Detect hardcoded API keys in code
+ pattern: '(api[_-]?key|apikey)\s*=\s*["\'][^"\']+["\']'
+ severity: critical
+ message: Hardcoded API key detected
+ suggestion: Use environment variables or a secrets manager
+ languages:
+ - python
+ - javascript
+ - typescript
+ enabled: true
+ case_sensitive: false
+ multiline: false
 
-  - id: no-console-log
-    name: No Console Statements
-    description: Detect console.log statements
-    pattern: 'console\.(log|debug|info)'
-    severity: low
-    message: Console statement detected
-    suggestion: Remove console statements before committing
-    languages:
-      - javascript
-      - typescript
-    enabled: true
+ - id: no-console-log
+ name: No Console Statements
+ description: Detect console.log statements
+ pattern: 'console\.(log|debug|info)'
+ severity: low
+ message: Console statement detected
+ suggestion: Remove console statements before committing
+ languages:
+ - javascript
+ - typescript
+ enabled: true
 ```
 
 #### JSON Format
 
 ```json
 {
-  "rules": [
-    {
-      "id": "no-hardcoded-api-keys",
-      "name": "No Hardcoded API Keys",
-      "description": "Detect hardcoded API keys in code",
-      "pattern": "(api[_-]?key|apikey)\\s*=\\s*[\"'][^\"']+[\"']",
-      "severity": "critical",
-      "message": "Hardcoded API key detected",
-      "suggestion": "Use environment variables or a secrets manager",
-      "languages": ["python", "javascript", "typescript"],
-      "enabled": true,
-      "case_sensitive": false,
-      "multiline": false
-    }
-  ]
+ "rules": [
+ {
+ "id": "no-hardcoded-api-keys",
+ "name": "No Hardcoded API Keys",
+ "description": "Detect hardcoded API keys in code",
+ "pattern": "(api[_-]?key|apikey)\\s*=\\s*[\"'][^\"']+[\"']",
+ "severity": "critical",
+ "message": "Hardcoded API key detected",
+ "suggestion": "Use environment variables or a secrets manager",
+ "languages": ["python", "javascript", "typescript"],
+ "enabled": true,
+ "case_sensitive": false,
+ "multiline": false
+ }
+ ]
 }
 ```
 
@@ -1641,20 +1641,20 @@ Rules can be restricted to specific languages:
 
 ```yaml
 rules:
-  - id: python-specific-rule
-    pattern: 'some_pattern'
-    languages:
-      - python
-    # This rule only runs on Python files
+ - id: python-specific-rule
+ pattern: 'some_pattern'
+ languages:
+ - python
+ # This rule only runs on Python files
 
-  - id: javascript-specific-rule
-    pattern: 'another_pattern'
-    languages:
-      - javascript
-      - typescript
-      - jsx
-      - tsx
-    # This rule only runs on JavaScript/TypeScript files
+ - id: javascript-specific-rule
+ pattern: 'another_pattern'
+ languages:
+ - javascript
+ - typescript
+ - jsx
+ - tsx
+ # This rule only runs on JavaScript/TypeScript files
 ```
 
 ### Pattern Tips
@@ -1669,28 +1669,28 @@ rules:
 
 ```yaml
 rules:
-  # Enforce company naming conventions
-  - id: component-naming
-    pattern: 'class\s+(?!Component)[A-Z]\w+\s*\('
-    severity: medium
-    message: Component classes must end with 'Component'
-    languages: [python]
+ # Enforce company naming conventions
+ - id: component-naming
+ pattern: 'class\s+(?!Component)[A-Z]\w+\s*\('
+ severity: medium
+ message: Component classes must end with 'Component'
+ languages: [python]
 
-  # Prevent deprecated API usage
-  - id: no-deprecated-api
-    pattern: 'old_api_function\('
-    severity: high
-    message: old_api_function is deprecated
-    suggestion: Use new_api_function instead
-    languages: [python, javascript]
+ # Prevent deprecated API usage
+ - id: no-deprecated-api
+ pattern: 'old_api_function\('
+ severity: high
+ message: old_api_function is deprecated
+ suggestion: Use new_api_function instead
+ languages: [python, javascript]
 
-  # Enforce error handling
-  - id: require-error-handling
-    pattern: 'fetch\([^)]+\)(?!\s*\.catch)'
-    severity: medium
-    message: fetch calls must include error handling
-    suggestion: Add .catch() or try/catch block
-    languages: [javascript, typescript]
+ # Enforce error handling
+ - id: require-error-handling
+ pattern: 'fetch\([^)]+\)(?!\s*\.catch)'
+ severity: medium
+ message: fetch calls must include error handling
+ suggestion: Add .catch() or try/catch block
+ languages: [javascript, typescript]
 ```
 
 ## Interactive Mode
@@ -1761,9 +1761,9 @@ Suggestion:
 Move API key to environment variable or secrets manager
 
 Code:
-45  def connect_api():
-46      api_key = "sk-1234567890abcdef"
-47      return ApiClient(api_key)
+45 def connect_api():
+46 api_key = "sk-1234567890abcdef"
+47 return ApiClient(api_key)
 
 Action (accept, reject, fix, skip): a
 
@@ -1780,9 +1780,9 @@ Suggestion:
 Replace loop with: results = [process(item) for item in items]
 
 Code:
-23  results = []
-24  for item in items:
-25      results.append(process(item))
+23 results = []
+24 for item in items:
+25 results.append(process(item))
 
 Action (accept, reject, fix, skip): f
 Applying fix...
@@ -1800,20 +1800,20 @@ Message:
 TODO comment found
 
 Code:
-100  # TODO: refactor this later
+100 # TODO: refactor this later
 
 Action (accept, reject, fix, skip): r
 Add a note? (y/n): y
 Note: This is intentional, tracked in JIRA-123
 
 Review Summary
-Action          Count
-accept          1
-reject          1
-skip            3
+Action Count
+accept 1
+reject 1
+skip 3
 
 Rejected findings with notes:
-  - test.py:100: This is intentional, tracked in JIRA-123
+ - test.py:100: This is intentional, tracked in JIRA-123
 
 Decisions exported to: reviewr-decisions.json
 ```
@@ -1824,22 +1824,22 @@ All decisions are automatically exported to `reviewr-decisions.json`:
 
 ```json
 [
-  {
-    "file": "app.py",
-    "line": 45,
-    "severity": "critical",
-    "message": "Hardcoded API key detected in source code",
-    "action": "accept",
-    "note": null
-  },
-  {
-    "file": "test.py",
-    "line": 100,
-    "severity": "low",
-    "message": "TODO comment found",
-    "action": "reject",
-    "note": "This is intentional, tracked in JIRA-123"
-  }
+ {
+ "file": "app.py",
+ "line": 45,
+ "severity": "critical",
+ "message": "Hardcoded API key detected in source code",
+ "action": "accept",
+ "note": null
+ },
+ {
+ "file": "test.py",
+ "line": 100,
+ "severity": "low",
+ "message": "TODO comment found",
+ "action": "reject",
+ "note": "This is intentional, tracked in JIRA-123"
+ }
 ]
 ```
 
@@ -1928,12 +1928,12 @@ reviewr-pre-commit --secrets-only app.py
 ### Example Output
 
 ```
-    Secrets detected in app.py:
-  Line 15: aws_access_key - AKIA...XXXX
-  Line 16: github_token - ghp_...XXXX
-  Line 42: database_url - postgres://user:pass@...
+ Secrets detected in app.py:
+ Line 15: aws_access_key - AKIA...XXXX
+ Line 16: github_token - ghp_...XXXX
+ Line 42: database_url - postgres://user:pass@...
 
-    Found 3 potential secret(s)
+ Found 3 potential secret(s)
 Remove hardcoded secrets and use environment variables or a secrets management system.
 ```
 
@@ -2006,28 +2006,28 @@ reviewr email --to <email> --all
 
 ```bash
 # Security scanning
---security-scan                    # Enable all security scans
---scan-vulnerabilities             # Scan for CVEs
---scan-sast                        # Run SAST rules
---scan-licenses                    # Check license compliance
+--security-scan # Enable all security scans
+--scan-vulnerabilities # Scan for CVEs
+--scan-sast # Run SAST rules
+--scan-licenses # Check license compliance
 
 # Code metrics
---metrics                          # Enable all metrics
---metrics-complexity               # Analyze complexity
---metrics-duplication              # Detect duplication
---metrics-debt                     # Estimate technical debt
+--metrics # Enable all metrics
+--metrics-complexity # Analyze complexity
+--metrics-duplication # Detect duplication
+--metrics-debt # Estimate technical debt
 
 # Incremental analysis
---diff                             # Only review changed code
---diff-base <ref>                  # Base reference (default: HEAD)
---diff-target <ref>                # Target reference
+--diff # Only review changed code
+--diff-base <ref> # Base reference (default: HEAD)
+--diff-target <ref> # Target reference
 
 # Advanced analyzers
---enable-security-analysis         # Enable security analyzer
---enable-dataflow-analysis         # Enable data flow analysis
---enable-type-analysis             # Enable type safety analysis
---enable-performance-analysis      # Enable performance analyzer
---enable-semantic-analysis         # Enable semantic analyzer
+--enable-security-analysis # Enable security analyzer
+--enable-dataflow-analysis # Enable data flow analysis
+--enable-type-analysis # Enable type safety analysis
+--enable-performance-analysis # Enable performance analyzer
+--enable-semantic-analysis # Enable semantic analyzer
 ```
 
 ## Documentation
@@ -2067,11 +2067,11 @@ reviewr email --to <email> --all
 If you encounter authentication errors:
 
 1. Verify your API keys are set correctly:
-   ```bash
-   echo $ANTHROPIC_API_KEY
-   echo $OPENAI_API_KEY
-   echo $GOOGLE_API_KEY
-   ```
+ ```bash
+ echo $ANTHROPIC_API_KEY
+ echo $OPENAI_API_KEY
+ echo $GOOGLE_API_KEY
+ ```
 
 2. Ensure keys are exported in your current shell session
 
@@ -2091,18 +2091,18 @@ If you hit rate limits:
 If installation fails:
 
 1. Ensure Python 3.9+ is installed:
-   ```bash
-   python3 --version
-   ```
+ ```bash
+ python3 --version
+ ```
 
 2. Upgrade pip:
-   ```bash
-   pip install --upgrade pip
-   ```
+ ```bash
+ pip install --upgrade pip
+ ```
 
 3. Install in a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -e .
-   ```
+ ```bash
+ python3 -m venv venv
+ source venv/bin/activate
+ pip install -e .
+ ```

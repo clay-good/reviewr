@@ -24,24 +24,24 @@ The Microsoft Teams integration enables **reviewr** to:
 
 ## Features
 
-### ✅ Adaptive Cards
+### Adaptive Cards
 - **Rich Formatting**: Interactive cards with colors, facts, and buttons
-- **Severity Indicators**: Color-coded severity levels (🔴 Critical, 🟠 High, 🟡 Medium, 🟢 Low)
+- **Severity Indicators**: Color-coded severity levels ( Critical, 🟠 High, 🟡 Medium, 🟢 Low)
 - **Action Buttons**: Quick links to repositories and files
 - **Fact Sets**: Organized key-value pairs for metrics
 
-### ✅ Multiple Authentication Methods
+### Multiple Authentication Methods
 - **Webhook Integration**: Simple incoming webhook (no authentication required)
 - **Bot Token Integration**: Full Teams Bot API with OAuth 2.0
 - **Environment Variables**: Secure credential storage
 
-### ✅ Message Types
+### Message Types
 - **Review Summary**: Complete review results with statistics
 - **Critical Alerts**: Immediate notifications for critical issues
 - **Finding Cards**: Individual issue details
 - **Success Messages**: Confirmation of clean code
 
-### ✅ CI/CD Integration
+### CI/CD Integration
 - **GitHub Actions**: Automatic Teams notifications
 - **GitLab CI**: Pipeline integration
 - **Azure Pipelines**: Native Teams integration
@@ -53,12 +53,12 @@ The Microsoft Teams integration enables **reviewr** to:
 ### Option 1: Using Incoming Webhook (Recommended for Simple Use)
 
 1. **Create an Incoming Webhook in Teams:**
-   - Go to your Teams channel
-   - Click the "..." menu → Connectors
-   - Search for "Incoming Webhook"
-   - Click "Configure"
-   - Give it a name (e.g., "reviewr")
-   - Copy the webhook URL
+ - Go to your Teams channel
+ - Click the "..." menu → Connectors
+ - Search for "Incoming Webhook"
+ - Click "Configure"
+ - Give it a name (e.g., "reviewr")
+ - Copy the webhook URL
 
 2. **Set the webhook URL as an environment variable:**
 
@@ -79,9 +79,9 @@ reviewr teams send review-results.json --project-name "My Project"
 ### Option 2: Using Bot Token (Advanced)
 
 1. **Register a bot in Azure Bot Service:**
-   - Go to Azure Portal
-   - Create a new Bot Service
-   - Get the bot token, team ID, and channel ID
+ - Go to Azure Portal
+ - Create a new Bot Service
+ - Get the bot token, team ID, and channel ID
 
 2. **Set environment variables:**
 
@@ -109,7 +109,7 @@ reviewr teams send review-results.json --project-name "My Project"
 | `TEAMS_CHANNEL_ID` | Channel ID (for Bot API) | No** | None |
 | `TEAMS_TEAM_ID` | Team ID (for Bot API) | No** | None |
 
-*Either `TEAMS_WEBHOOK_URL` or `TEAMS_BOT_TOKEN` must be provided  
+*Either `TEAMS_WEBHOOK_URL` or `TEAMS_BOT_TOKEN` must be provided 
 **Required when using Bot API
 
 ### Creating an Incoming Webhook
@@ -169,12 +169,12 @@ reviewr teams send review-results.json --critical-only
 
 # Include repository URL
 reviewr teams send review-results.json \
-  --project-name "My App" \
-  --repository-url "https://github.com/myorg/myapp"
+ --project-name "My App" \
+ --repository-url "https://github.com/myorg/myapp"
 
 # Use specific webhook
 reviewr teams send review-results.json \
-  --webhook-url "https://outlook.office.com/webhook/..."
+ --webhook-url "https://outlook.office.com/webhook/..."
 ```
 
 ### `reviewr teams setup`
@@ -223,7 +223,7 @@ reviewr teams test --webhook-url "https://outlook.office.com/webhook/..."
 ### Review Summary Card
 
 The review summary card displays:
-- Overall status with emoji (🟢 No issues, 🟡 Issues found, 🟠 High priority, 🔴 Critical)
+- Overall status with emoji (🟢 No issues, 🟡 Issues found, 🟠 High priority, Critical)
 - Total issue count
 - Breakdown by severity (Critical, High, Medium, Low)
 - Action button to view repository
@@ -235,7 +235,7 @@ The review summary card displays:
 No Issues Found
 
 Total Issues: 0
-Critical: 🔴 0
+Critical: 0
 High: 🟠 0
 Medium: 🟡 0
 Low: 🟢 0
@@ -246,7 +246,7 @@ Low: 🟢 0
 ### Critical Alert Card
 
 The critical alert card displays:
-- Alert header with 🚨 emoji
+- Alert header with emoji
 - Issue title
 - Severity, type, file, and line number
 - Description
@@ -256,10 +256,10 @@ The critical alert card displays:
 **Example:**
 
 ```
-🚨 Critical Issue Detected - My Project
+ Critical Issue Detected - My Project
 SQL Injection Vulnerability
 
-Severity: 🔴 CRITICAL
+Severity: CRITICAL
 Type: security
 File: app.py
 Line: 42
@@ -292,93 +292,93 @@ name: Code Review
 on: [pull_request]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install reviewr
-        run: pip install reviewr
-      
-      - name: Run code review
-        run: reviewr . --output review-results.json
-      
-      - name: Send to Teams
-        env:
-          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
-        run: |
-          reviewr teams send review-results.json \
-            --project-name "${{ github.repository }}" \
-            --repository-url "${{ github.server_url }}/${{ github.repository }}"
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ 
+ - name: Install reviewr
+ run: pip install reviewr
+ 
+ - name: Run code review
+ run: reviewr . --output review-results.json
+ 
+ - name: Send to Teams
+ env:
+ TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+ run: |
+ reviewr teams send review-results.json \
+ --project-name "${{ github.repository }}" \
+ --repository-url "${{ github.server_url }}/${{ github.repository }}"
 ```
 
 ### GitLab CI
 
 ```yaml
 code_review:
-  stage: test
-  script:
-    - pip install reviewr
-    - reviewr . --output review-results.json
-    - |
-      reviewr teams send review-results.json \
-        --project-name "$CI_PROJECT_NAME" \
-        --repository-url "$CI_PROJECT_URL"
-  variables:
-    TEAMS_WEBHOOK_URL: $TEAMS_WEBHOOK_URL
+ stage: test
+ script:
+ - pip install reviewr
+ - reviewr . --output review-results.json
+ - |
+ reviewr teams send review-results.json \
+ --project-name "$CI_PROJECT_NAME" \
+ --repository-url "$CI_PROJECT_URL"
+ variables:
+ TEAMS_WEBHOOK_URL: $TEAMS_WEBHOOK_URL
 ```
 
 ### Azure Pipelines
 
 ```yaml
 trigger:
-  - main
+ - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+ vmImage: 'ubuntu-latest'
 
 steps:
 - task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.10'
+ inputs:
+ versionSpec: '3.10'
 
 - script: |
-    pip install reviewr
-    reviewr . --output review-results.json
-  displayName: 'Run code review'
+ pip install reviewr
+ reviewr . --output review-results.json
+ displayName: 'Run code review'
 
 - script: |
-    reviewr teams send review-results.json \
-      --project-name "$(Build.Repository.Name)" \
-      --repository-url "$(Build.Repository.Uri)"
-  env:
-    TEAMS_WEBHOOK_URL: $(TEAMS_WEBHOOK_URL)
-  displayName: 'Send to Teams'
+ reviewr teams send review-results.json \
+ --project-name "$(Build.Repository.Name)" \
+ --repository-url "$(Build.Repository.Uri)"
+ env:
+ TEAMS_WEBHOOK_URL: $(TEAMS_WEBHOOK_URL)
+ displayName: 'Send to Teams'
 ```
 
 ### Jenkins
 
 ```groovy
 pipeline {
-    agent any
-    
-    environment {
-        TEAMS_WEBHOOK_URL = credentials('teams-webhook-url')
-    }
-    
-    stages {
-        stage('Code Review') {
-            steps {
-                sh 'pip install reviewr'
-                sh 'reviewr . --output review-results.json'
-                sh '''
-                    reviewr teams send review-results.json \
-                      --project-name "${JOB_NAME}" \
-                      --repository-url "${GIT_URL}"
-                '''
-            }
-        }
-    }
+ agent any
+ 
+ environment {
+ TEAMS_WEBHOOK_URL = credentials('teams-webhook-url')
+ }
+ 
+ stages {
+ stage('Code Review') {
+ steps {
+ sh 'pip install reviewr'
+ sh 'reviewr . --output review-results.json'
+ sh '''
+ reviewr teams send review-results.json \
+ --project-name "${JOB_NAME}" \
+ --repository-url "${GIT_URL}"
+ '''
+ }
+ }
+ }
 }
 ```
 
@@ -388,28 +388,28 @@ pipeline {
 version: 2.1
 
 jobs:
-  code-review:
-    docker:
-      - image: cimg/python:3.10
-    steps:
-      - checkout
-      - run:
-          name: Install reviewr
-          command: pip install reviewr
-      - run:
-          name: Run code review
-          command: reviewr . --output review-results.json
-      - run:
-          name: Send to Teams
-          command: |
-            reviewr teams send review-results.json \
-              --project-name "${CIRCLE_PROJECT_REPONAME}" \
-              --repository-url "${CIRCLE_REPOSITORY_URL}"
+ code-review:
+ docker:
+ - image: cimg/python:3.10
+ steps:
+ - checkout
+ - run:
+ name: Install reviewr
+ command: pip install reviewr
+ - run:
+ name: Run code review
+ command: reviewr . --output review-results.json
+ - run:
+ name: Send to Teams
+ command: |
+ reviewr teams send review-results.json \
+ --project-name "${CIRCLE_PROJECT_REPONAME}" \
+ --repository-url "${CIRCLE_REPOSITORY_URL}"
 
 workflows:
-  review:
-    jobs:
-      - code-review
+ review:
+ jobs:
+ - code-review
 ```
 
 ## Troubleshooting
@@ -453,4 +453,3 @@ workflows:
 - [CI/CD Best Practices](CI_CD_BEST_PRACTICES.md)
 - [Security Scanning Guide](SECURITY_SCANNING.md)
 - [Code Metrics Guide](CODE_METRICS.md)
-

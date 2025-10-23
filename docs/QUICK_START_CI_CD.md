@@ -1,4 +1,4 @@
-# 🚀 Quick Start: CI/CD Integration
+# Quick Start: CI/CD Integration
 
 Get automated code review on every PR/MR in **5 minutes**.
 
@@ -21,19 +21,19 @@ Create `.github/workflows/reviewr.yml`:
 name: reviewr Code Review
 on: [pull_request]
 permissions:
-  pull-requests: write
+ pull-requests: write
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/reviewr-action
-        with:
-          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          fail-on-critical: true
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - uses: ./.github/actions/reviewr-action
+ with:
+ api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+ fail-on-critical: true
 ```
 
-### Step 3: Done! 🎉
+### Step 3: Done! 
 
 Open a PR and watch reviewr automatically review your code!
 
@@ -48,14 +48,14 @@ Go to your project → **Settings** → **CI/CD** → **Variables** → **Add va
 **Variable 1:**
 - **Key:** `ANTHROPIC_API_KEY`
 - **Value:** Your Claude API key
-- **Protected:** ✅
-- **Masked:** ✅
+- **Protected:** 
+- **Masked:** 
 
 **Variable 2:**
 - **Key:** `GITLAB_TOKEN`
 - **Value:** Your personal access token (with `api` scope)
-- **Protected:** ✅
-- **Masked:** ✅
+- **Protected:** 
+- **Masked:** 
 
 ### Step 2: Create Pipeline
 
@@ -63,10 +63,10 @@ Create or update `.gitlab-ci.yml`:
 
 ```yaml
 include:
-  - local: '.gitlab-ci-reviewr.yml'
+ - local: '.gitlab-ci-reviewr.yml'
 ```
 
-### Step 3: Done! 🎉
+### Step 3: Done! 
 
 Open an MR and watch reviewr automatically review your code!
 
@@ -77,30 +77,30 @@ Open an MR and watch reviewr automatically review your code!
 ### Automated PR/MR Comments
 
 ```markdown
-## 🤖 reviewr Code Review
+## reviewr Code Review
 
-### 🔴 **Action Required**
+### **Action Required**
 
 | Metric | Value |
 |--------|-------|
 | Files Reviewed | 5 |
 | Total Issues | 12 |
-| 🔴 Critical | 2 |
+| Critical | 2 |
 | 🟠 High | 3 |
 | 🟡 Medium | 5 |
 
-### 🚨 Critical & High Severity Issues
+### Critical & High Severity Issues
 
-#### 🔴 🔒 Security
-**📄 File:** `src/auth.py` (Lines 10-15)
+#### Security
+** File:** `src/auth.py` (Lines 10-15)
 **Issue:** SQL injection vulnerability detected
-💡 **Suggestion:** Use parameterized queries
+ **Suggestion:** Use parameterized queries
 ```
 
 ### Commit Status Checks
 
-- ✅ **Pass** - No critical issues
-- ❌ **Fail** - Critical issues found
+- **Pass** - No critical issues
+- **Fail** - Critical issues found
 
 ### Changed Files Only
 
@@ -113,19 +113,19 @@ Only reviews files that changed in the PR/MR (fast and efficient!)
 ### Fail on Critical Issues
 
 ```yaml
-fail-on-critical: true  # Fail build if critical issues found
+fail-on-critical: true # Fail build if critical issues found
 ```
 
 ### Fail on High Severity Threshold
 
 ```yaml
-fail-on-high-threshold: 5  # Fail if > 5 high severity issues
+fail-on-high-threshold: 5 # Fail if > 5 high severity issues
 ```
 
 ### Choose AI Provider
 
 ```yaml
-provider: claude  # or: openai, gemini
+provider: claude # or: openai, gemini
 ```
 
 ### Review Specific Types
@@ -150,15 +150,15 @@ review-types: all
 name: reviewr
 on: [pull_request]
 permissions:
-  pull-requests: write
+ pull-requests: write
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/reviewr-action
-        with:
-          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - uses: ./.github/actions/reviewr-action
+ with:
+ api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
 ### Production Setup (GitHub)
@@ -166,37 +166,37 @@ jobs:
 ```yaml
 name: reviewr Code Review
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+ pull_request:
+ types: [opened, synchronize, reopened]
 permissions:
-  contents: read
-  pull-requests: write
-  checks: write
+ contents: read
+ pull-requests: write
+ checks: write
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/reviewr-action
-        with:
-          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          provider: claude
-          fail-on-critical: true
-          fail-on-high-threshold: 5
-          max-findings: 50
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v4
+ - uses: ./.github/actions/reviewr-action
+ with:
+ api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+ provider: claude
+ fail-on-critical: true
+ fail-on-high-threshold: 5
+ max-findings: 50
 ```
 
 ### Custom Configuration (GitLab)
 
 ```yaml
 include:
-  - local: '.gitlab-ci-reviewr.yml'
+ - local: '.gitlab-ci-reviewr.yml'
 
 variables:
-  REVIEWR_PROVIDER: "claude"
-  REVIEWR_FAIL_ON_CRITICAL: "true"
-  REVIEWR_HIGH_THRESHOLD: "3"
-  REVIEWR_MAX_FINDINGS: "30"
+ REVIEWR_PROVIDER: "claude"
+ REVIEWR_FAIL_ON_CRITICAL: "true"
+ REVIEWR_HIGH_THRESHOLD: "3"
+ REVIEWR_MAX_FINDINGS: "30"
 ```
 
 ---
@@ -212,7 +212,7 @@ variables:
 **GitHub Solution:**
 ```yaml
 permissions:
-  pull-requests: write
+ pull-requests: write
 ```
 
 **GitLab Solution:** Add `GITLAB_TOKEN` variable with `api` scope.
@@ -222,9 +222,9 @@ permissions:
 **Solution:** Ensure your file patterns match changed files:
 ```yaml
 files: |
-  **/*.py
-  **/*.js
-  **/*.ts
+ **/*.py
+ **/*.js
+ **/*.ts
 ```
 
 ### Build fails unexpectedly
@@ -239,25 +239,24 @@ fail-on-high-threshold: 0
 
 ## Next Steps
 
-- 📖 [Full Documentation](docs/CI_CD_INTEGRATION.md)
-- 🔧 [Configuration Guide](docs/CI_CD_INTEGRATION.md#configuration)
-- 🐛 [Troubleshooting](docs/CI_CD_INTEGRATION.md#troubleshooting)
-- 💬 [Get Help](https://github.com/clay-good/reviewr/issues)
+- [Full Documentation](docs/CI_CD_INTEGRATION.md)
+- [Configuration Guide](docs/CI_CD_INTEGRATION.md#configuration)
+- [Troubleshooting](docs/CI_CD_INTEGRATION.md#troubleshooting)
+- [Get Help](https://github.com/clay-good/reviewr/issues)
 
 ---
 
 ## Benefits
 
-✅ **Zero manual work** - Automatic reviews on every PR/MR  
-✅ **Fast feedback** - Results in minutes, not hours  
-✅ **Catch bugs early** - Before they reach production  
-✅ **Consistent standards** - Same quality bar for all code  
-✅ **Learning tool** - Developers learn from AI suggestions  
-✅ **Cost savings** - Prevent expensive production fixes  
+ **Zero manual work** - Automatic reviews on every PR/MR 
+ **Fast feedback** - Results in minutes, not hours 
+ **Catch bugs early** - Before they reach production 
+ **Consistent standards** - Same quality bar for all code 
+ **Learning tool** - Developers learn from AI suggestions 
+ **Cost savings** - Prevent expensive production fixes 
 
 ---
 
-**Built by world-class engineers** 🌟
+**Built by world-class engineers** 
 
-**Status:** ✅ Production Ready
-
+**Status:** Production Ready

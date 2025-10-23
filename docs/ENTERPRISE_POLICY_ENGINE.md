@@ -1,7 +1,7 @@
 # Enterprise Policy Enforcement Engine
 
-**Status**: ✅ **PRODUCTION READY**  
-**Version**: 1.0.0  
+**Status**: **PRODUCTION READY** 
+**Version**: 1.0.0 
 **Date**: October 20, 2025
 
 ---
@@ -12,14 +12,14 @@ The **Enterprise Policy Enforcement Engine** provides centralized policy managem
 
 ### Key Features
 
-✅ **Centralized Policy Management** - Define organization-wide policies  
-✅ **Pre-commit Enforcement** - Block commits that violate policies  
-✅ **PR/MR Approval Workflows** - Automated approval based on compliance  
-✅ **Compliance Reporting** - Track violations across teams  
-✅ **Custom Policy Rules** - Define organization-specific rules  
-✅ **Flexible Enforcement** - Strict, flexible, or advisory modes  
-✅ **Branch-specific Policies** - Different rules for different branches  
-✅ **File Pattern Matching** - Target specific files or directories  
+ **Centralized Policy Management** - Define organization-wide policies 
+ **Pre-commit Enforcement** - Block commits that violate policies 
+ **PR/MR Approval Workflows** - Automated approval based on compliance 
+ **Compliance Reporting** - Track violations across teams 
+ **Custom Policy Rules** - Define organization-specific rules 
+ **Flexible Enforcement** - Strict, flexible, or advisory modes 
+ **Branch-specific Policies** - Different rules for different branches 
+ **File Pattern Matching** - Target specific files or directories 
 
 ---
 
@@ -53,12 +53,12 @@ reviewr policy list-templates
 ```
 Available Policy Templates:
 
-Template ID              Name                     Description
-security-critical        Security Critical        Zero tolerance for critical security issues
-production-ready         Production Ready         Strict quality requirements for production code
+Template ID Name Description
+security-critical Security Critical Zero tolerance for critical security issues
+production-ready Production Ready Strict quality requirements for production code
 security-review-required Security Review Required Require security team approval for sensitive files
-architecture-review      Architecture Review      Require architecture review for core changes
-quality-gate             Quality Gate             Standard quality requirements for all code
+architecture-review Architecture Review Require architecture review for core changes
+quality-gate Quality Gate Standard quality requirements for all code
 ```
 
 ### 2. Create a Policy
@@ -69,10 +69,10 @@ reviewr policy create security-critical my-security-policy --save
 
 # Create with custom thresholds
 reviewr policy create production-ready prod-policy \
-  --max-critical 0 \
-  --max-high 2 \
-  --max-medium 10 \
-  --save
+ --max-critical 0 \
+ --max-high 2 \
+ --max-medium 10 \
+ --save
 ```
 
 ### 3. Check Code Against Policies
@@ -184,13 +184,13 @@ scope: [pull-request]
 action: require-approval
 enforcement: strict
 file_patterns:
-  - "**/auth/**"
-  - "**/security/**"
-  - "**/crypto/**"
+ - "**/auth/**"
+ - "**/security/**"
+ - "**/crypto/**"
 approval:
-  required_approvers: 1
-  required_teams: [security]
-  allow_self_approval: false
+ required_approvers: 1
+ required_teams: [security]
+ allow_self_approval: false
 ```
 
 **When to Use**:
@@ -208,13 +208,13 @@ scope: [pull-request]
 action: require-approval
 enforcement: flexible
 file_patterns:
-  - "**/core/**"
-  - "**/api/**"
-  - "**/database/**"
+ - "**/core/**"
+ - "**/api/**"
+ - "**/database/**"
 approval:
-  required_approvers: 1
-  required_roles: [architect, tech-lead]
-  allow_self_approval: false
+ required_approvers: 1
+ required_roles: [architect, tech-lead]
+ allow_self_approval: false
 ```
 
 **When to Use**:
@@ -262,32 +262,32 @@ max_complexity: 20
 from reviewr.policy import PolicyRule, RuleViolation
 
 class MyCustomRule(PolicyRule):
-    def __init__(self):
-        super().__init__(
-            rule_id="my-custom-rule",
-            name="My Custom Rule",
-            description="Custom validation logic",
-            severity="high"
-        )
-    
-    def evaluate(self, context):
-        violations = []
-        
-        # Your custom logic here
-        findings = context.get('findings', [])
-        
-        for finding in findings:
-            if self._should_flag(finding):
-                violations.append(RuleViolation(
-                    rule_id=self.rule_id,
-                    rule_name=self.name,
-                    severity=self.severity,
-                    message="Custom violation detected",
-                    file_path=finding.file_path,
-                    suggestion="Fix the issue"
-                ))
-        
-        return violations
+ def __init__(self):
+ super().__init__(
+ rule_id="my-custom-rule",
+ name="My Custom Rule",
+ description="Custom validation logic",
+ severity="high"
+ )
+ 
+ def evaluate(self, context):
+ violations = []
+ 
+ # Your custom logic here
+ findings = context.get('findings', [])
+ 
+ for finding in findings:
+ if self._should_flag(finding):
+ violations.append(RuleViolation(
+ rule_id=self.rule_id,
+ rule_name=self.name,
+ severity=self.severity,
+ message="Custom violation detected",
+ file_path=finding.file_path,
+ suggestion="Fix the issue"
+ ))
+ 
+ return violations
 ```
 
 ---
@@ -313,35 +313,35 @@ exit $?
 name: Policy Enforcement
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+ pull_request:
+ types: [opened, synchronize, reopened]
 
 jobs:
-  policy-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install reviewr
-        run: pip install reviewr
-      
-      - name: Check Policies
-        run: |
-          reviewr policy check \
-            --scope pull-request \
-            --branch ${{ github.base_ref }}
+ policy-check:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ 
+ - name: Install reviewr
+ run: pip install reviewr
+ 
+ - name: Check Policies
+ run: |
+ reviewr policy check \
+ --scope pull-request \
+ --branch ${{ github.base_ref }}
 ```
 
 ### GitLab CI
 
 ```yaml
 policy-check:
-  stage: test
-  script:
-    - pip install reviewr
-    - reviewr policy check --scope pull-request --branch $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-  only:
-    - merge_requests
+ stage: test
+ script:
+ - pip install reviewr
+ - reviewr policy check --scope pull-request --branch $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+ only:
+ - merge_requests
 ```
 
 ---
@@ -353,67 +353,67 @@ policy-check:
 ```yaml
 id: my-policy
 config:
-  name: My Policy
-  description: Custom policy for my team
-  enabled: true
-  scope:
-    - pull-request
-    - merge
-  action: block
-  enforcement: strict
-  
-  # File filters
-  file_patterns:
-    - "src/**/*.py"
-    - "lib/**/*.js"
-  exclude_patterns:
-    - "**/*_test.py"
-    - "**/vendor/**"
-  
-  # Branch filters
-  branches:
-    - main
-    - release/*
-  exclude_branches:
-    - feature/*
-  
-  # Thresholds
-  max_critical_issues: 0
-  max_high_issues: 2
-  max_medium_issues: 10
-  max_complexity: 15
-  min_test_coverage: 0.8
-  
-  # Approval requirements
-  approval:
-    required_approvers: 2
-    required_roles:
-      - tech-lead
-      - architect
-    required_teams:
-      - security
-    allow_self_approval: false
-    timeout_hours: 48
-  
-  # Metadata
-  owner: security-team
-  tags:
-    - security
-    - compliance
-  priority: 100
-  
-  # Notifications
-  notify_on_violation:
-    - security@company.com
-    - slack://security-channel
-  notify_on_override:
-    - audit@company.com
+ name: My Policy
+ description: Custom policy for my team
+ enabled: true
+ scope:
+ - pull-request
+ - merge
+ action: block
+ enforcement: strict
+ 
+ # File filters
+ file_patterns:
+ - "src/**/*.py"
+ - "lib/**/*.js"
+ exclude_patterns:
+ - "**/*_test.py"
+ - "**/vendor/**"
+ 
+ # Branch filters
+ branches:
+ - main
+ - release/*
+ exclude_branches:
+ - feature/*
+ 
+ # Thresholds
+ max_critical_issues: 0
+ max_high_issues: 2
+ max_medium_issues: 10
+ max_complexity: 15
+ min_test_coverage: 0.8
+ 
+ # Approval requirements
+ approval:
+ required_approvers: 2
+ required_roles:
+ - tech-lead
+ - architect
+ required_teams:
+ - security
+ allow_self_approval: false
+ timeout_hours: 48
+ 
+ # Metadata
+ owner: security-team
+ tags:
+ - security
+ - compliance
+ priority: 100
+ 
+ # Notifications
+ notify_on_violation:
+ - security@company.com
+ - slack://security-channel
+ notify_on_override:
+ - audit@company.com
 
 rules:
-  - severity-strict
-  - security-zero-tolerance
-  - complexity-strict
-  - coverage-80
+ - severity-strict
+ - security-zero-tolerance
+ - complexity-strict
+ - coverage-80
 
 created_at: "2025-10-20T10:00:00Z"
 version: 1
@@ -489,7 +489,7 @@ max_high_issues: 0
 file_patterns: ["**/auth/**", "**/security/**"]
 action: require-approval
 approval:
-  required_teams: [security]
+ required_teams: [security]
 ```
 
 ### 4. Use Advisory Mode for New Policies
@@ -559,5 +559,4 @@ For issues or questions:
 
 ---
 
-**Built with ❤️ for enterprise teams**
-
+**Built with for enterprise teams**

@@ -6,14 +6,14 @@ The **reviewr Web Dashboard** provides a comprehensive web-based interface for v
 
 ## Features
 
-✅ **Historical Review Data** - Store and query all review results  
-✅ **Trend Analysis** - Visualize code quality trends over time  
-✅ **Team Metrics** - Track team performance and productivity  
-✅ **Cost Tracking** - Monitor API usage and costs  
-✅ **Quality Gates** - Define and enforce quality thresholds  
-✅ **RESTful API** - Integrate with external tools and services  
-✅ **Real-time Metrics** - Live dashboard updates  
-✅ **Multi-Project Support** - Manage multiple projects in one dashboard
+ **Historical Review Data** - Store and query all review results 
+ **Trend Analysis** - Visualize code quality trends over time 
+ **Team Metrics** - Track team performance and productivity 
+ **Cost Tracking** - Monitor API usage and costs 
+ **Quality Gates** - Define and enforce quality thresholds 
+ **RESTful API** - Integrate with external tools and services 
+ **Real-time Metrics** - Live dashboard updates 
+ **Multi-Project Support** - Manage multiple projects in one dashboard
 
 ## Quick Start
 
@@ -50,9 +50,9 @@ The dashboard will be available at:
 ```bash
 # Add a project
 reviewr dashboard add-project my-app \
-  --repository-url https://github.com/user/my-app \
-  --language python \
-  --description "My awesome application"
+ --repository-url https://github.com/user/my-app \
+ --language python \
+ --description "My awesome application"
 
 # List all projects
 reviewr dashboard list-projects
@@ -66,10 +66,10 @@ reviewr /path/to/code --output results.json
 
 # Upload results to dashboard
 reviewr dashboard upload results.json \
-  --project-name my-app \
-  --commit-sha abc123 \
-  --branch main \
-  --author "John Doe"
+ --project-name my-app \
+ --commit-sha abc123 \
+ --branch main \
+ --author "John Doe"
 ```
 
 ### 5. View Statistics
@@ -187,9 +187,9 @@ reviewr dashboard add-project my-app
 
 # Add with full details
 reviewr dashboard add-project my-app \
-  --repository-url https://github.com/user/my-app \
-  --language python \
-  --description "My awesome application"
+ --repository-url https://github.com/user/my-app \
+ --language python \
+ --description "My awesome application"
 ```
 
 ### `reviewr dashboard list-projects`
@@ -242,10 +242,10 @@ reviewr dashboard upload results.json --project-name my-app
 
 # Upload with full metadata
 reviewr dashboard upload results.json \
-  --project-name my-app \
-  --commit-sha abc123def456 \
-  --branch main \
-  --author "John Doe"
+ --project-name my-app \
+ --commit-sha abc123def456 \
+ --branch main \
+ --author "John Doe"
 ```
 
 ## API Endpoints
@@ -291,40 +291,40 @@ name: Code Review with Dashboard
 on: [push, pull_request]
 
 jobs:
-  review:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Run reviewr
-        run: |
-          pip install reviewr
-          reviewr . --output results.json
-      
-      - name: Upload to Dashboard
-        run: |
-          reviewr dashboard upload results.json \
-            --project-name ${{ github.repository }} \
-            --commit-sha ${{ github.sha }} \
-            --branch ${{ github.ref_name }} \
-            --author "${{ github.actor }}" \
-            --database-url ${{ secrets.REVIEWR_DATABASE_URL }}
+ review:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ 
+ - name: Run reviewr
+ run: |
+ pip install reviewr
+ reviewr . --output results.json
+ 
+ - name: Upload to Dashboard
+ run: |
+ reviewr dashboard upload results.json \
+ --project-name ${{ github.repository }} \
+ --commit-sha ${{ github.sha }} \
+ --branch ${{ github.ref_name }} \
+ --author "${{ github.actor }}" \
+ --database-url ${{ secrets.REVIEWR_DATABASE_URL }}
 ```
 
 ### GitLab CI
 
 ```yaml
 code_review:
-  script:
-    - pip install reviewr
-    - reviewr . --output results.json
-    - |
-      reviewr dashboard upload results.json \
-        --project-name $CI_PROJECT_NAME \
-        --commit-sha $CI_COMMIT_SHA \
-        --branch $CI_COMMIT_BRANCH \
-        --author "$CI_COMMIT_AUTHOR" \
-        --database-url $REVIEWR_DATABASE_URL
+ script:
+ - pip install reviewr
+ - reviewr . --output results.json
+ - |
+ reviewr dashboard upload results.json \
+ --project-name $CI_PROJECT_NAME \
+ --commit-sha $CI_COMMIT_SHA \
+ --branch $CI_COMMIT_BRANCH \
+ --author "$CI_COMMIT_AUTHOR" \
+ --database-url $REVIEWR_DATABASE_URL
 ```
 
 ## Docker Deployment
@@ -337,29 +337,29 @@ Create `docker-compose.yml`:
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: reviewr
-      POSTGRES_USER: reviewr
-      POSTGRES_PASSWORD: reviewr_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+ postgres:
+ image: postgres:15
+ environment:
+ POSTGRES_DB: reviewr
+ POSTGRES_USER: reviewr
+ POSTGRES_PASSWORD: reviewr_password
+ volumes:
+ - postgres_data:/var/lib/postgresql/data
+ ports:
+ - "5432:5432"
 
-  dashboard:
-    image: reviewr:latest
-    command: reviewr dashboard start --host 0.0.0.0 --port 8000
-    environment:
-      REVIEWR_DATABASE_URL: postgresql://reviewr:reviewr_password@postgres:5432/reviewr
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres
+ dashboard:
+ image: reviewr:latest
+ command: reviewr dashboard start --host 0.0.0.0 --port 8000
+ environment:
+ REVIEWR_DATABASE_URL: postgresql://reviewr:reviewr_password@postgres:5432/reviewr
+ ports:
+ - "8000:8000"
+ depends_on:
+ - postgres
 
 volumes:
-  postgres_data:
+ postgres_data:
 ```
 
 Start the services:
@@ -417,4 +417,3 @@ pip install fastapi uvicorn sqlalchemy psycopg2-binary
 For issues and questions:
 - GitHub Issues: https://github.com/user/reviewr/issues
 - Documentation: README.md
-

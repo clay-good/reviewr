@@ -19,50 +19,50 @@ This document provides a comprehensive guide for the Reviewr IntelliJ/JetBrains 
 
 ```
 intellij-plugin/
-├── build.gradle.kts                    # Gradle build configuration
-├── src/main/
-│   ├── java/com/reviewr/intellij/
-│   │   ├── ReviewrService.java         # Core analysis service ✅
-│   │   ├── model/
-│   │   │   ├── ReviewFinding.java      # Finding data model
-│   │   │   └── AnalysisResult.java     # Analysis result model
-│   │   ├── annotator/
-│   │   │   └── ReviewrAnnotator.java   # Real-time annotator
-│   │   ├── inspection/
-│   │   │   └── ReviewrInspection.java  # On-demand inspection
-│   │   ├── intention/
-│   │   │   └── ApplyReviewrFixIntention.java  # Quick fixes
-│   │   ├── toolwindow/
-│   │   │   ├── ReviewrToolWindowFactory.java
-│   │   │   └── ReviewrToolWindowPanel.java
-│   │   ├── settings/
-│   │   │   ├── ReviewrSettings.java
-│   │   │   └── ReviewrConfigurable.java
-│   │   ├── action/
-│   │   │   ├── AnalyzeFileAction.java
-│   │   │   ├── AnalyzeProjectAction.java
-│   │   │   ├── ClearCacheAction.java
-│   │   │   └── OpenSettingsAction.java
-│   │   └── listener/
-│   │       ├── ReviewrFileEditorListener.java
-│   │       └── ReviewrProjectListener.java
-│   └── resources/
-│       ├── META-INF/
-│       │   └── plugin.xml              # Plugin configuration ✅
-│       └── icons/
-│           └── reviewr.svg             # Plugin icon
-└── README.md
+ build.gradle.kts # Gradle build configuration
+ src/main/
+ java/com/reviewr/intellij/
+ ReviewrService.java # Core analysis service 
+ model/
+ ReviewFinding.java # Finding data model
+ AnalysisResult.java # Analysis result model
+ annotator/
+ ReviewrAnnotator.java # Real-time annotator
+ inspection/
+ ReviewrInspection.java # On-demand inspection
+ intention/
+ ApplyReviewrFixIntention.java # Quick fixes
+ toolwindow/
+ ReviewrToolWindowFactory.java
+ ReviewrToolWindowPanel.java
+ settings/
+ ReviewrSettings.java
+ ReviewrConfigurable.java
+ action/
+ AnalyzeFileAction.java
+ AnalyzeProjectAction.java
+ ClearCacheAction.java
+ OpenSettingsAction.java
+ listener/
+ ReviewrFileEditorListener.java
+ ReviewrProjectListener.java
+ resources/
+ META-INF/
+ plugin.xml # Plugin configuration 
+ icons/
+ reviewr.svg # Plugin icon
+ README.md
 ```
 
 ## Implementation Status
 
-### ✅ Completed Components
+### Completed Components
 
 1. **build.gradle.kts** - Gradle build configuration with IntelliJ plugin setup
 2. **plugin.xml** - Complete plugin descriptor with all extensions and actions
 3. **ReviewrService.java** - Core service for running reviewr CLI and parsing SARIF output
 
-### 📝 Remaining Components (Implementation Templates)
+### Remaining Components (Implementation Templates)
 
 #### 1. ReviewFinding.java
 
@@ -70,18 +70,18 @@ intellij-plugin/
 package com.reviewr.intellij.model;
 
 public class ReviewFinding {
-    private String filePath;
-    private int lineStart;
-    private int lineEnd;
-    private String severity;
-    private String category;
-    private String message;
-    private String ruleId;
-    private String suggestion;
-    
-    // Getters and setters
-    // Constructor
-    // toString, equals, hashCode
+ private String filePath;
+ private int lineStart;
+ private int lineEnd;
+ private String severity;
+ private String category;
+ private String message;
+ private String ruleId;
+ private String suggestion;
+ 
+ // Getters and setters
+ // Constructor
+ // toString, equals, hashCode
 }
 ```
 
@@ -97,32 +97,32 @@ import com.reviewr.intellij.ReviewrService;
 import com.reviewr.intellij.model.ReviewFinding;
 
 public class ReviewrAnnotator extends ExternalAnnotator<PsiFile, List<ReviewFinding>> {
-    
-    @Override
-    public PsiFile collectInformation(@NotNull PsiFile file) {
-        return file;
-    }
-    
-    @Override
-    public List<ReviewFinding> doAnnotate(PsiFile file) {
-        // Run analysis asynchronously
-        return ReviewrService.getInstance()
-            .analyzeFile(file.getProject(), file.getVirtualFile())
-            .join();
-    }
-    
-    @Override
-    public void apply(@NotNull PsiFile file, List<ReviewFinding> findings, 
-                      @NotNull AnnotationHolder holder) {
-        for (ReviewFinding finding : findings) {
-            // Create annotation based on severity
-            HighlightSeverity severity = mapSeverity(finding.getSeverity());
-            holder.newAnnotation(severity, finding.getMessage())
-                .range(/* calculate range from line numbers */)
-                .withFix(new ApplyReviewrFixIntention(finding))
-                .create();
-        }
-    }
+ 
+ @Override
+ public PsiFile collectInformation(@NotNull PsiFile file) {
+ return file;
+ }
+ 
+ @Override
+ public List<ReviewFinding> doAnnotate(PsiFile file) {
+ // Run analysis asynchronously
+ return ReviewrService.getInstance()
+ .analyzeFile(file.getProject(), file.getVirtualFile())
+ .join();
+ }
+ 
+ @Override
+ public void apply(@NotNull PsiFile file, List<ReviewFinding> findings, 
+ @NotNull AnnotationHolder holder) {
+ for (ReviewFinding finding : findings) {
+ // Create annotation based on severity
+ HighlightSeverity severity = mapSeverity(finding.getSeverity());
+ holder.newAnnotation(severity, finding.getMessage())
+ .range(/* calculate range from line numbers */)
+ .withFix(new ApplyReviewrFixIntention(finding))
+ .create();
+ }
+ }
 }
 ```
 
@@ -136,29 +136,29 @@ import com.intellij.psi.PsiFile;
 import com.reviewr.intellij.ReviewrService;
 
 public class ReviewrInspection extends LocalInspectionTool {
-    
-    @Override
-    public ProblemDescriptor[] checkFile(@NotNull PsiFile file, 
-                                         @NotNull InspectionManager manager, 
-                                         boolean isOnTheFly) {
-        List<ReviewFinding> findings = ReviewrService.getInstance()
-            .analyzeFile(file.getProject(), file.getVirtualFile())
-            .join();
-        
-        List<ProblemDescriptor> problems = new ArrayList<>();
-        for (ReviewFinding finding : findings) {
-            ProblemDescriptor problem = manager.createProblemDescriptor(
-                /* element */,
-                finding.getMessage(),
-                new ApplyReviewrFixIntention(finding),
-                mapSeverity(finding.getSeverity()),
-                isOnTheFly
-            );
-            problems.add(problem);
-        }
-        
-        return problems.toArray(new ProblemDescriptor[0]);
-    }
+ 
+ @Override
+ public ProblemDescriptor[] checkFile(@NotNull PsiFile file, 
+ @NotNull InspectionManager manager, 
+ boolean isOnTheFly) {
+ List<ReviewFinding> findings = ReviewrService.getInstance()
+ .analyzeFile(file.getProject(), file.getVirtualFile())
+ .join();
+ 
+ List<ProblemDescriptor> problems = new ArrayList<>();
+ for (ReviewFinding finding : findings) {
+ ProblemDescriptor problem = manager.createProblemDescriptor(
+ /* element */,
+ finding.getMessage(),
+ new ApplyReviewrFixIntention(finding),
+ mapSeverity(finding.getSeverity()),
+ isOnTheFly
+ );
+ problems.add(problem);
+ }
+ 
+ return problems.toArray(new ProblemDescriptor[0]);
+ }
 }
 ```
 
@@ -174,22 +174,22 @@ import com.intellij.psi.PsiFile;
 import com.reviewr.intellij.model.ReviewFinding;
 
 public class ApplyReviewrFixIntention implements IntentionAction {
-    private final ReviewFinding finding;
-    
-    public ApplyReviewrFixIntention(ReviewFinding finding) {
-        this.finding = finding;
-    }
-    
-    @Override
-    public String getText() {
-        return "Apply Reviewr fix: " + finding.getSuggestion();
-    }
-    
-    @Override
-    public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
-        // Apply the fix using reviewr autofix command
-        // Or apply the suggestion directly
-    }
+ private final ReviewFinding finding;
+ 
+ public ApplyReviewrFixIntention(ReviewFinding finding) {
+ this.finding = finding;
+ }
+ 
+ @Override
+ public String getText() {
+ return "Apply Reviewr fix: " + finding.getSuggestion();
+ }
+ 
+ @Override
+ public void invoke(@NotNull Project project, Editor editor, PsiFile file) {
+ // Apply the fix using reviewr autofix command
+ // Or apply the suggestion directly
+ }
 }
 ```
 
@@ -203,15 +203,15 @@ import com.intellij.openapi.wm.*;
 import com.intellij.ui.content.*;
 
 public class ReviewrToolWindowFactory implements ToolWindowFactory {
-    
-    @Override
-    public void createToolWindowContent(@NotNull Project project, 
-                                       @NotNull ToolWindow toolWindow) {
-        ReviewrToolWindowPanel panel = new ReviewrToolWindowPanel(project);
-        Content content = ContentFactory.SERVICE.getInstance()
-            .createContent(panel, "", false);
-        toolWindow.getContentManager().addContent(content);
-    }
+ 
+ @Override
+ public void createToolWindowContent(@NotNull Project project, 
+ @NotNull ToolWindow toolWindow) {
+ ReviewrToolWindowPanel panel = new ReviewrToolWindowPanel(project);
+ Content content = ContentFactory.SERVICE.getInstance()
+ .createContent(panel, "", false);
+ toolWindow.getContentManager().addContent(content);
+ }
 }
 ```
 
@@ -225,34 +225,34 @@ import com.intellij.openapi.components.*;
 
 @State(name = "ReviewrSettings", storages = @Storage("reviewr.xml"))
 public class ReviewrSettings implements PersistentStateComponent<ReviewrSettings.State> {
-    
-    public static class State {
-        public boolean enabled = true;
-        public String reviewrPath = "";
-        public boolean securityAnalysis = true;
-        public boolean performanceAnalysis = true;
-        public boolean realTimeAnalysis = true;
-        public int analysisDelay = 1000; // ms
-    }
-    
-    private State state = new State();
-    
-    public static ReviewrSettings getInstance() {
-        return ApplicationManager.getApplication()
-            .getService(ReviewrSettings.class);
-    }
-    
-    @Override
-    public State getState() {
-        return state;
-    }
-    
-    @Override
-    public void loadState(@NotNull State state) {
-        this.state = state;
-    }
-    
-    // Getters and setters
+ 
+ public static class State {
+ public boolean enabled = true;
+ public String reviewrPath = "";
+ public boolean securityAnalysis = true;
+ public boolean performanceAnalysis = true;
+ public boolean realTimeAnalysis = true;
+ public int analysisDelay = 1000; // ms
+ }
+ 
+ private State state = new State();
+ 
+ public static ReviewrSettings getInstance() {
+ return ApplicationManager.getApplication()
+ .getService(ReviewrSettings.class);
+ }
+ 
+ @Override
+ public State getState() {
+ return state;
+ }
+ 
+ @Override
+ public void loadState(@NotNull State state) {
+ this.state = state;
+ }
+ 
+ // Getters and setters
 }
 ```
 
@@ -345,4 +345,3 @@ Options:
 - [IntelliJ Platform SDK](https://plugins.jetbrains.com/docs/intellij/welcome.html)
 - [Plugin Development Guidelines](https://plugins.jetbrains.com/docs/intellij/plugin-development-guidelines.html)
 - [IntelliJ Platform Explorer](https://plugins.jetbrains.com/intellij-platform-explorer/)
-

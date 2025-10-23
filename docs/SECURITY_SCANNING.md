@@ -25,27 +25,27 @@ The advanced security scanning module provides three complementary security anal
 ## Features
 
 ### Vulnerability Scanning
-- ✅ **OSV Database Integration**: Query Open Source Vulnerabilities database for known CVEs
-- ✅ **Multi-Ecosystem Support**: Python (PyPI), JavaScript (npm), Go, Rust (crates.io)
-- ✅ **Severity Classification**: Critical, High, Medium, Low severity levels
-- ✅ **Fix Guidance**: Automatic remediation recommendations
-- ✅ **CWE Mapping**: Common Weakness Enumeration categorization
-- ✅ **CVSS Scoring**: Industry-standard vulnerability scoring
+- **OSV Database Integration**: Query Open Source Vulnerabilities database for known CVEs
+- **Multi-Ecosystem Support**: Python (PyPI), JavaScript (npm), Go, Rust (crates.io)
+- **Severity Classification**: Critical, High, Medium, Low severity levels
+- **Fix Guidance**: Automatic remediation recommendations
+- **CWE Mapping**: Common Weakness Enumeration categorization
+- **CVSS Scoring**: Industry-standard vulnerability scoring
 
 ### SAST Engine
-- ✅ **10 Built-in Rules**: Covering OWASP Top 10 categories
-- ✅ **CWE Mapping**: Each rule mapped to specific CWE IDs
-- ✅ **OWASP Coverage**: A01-A10 categories from OWASP Top 10 2021
-- ✅ **Multi-Language**: Python, JavaScript, TypeScript, Java, Go, Rust, PHP
-- ✅ **Custom Rules**: Extensible rule engine for custom security patterns
-- ✅ **Fix Guidance**: Actionable remediation advice for each finding
+- **10 Built-in Rules**: Covering OWASP Top 10 categories
+- **CWE Mapping**: Each rule mapped to specific CWE IDs
+- **OWASP Coverage**: A01-A10 categories from OWASP Top 10 2021
+- **Multi-Language**: Python, JavaScript, TypeScript, Java, Go, Rust, PHP
+- **Custom Rules**: Extensible rule engine for custom security patterns
+- **Fix Guidance**: Actionable remediation advice for each finding
 
 ### License Compliance
-- ✅ **SPDX Identification**: Standard license identification
-- ✅ **Policy Enforcement**: Permissive and copyleft-friendly policies
-- ✅ **Compatibility Checking**: Detect incompatible license combinations
-- ✅ **Risk Assessment**: Low, Medium, High, Critical risk levels
-- ✅ **OSI/FSF Approval**: Track OSI and FSF approved licenses
+- **SPDX Identification**: Standard license identification
+- **Policy Enforcement**: Permissive and copyleft-friendly policies
+- **Compatibility Checking**: Detect incompatible license combinations
+- **Risk Assessment**: Low, Medium, High, Critical risk levels
+- **OSI/FSF Approval**: Track OSI and FSF approved licenses
 
 ## Quick Start
 
@@ -95,15 +95,15 @@ reviewr /path/to/project --security-scan --license-policy copyleft-friendly --al
 
 ```json
 {
-  "type": "vulnerability",
-  "severity": "critical",
-  "message": "CVE-2023-1234: Remote Code Execution in package-name",
-  "details": "An attacker can execute arbitrary code...",
-  "package": "package-name",
-  "version": "1.0.0",
-  "fix": "Update package-name to version 1.0.1 or later",
-  "file": "requirements.txt",
-  "line": 1
+ "type": "vulnerability",
+ "severity": "critical",
+ "message": "CVE-2023-1234: Remote Code Execution in package-name",
+ "details": "An attacker can execute arbitrary code...",
+ "package": "package-name",
+ "version": "1.0.0",
+ "fix": "Update package-name to version 1.0.1 or later",
+ "file": "requirements.txt",
+ "line": 1
 }
 ```
 
@@ -143,15 +143,15 @@ cursor.execute(query)
 
 # Finding
 {
-  "type": "sast",
-  "severity": "critical",
-  "message": "SQL Injection via String Concatenation",
-  "details": "Use parameterized queries or prepared statements",
-  "cwe_id": "CWE-89",
-  "cwe_url": "https://cwe.mitre.org/data/definitions/89.html",
-  "owasp_category": "A03:2021 - Injection",
-  "file": "app.py",
-  "line": 42
+ "type": "sast",
+ "severity": "critical",
+ "message": "SQL Injection via String Concatenation",
+ "details": "Use parameterized queries or prepared statements",
+ "cwe_id": "CWE-89",
+ "cwe_url": "https://cwe.mitre.org/data/definitions/89.html",
+ "owasp_category": "A03:2021 - Injection",
+ "file": "app.py",
+ "line": 42
 }
 ```
 
@@ -163,13 +163,13 @@ api_key = "sk-1234567890abcdef"
 
 # Finding
 {
-  "type": "sast",
-  "severity": "critical",
-  "message": "Hard-coded Credentials",
-  "details": "Use environment variables or secure credential management systems",
-  "cwe_id": "CWE-798",
-  "file": "config.py",
-  "line": 15
+ "type": "sast",
+ "severity": "critical",
+ "message": "Hard-coded Credentials",
+ "details": "Use environment variables or secure credential management systems",
+ "cwe_id": "CWE-798",
+ "file": "config.py",
+ "line": 15
 }
 ```
 
@@ -177,16 +177,16 @@ api_key = "sk-1234567890abcdef"
 
 The SAST engine covers all OWASP Top 10 2021 categories:
 
-- ✅ **A01:2021** - Broken Access Control
-- ✅ **A02:2021** - Cryptographic Failures
-- ✅ **A03:2021** - Injection
-- ✅ **A04:2021** - Insecure Design
-- ✅ **A05:2021** - Security Misconfiguration
-- ✅ **A06:2021** - Vulnerable and Outdated Components
-- ✅ **A07:2021** - Identification and Authentication Failures
-- ✅ **A08:2021** - Software and Data Integrity Failures
-- ✅ **A09:2021** - Security Logging and Monitoring Failures
-- ✅ **A10:2021** - Server-Side Request Forgery
+- **A01:2021** - Broken Access Control
+- **A02:2021** - Cryptographic Failures
+- **A03:2021** - Injection
+- **A04:2021** - Insecure Design
+- **A05:2021** - Security Misconfiguration
+- **A06:2021** - Vulnerable and Outdated Components
+- **A07:2021** - Identification and Authentication Failures
+- **A08:2021** - Software and Data Integrity Failures
+- **A09:2021** - Security Logging and Monitoring Failures
+- **A10:2021** - Server-Side Request Forgery
 
 ## License Compliance
 
@@ -253,11 +253,11 @@ reviewr /path/to/project --scan-licenses --license-policy copyleft-friendly --al
 ### Options
 
 ```
---security-scan                 Enable all security scanning features
---scan-vulnerabilities          Scan dependencies for CVEs
---scan-sast                     Run SAST security rules
---scan-licenses                 Check license compliance
---license-policy POLICY         License policy: permissive (default) or copyleft-friendly
+--security-scan Enable all security scanning features
+--scan-vulnerabilities Scan dependencies for CVEs
+--scan-sast Run SAST security rules
+--scan-licenses Check license compliance
+--license-policy POLICY License policy: permissive (default) or copyleft-friendly
 ```
 
 ### Examples
@@ -288,45 +288,45 @@ name: Security Scan
 on: [pull_request]
 
 jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install reviewr
-        run: pip install reviewr
-      - name: Run security scan
-        run: |
-          reviewr . --security-scan --all --output-format sarif > security.sarif
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: security.sarif
+ security:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ - name: Install reviewr
+ run: pip install reviewr
+ - name: Run security scan
+ run: |
+ reviewr . --security-scan --all --output-format sarif > security.sarif
+ - name: Upload SARIF
+ uses: github/codeql-action/upload-sarif@v2
+ with:
+ sarif_file: security.sarif
 ```
 
 ### GitLab CI
 
 ```yaml
 security_scan:
-  stage: test
-  script:
-    - pip install reviewr
-    - reviewr . --security-scan --all --output-format sarif > security.sarif
-  artifacts:
-    reports:
-      sast: security.sarif
+ stage: test
+ script:
+ - pip install reviewr
+ - reviewr . --security-scan --all --output-format sarif > security.sarif
+ artifacts:
+ reports:
+ sast: security.sarif
 ```
 
 ### Bitbucket Pipelines
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Security Scan
-          script:
-            - pip install reviewr
-            - reviewr . --security-scan --all --output-format sarif
+ pull-requests:
+ '**':
+ - step:
+ name: Security Scan
+ script:
+ - pip install reviewr
+ - reviewr . --security-scan --all --output-format sarif
 ```
 
 ## Best Practices
@@ -432,4 +432,3 @@ For issues, questions, or feature requests related to security scanning:
 ---
 
 **Note**: Security scanning is a complementary feature to reviewr's AI-powered code review. For best results, use both capabilities together to achieve comprehensive code quality and security assurance.
-

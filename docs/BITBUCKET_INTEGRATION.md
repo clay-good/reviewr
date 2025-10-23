@@ -4,14 +4,14 @@ Automated code review for Bitbucket pull requests with inline comments, summary 
 
 ## Features
 
-- ✅ **Automated PR Reviews** - Review pull requests automatically in Bitbucket Pipelines
-- ✅ **Inline Comments** - Post findings as inline comments on specific lines
-- ✅ **Summary Reports** - Generate comprehensive summary comments
-- ✅ **Auto-Approval** - Automatically approve PRs with no critical issues
-- ✅ **Build Status** - Update commit build status based on review results
-- ✅ **Bitbucket Cloud** - Full support for bitbucket.org
-- ✅ **Bitbucket Server/Data Center** - Support for self-hosted instances
-- ✅ **Incremental Analysis** - Review only changed code with `--diff` flag
+- **Automated PR Reviews** - Review pull requests automatically in Bitbucket Pipelines
+- **Inline Comments** - Post findings as inline comments on specific lines
+- **Summary Reports** - Generate comprehensive summary comments
+- **Auto-Approval** - Automatically approve PRs with no critical issues
+- **Build Status** - Update commit build status based on review results
+- **Bitbucket Cloud** - Full support for bitbucket.org
+- **Bitbucket Server/Data Center** - Support for self-hosted instances
+- **Incremental Analysis** - Review only changed code with `--diff` flag
 
 ## Quick Start
 
@@ -24,15 +24,15 @@ Create an app password:
 2. Click "Create app password"
 3. Give it a label (e.g., "reviewr")
 4. Select permissions:
-   - **Pull requests**: Read, Write
-   - **Repositories**: Read
+ - **Pull requests**: Read, Write
+ - **Repositories**: Read
 5. Click "Create" and save the password
 
 Set environment variables:
 ```bash
 export BITBUCKET_USERNAME='your-username'
 export BITBUCKET_APP_PASSWORD='your-app-password'
-export ANTHROPIC_API_KEY='your-api-key'  # or OPENAI_API_KEY, GEMINI_API_KEY
+export ANTHROPIC_API_KEY='your-api-key' # or OPENAI_API_KEY, GEMINI_API_KEY
 ```
 
 #### Bitbucket Server/Data Center
@@ -53,13 +53,13 @@ Create `.bitbucket/bitbucket-pipelines.yml`:
 image: python:3.9
 
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Code Review
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --all --auto-approve
+ pull-requests:
+ '**':
+ - step:
+ name: Code Review
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --all --auto-approve
 ```
 
 ### 3. Add Repository Variables
@@ -67,8 +67,8 @@ pipelines:
 In your Bitbucket repository:
 1. Go to **Repository Settings** > **Pipelines** > **Repository variables**
 2. Add secured variables:
-   - `BITBUCKET_APP_PASSWORD`: Your app password
-   - `ANTHROPIC_API_KEY`: Your LLM provider API key
+ - `BITBUCKET_APP_PASSWORD`: Your app password
+ - `ANTHROPIC_API_KEY`: Your LLM provider API key
 
 **Note**: `BITBUCKET_USERNAME`, `BITBUCKET_PR_ID`, and `BITBUCKET_COMMIT` are automatically provided by Bitbucket Pipelines.
 
@@ -152,91 +152,91 @@ reviewr bitbucket review --all --provider gemini
 image: python:3.9
 
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Code Review
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --all --auto-approve
+ pull-requests:
+ '**':
+ - step:
+ name: Code Review
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --all --auto-approve
 ```
 
 ### Example 2: Incremental Review (Faster)
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Incremental Code Review
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --all --diff --diff-base origin/main
+ pull-requests:
+ '**':
+ - step:
+ name: Incremental Code Review
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --all --diff --diff-base origin/main
 ```
 
 ### Example 3: Different Reviews for Different Branches
 
 ```yaml
 pipelines:
-  pull-requests:
-    feature/*:
-      - step:
-          name: Feature Review
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --security --performance
-    
-    hotfix/*:
-      - step:
-          name: Hotfix Review (Critical Only)
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --security --correctness
+ pull-requests:
+ feature/*:
+ - step:
+ name: Feature Review
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --security --performance
+ 
+ hotfix/*:
+ - step:
+ name: Hotfix Review (Critical Only)
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --security --correctness
 ```
 
 ### Example 4: Parallel Reviews
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - parallel:
-          - step:
-              name: Security Review
-              script:
-                - pip install reviewr
-                - reviewr . --security --local-only
-          - step:
-              name: Performance Review
-              script:
-                - pip install reviewr
-                - reviewr . --performance --local-only
+ pull-requests:
+ '**':
+ - parallel:
+ - step:
+ name: Security Review
+ script:
+ - pip install reviewr
+ - reviewr . --security --local-only
+ - step:
+ name: Performance Review
+ script:
+ - pip install reviewr
+ - reviewr . --performance --local-only
 ```
 
 ### Example 5: Custom Configuration
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Custom Review
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --config .reviewr.yml
+ pull-requests:
+ '**':
+ - step:
+ name: Custom Review
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --config .reviewr.yml
 ```
 
 ### Example 6: Bitbucket Server
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Code Review (Server)
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --all --is-server
+ pull-requests:
+ '**':
+ - step:
+ name: Code Review (Server)
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --all --is-server
 ```
 
 ## CLI Reference
@@ -312,7 +312,7 @@ reviewr bitbucket setup
 Each finding is posted as an inline comment on the specific line:
 
 ```
-🔴 CRITICAL: SQL injection vulnerability detected
+ CRITICAL: SQL injection vulnerability detected
 
 Suggestion: Use parameterized queries instead of string concatenation
 
@@ -325,11 +325,11 @@ Type: security
 A summary comment is posted with all findings:
 
 ```markdown
-## 🔍 Code Review Summary
+## Code Review Summary
 
 **Total findings**: 5
 
-🔴 **Critical**: 1
+ **Critical**: 1
 🟠 **High**: 2
 🟡 **Medium**: 2
 
@@ -341,9 +341,9 @@ A summary comment is posted with all findings:
 
 The commit build status is updated based on review results:
 
-- ✅ **SUCCESSFUL** - No critical or high severity issues
-- ❌ **FAILED** - Critical or high severity issues found
-- 🔄 **INPROGRESS** - Review in progress
+- **SUCCESSFUL** - No critical or high severity issues
+- **FAILED** - Critical or high severity issues found
+- **INPROGRESS** - Review in progress
 
 ## Best Practices
 
@@ -379,15 +379,15 @@ Speed up pipeline execution by caching pip packages:
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - step:
-          name: Code Review
-          caches:
-            - pip
-          script:
-            - pip install reviewr
-            - reviewr bitbucket review --all
+ pull-requests:
+ '**':
+ - step:
+ name: Code Review
+ caches:
+ - pip
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --all
 ```
 
 ### 4. Use Local-Only Mode for Fast Feedback
@@ -404,22 +404,22 @@ Integrate reviewr with other quality checks:
 
 ```yaml
 pipelines:
-  pull-requests:
-    '**':
-      - parallel:
-          - step:
-              name: Code Review
-              script:
-                - pip install reviewr
-                - reviewr bitbucket review --all
-          - step:
-              name: Unit Tests
-              script:
-                - pytest
-          - step:
-              name: Linting
-              script:
-                - flake8
+ pull-requests:
+ '**':
+ - parallel:
+ - step:
+ name: Code Review
+ script:
+ - pip install reviewr
+ - reviewr bitbucket review --all
+ - step:
+ name: Unit Tests
+ script:
+ - pytest
+ - step:
+ name: Linting
+ script:
+ - flake8
 ```
 
 ## Troubleshooting
@@ -505,4 +505,3 @@ For issues or questions:
 - [GitLab Integration](GITLAB_INTEGRATION.md)
 - [Incremental Analysis](INCREMENTAL_ANALYSIS.md)
 - [Configuration Guide](CONFIG.md)
-

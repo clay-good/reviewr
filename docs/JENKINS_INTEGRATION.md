@@ -24,23 +24,23 @@ The Jenkins integration enables **reviewr** to:
 
 ## Features
 
-### ✅ Build Integration
+### Build Integration
 - **Build Description**: Automatically update build description with review summary
 - **Build Badges**: Add colored badges based on review results
 - **Artifact Publishing**: Publish review reports as Jenkins artifacts
 
-### ✅ Pipeline Support
+### Pipeline Support
 - **Declarative Pipelines**: Full support for declarative pipeline syntax
 - **Scripted Pipelines**: Full support for scripted pipeline syntax
 - **Parallel Execution**: Run multiple review types in parallel
 - **Conditional Execution**: Different presets for different branches
 
-### ✅ Credentials Management
+### Credentials Management
 - **Jenkins Credentials**: Use Jenkins credentials for secure storage
 - **Environment Variables**: Configure via environment variables
 - **API Token Authentication**: Secure authentication with API tokens
 
-### ✅ Reporting
+### Reporting
 - **HTML Summaries**: Rich HTML formatting in build descriptions
 - **JSON Reports**: Detailed JSON reports as artifacts
 - **SARIF Format**: SARIF reports for tool integration
@@ -69,34 +69,34 @@ Create a `Jenkinsfile` in your repository:
 
 ```groovy
 pipeline {
-    agent any
-    
-    environment {
-        JENKINS_URL = credentials('jenkins-url')
-        JENKINS_USERNAME = credentials('jenkins-username')
-        JENKINS_API_TOKEN = credentials('jenkins-api-token')
-        OPENAI_API_KEY = credentials('openai-api-key')
-    }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Install reviewr') {
-            steps {
-                sh 'pip install reviewr'
-            }
-        }
-        
-        stage('Code Review') {
-            steps {
-                sh 'reviewr jenkins review'
-            }
-        }
-    }
+ agent any
+ 
+ environment {
+ JENKINS_URL = credentials('jenkins-url')
+ JENKINS_USERNAME = credentials('jenkins-username')
+ JENKINS_API_TOKEN = credentials('jenkins-api-token')
+ OPENAI_API_KEY = credentials('openai-api-key')
+ }
+ 
+ stages {
+ stage('Checkout') {
+ steps {
+ checkout scm
+ }
+ }
+ 
+ stage('Install reviewr') {
+ steps {
+ sh 'pip install reviewr'
+ }
+ }
+ 
+ stage('Code Review') {
+ steps {
+ sh 'reviewr jenkins review'
+ }
+ }
+ }
 }
 ```
 
@@ -104,10 +104,10 @@ pipeline {
 
 1. Create a new **Pipeline** job in Jenkins
 2. Configure **Pipeline** section:
-   - **Definition**: Pipeline script from SCM
-   - **SCM**: Git
-   - **Repository URL**: Your repository URL
-   - **Script Path**: Jenkinsfile
+ - **Definition**: Pipeline script from SCM
+ - **SCM**: Git
+ - **Repository URL**: Your repository URL
+ - **Script Path**: Jenkinsfile
 3. Save and run the job
 
 ## Configuration
@@ -185,9 +185,9 @@ reviewr jenkins setup [OPTIONS]
 
 ```bash
 reviewr jenkins setup \
-  --url https://jenkins.example.com \
-  --username admin \
-  --api-token YOUR_TOKEN
+ --url https://jenkins.example.com \
+ --username admin \
+ --api-token YOUR_TOKEN
 ```
 
 ### `reviewr jenkins set-description`
@@ -249,40 +249,40 @@ reviewr jenkins add-badge "Review: Issues Found" --color red
 
 ```groovy
 pipeline {
-    agent any
-    
-    environment {
-        JENKINS_URL = credentials('jenkins-url')
-        JENKINS_USERNAME = credentials('jenkins-username')
-        JENKINS_API_TOKEN = credentials('jenkins-api-token')
-        OPENAI_API_KEY = credentials('openai-api-key')
-    }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Install reviewr') {
-            steps {
-                sh 'pip install reviewr'
-            }
-        }
-        
-        stage('Code Review') {
-            steps {
-                sh 'reviewr jenkins review --output review-report.json'
-            }
-        }
-        
-        stage('Archive Results') {
-            steps {
-                archiveArtifacts artifacts: 'review-report.json', fingerprint: true
-            }
-        }
-    }
+ agent any
+ 
+ environment {
+ JENKINS_URL = credentials('jenkins-url')
+ JENKINS_USERNAME = credentials('jenkins-username')
+ JENKINS_API_TOKEN = credentials('jenkins-api-token')
+ OPENAI_API_KEY = credentials('openai-api-key')
+ }
+ 
+ stages {
+ stage('Checkout') {
+ steps {
+ checkout scm
+ }
+ }
+ 
+ stage('Install reviewr') {
+ steps {
+ sh 'pip install reviewr'
+ }
+ }
+ 
+ stage('Code Review') {
+ steps {
+ sh 'reviewr jenkins review --output review-report.json'
+ }
+ }
+ 
+ stage('Archive Results') {
+ steps {
+ archiveArtifacts artifacts: 'review-report.json', fingerprint: true
+ }
+ }
+ }
 }
 ```
 
@@ -290,53 +290,53 @@ pipeline {
 
 ```groovy
 pipeline {
-    agent any
-    
-    environment {
-        JENKINS_URL = credentials('jenkins-url')
-        JENKINS_USERNAME = credentials('jenkins-username')
-        JENKINS_API_TOKEN = credentials('jenkins-api-token')
-        OPENAI_API_KEY = credentials('openai-api-key')
-    }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Install reviewr') {
-            steps {
-                sh 'pip install reviewr'
-            }
-        }
-        
-        stage('Security Review') {
-            steps {
-                sh '''
-                    reviewr . \
-                        --review-type security \
-                        --security-scan \
-                        --check-vulnerabilities \
-                        --check-licenses \
-                        --output security-report.json
-                '''
-            }
-        }
-        
-        stage('Code Quality Review') {
-            steps {
-                sh '''
-                    reviewr jenkins review \
-                        --review-type correctness maintainability \
-                        --code-metrics \
-                        --check-complexity \
-                        --check-duplication
-                '''
-            }
-        }
-    }
+ agent any
+ 
+ environment {
+ JENKINS_URL = credentials('jenkins-url')
+ JENKINS_USERNAME = credentials('jenkins-username')
+ JENKINS_API_TOKEN = credentials('jenkins-api-token')
+ OPENAI_API_KEY = credentials('openai-api-key')
+ }
+ 
+ stages {
+ stage('Checkout') {
+ steps {
+ checkout scm
+ }
+ }
+ 
+ stage('Install reviewr') {
+ steps {
+ sh 'pip install reviewr'
+ }
+ }
+ 
+ stage('Security Review') {
+ steps {
+ sh '''
+ reviewr . \
+ --review-type security \
+ --security-scan \
+ --check-vulnerabilities \
+ --check-licenses \
+ --output security-report.json
+ '''
+ }
+ }
+ 
+ stage('Code Quality Review') {
+ steps {
+ sh '''
+ reviewr jenkins review \
+ --review-type correctness maintainability \
+ --code-metrics \
+ --check-complexity \
+ --check-duplication
+ '''
+ }
+ }
+ }
 }
 ```
 
@@ -344,48 +344,48 @@ pipeline {
 
 ```groovy
 pipeline {
-    agent any
-    
-    environment {
-        JENKINS_URL = credentials('jenkins-url')
-        JENKINS_USERNAME = credentials('jenkins-username')
-        JENKINS_API_TOKEN = credentials('jenkins-api-token')
-        OPENAI_API_KEY = credentials('openai-api-key')
-    }
-    
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Install reviewr') {
-            steps {
-                sh 'pip install reviewr'
-            }
-        }
-        
-        stage('Quick Review') {
-            when {
-                not {
-                    branch 'main'
-                }
-            }
-            steps {
-                sh 'reviewr jenkins review --preset quick'
-            }
-        }
-        
-        stage('Strict Review') {
-            when {
-                branch 'main'
-            }
-            steps {
-                sh 'reviewr jenkins review --preset strict'
-            }
-        }
-    }
+ agent any
+ 
+ environment {
+ JENKINS_URL = credentials('jenkins-url')
+ JENKINS_USERNAME = credentials('jenkins-username')
+ JENKINS_API_TOKEN = credentials('jenkins-api-token')
+ OPENAI_API_KEY = credentials('openai-api-key')
+ }
+ 
+ stages {
+ stage('Checkout') {
+ steps {
+ checkout scm
+ }
+ }
+ 
+ stage('Install reviewr') {
+ steps {
+ sh 'pip install reviewr'
+ }
+ }
+ 
+ stage('Quick Review') {
+ when {
+ not {
+ branch 'main'
+ }
+ }
+ steps {
+ sh 'reviewr jenkins review --preset quick'
+ }
+ }
+ 
+ stage('Strict Review') {
+ when {
+ branch 'main'
+ }
+ steps {
+ sh 'reviewr jenkins review --preset strict'
+ }
+ }
+ }
 }
 ```
 
@@ -395,31 +395,31 @@ pipeline {
 
 ```groovy
 node {
-    env.JENKINS_URL = credentials('jenkins-url')
-    env.JENKINS_USERNAME = credentials('jenkins-username')
-    env.JENKINS_API_TOKEN = credentials('jenkins-api-token')
-    env.OPENAI_API_KEY = credentials('openai-api-key')
-    
-    try {
-        stage('Checkout') {
-            checkout scm
-        }
-        
-        stage('Install reviewr') {
-            sh 'pip install reviewr'
-        }
-        
-        stage('Code Review') {
-            sh 'reviewr jenkins review'
-        }
-        
-        currentBuild.result = 'SUCCESS'
-    } catch (Exception e) {
-        currentBuild.result = 'FAILURE'
-        throw e
-    } finally {
-        cleanWs()
-    }
+ env.JENKINS_URL = credentials('jenkins-url')
+ env.JENKINS_USERNAME = credentials('jenkins-username')
+ env.JENKINS_API_TOKEN = credentials('jenkins-api-token')
+ env.OPENAI_API_KEY = credentials('openai-api-key')
+ 
+ try {
+ stage('Checkout') {
+ checkout scm
+ }
+ 
+ stage('Install reviewr') {
+ sh 'pip install reviewr'
+ }
+ 
+ stage('Code Review') {
+ sh 'reviewr jenkins review'
+ }
+ 
+ currentBuild.result = 'SUCCESS'
+ } catch (Exception e) {
+ currentBuild.result = 'FAILURE'
+ throw e
+ } finally {
+ cleanWs()
+ }
 }
 ```
 
@@ -430,17 +430,17 @@ node {
 ```bash
 # Security-focused review
 reviewr jenkins review \
-  --review-type security \
-  --security-scan \
-  --check-vulnerabilities \
-  --check-licenses
+ --review-type security \
+ --security-scan \
+ --check-vulnerabilities \
+ --check-licenses
 
 # Code quality review
 reviewr jenkins review \
-  --review-type correctness maintainability \
-  --code-metrics \
-  --check-complexity \
-  --check-duplication
+ --review-type correctness maintainability \
+ --code-metrics \
+ --check-complexity \
+ --check-duplication
 ```
 
 ### Using Presets
@@ -460,9 +460,9 @@ reviewr jenkins review --preset quick
 
 ```bash
 reviewr jenkins review \
-  --slack \
-  --slack-channel '#code-reviews' \
-  --slack-critical-only
+ --slack \
+ --slack-channel '#code-reviews' \
+ --slack-critical-only
 ```
 
 ## Troubleshooting
@@ -510,4 +510,3 @@ reviewr jenkins review \
 - [Code Metrics Guide](CODE_METRICS.md)
 - [Slack Integration](SLACK_INTEGRATION.md)
 - [CI/CD Best Practices](CI_CD_BEST_PRACTICES.md)
-

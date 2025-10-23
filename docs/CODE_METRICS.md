@@ -17,21 +17,21 @@ Analyzes code complexity using multiple industry-standard metrics:
 #### Cyclomatic Complexity (McCabe)
 - Measures the number of linearly independent paths through code
 - Thresholds:
-  - **Low** (1-5): Simple, easy to test
-  - **Moderate** (6-10): Acceptable complexity
-  - **High** (11-20): Consider refactoring
-  - **Very High** (21-50): Difficult to maintain
-  - **Extreme** (50+): Critical refactoring needed
+ - **Low** (1-5): Simple, easy to test
+ - **Moderate** (6-10): Acceptable complexity
+ - **High** (11-20): Consider refactoring
+ - **Very High** (21-50): Difficult to maintain
+ - **Extreme** (50+): Critical refactoring needed
 
 #### Cognitive Complexity (SonarSource)
 - Measures how difficult code is to understand
 - Accounts for nesting and control flow breaks
 - Thresholds:
-  - **Low** (1-5): Easy to understand
-  - **Moderate** (6-10): Acceptable
-  - **High** (11-15): Consider simplification
-  - **Very High** (16-25): Hard to understand
-  - **Extreme** (25+): Critical simplification needed
+ - **Low** (1-5): Easy to understand
+ - **Moderate** (6-10): Acceptable
+ - **High** (11-15): Consider simplification
+ - **Very High** (16-25): Hard to understand
+ - **Extreme** (25+): Critical simplification needed
 
 #### Halstead Metrics
 - **Volume**: Size of the implementation
@@ -40,15 +40,15 @@ Analyzes code complexity using multiple industry-standard metrics:
 
 #### Maintainability Index
 - Composite metric combining:
-  - Halstead Volume
-  - Cyclomatic Complexity
-  - Lines of Code
+ - Halstead Volume
+ - Cyclomatic Complexity
+ - Lines of Code
 - Scale: 0-100 (higher is better)
 - Thresholds:
-  - **85-100**: Highly maintainable
-  - **65-84**: Maintainable
-  - **20-64**: Moderate maintainability
-  - **0-19**: Difficult to maintain
+ - **85-100**: Highly maintainable
+ - **65-84**: Maintainable
+ - **20-64**: Moderate maintainability
+ - **0-19**: Difficult to maintain
 
 ### 2. Duplication Detection
 
@@ -148,13 +148,13 @@ reviewr /path/to/project --metrics --security-scan --all --output-format sarif
 
 ```json
 {
-  "type": "complexity",
-  "severity": "high",
-  "title": "High complexity in function process_data",
-  "description": "Cyclomatic: 25, Cognitive: 20",
-  "file": "src/processor.py",
-  "line": 42,
-  "recommendation": "Refactor to reduce complexity"
+ "type": "complexity",
+ "severity": "high",
+ "title": "High complexity in function process_data",
+ "description": "Cyclomatic: 25, Cognitive: 20",
+ "file": "src/processor.py",
+ "line": 42,
+ "recommendation": "Refactor to reduce complexity"
 }
 ```
 
@@ -162,13 +162,13 @@ reviewr /path/to/project --metrics --security-scan --all --output-format sarif
 
 ```json
 {
-  "type": "duplication",
-  "severity": "medium",
-  "title": "Code duplication detected (30 lines)",
-  "description": "Duplicate code between src/a.py:10 and src/b.py:50",
-  "file": "src/a.py",
-  "line": 10,
-  "recommendation": "Extract common code into reusable function"
+ "type": "duplication",
+ "severity": "medium",
+ "title": "Code duplication detected (30 lines)",
+ "description": "Duplicate code between src/a.py:10 and src/b.py:50",
+ "file": "src/a.py",
+ "line": 10,
+ "recommendation": "Extract common code into reusable function"
 }
 ```
 
@@ -176,13 +176,13 @@ reviewr /path/to/project --metrics --security-scan --all --output-format sarif
 
 ```json
 {
-  "type": "debt",
-  "severity": "critical",
-  "title": "High complexity (cyclomatic: 35)",
-  "description": "Difficult to understand, test, and maintain. Estimated remediation: 2.1 hours",
-  "file": "function complex_algorithm",
-  "line": 100,
-  "recommendation": "Refactor into smaller functions, reduce branching"
+ "type": "debt",
+ "severity": "critical",
+ "title": "High complexity (cyclomatic: 35)",
+ "description": "Difficult to understand, test, and maintain. Estimated remediation: 2.1 hours",
+ "file": "function complex_algorithm",
+ "line": 100,
+ "recommendation": "Refactor into smaller functions, reduce branching"
 }
 ```
 
@@ -196,46 +196,46 @@ name: Code Quality
 on: [push, pull_request]
 
 jobs:
-  metrics:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install reviewr
-        run: pip install reviewr
-      
-      - name: Run metrics analysis
-        run: reviewr . --metrics --all --output-format sarif > metrics.sarif
-      
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: metrics.sarif
+ metrics:
+ runs-on: ubuntu-latest
+ steps:
+ - uses: actions/checkout@v3
+ 
+ - name: Install reviewr
+ run: pip install reviewr
+ 
+ - name: Run metrics analysis
+ run: reviewr . --metrics --all --output-format sarif > metrics.sarif
+ 
+ - name: Upload SARIF
+ uses: github/codeql-action/upload-sarif@v2
+ with:
+ sarif_file: metrics.sarif
 ```
 
 ### GitLab CI
 
 ```yaml
 code_metrics:
-  stage: test
-  script:
-    - pip install reviewr
-    - reviewr . --metrics --all --output-format sarif > metrics.sarif
-  artifacts:
-    reports:
-      sast: metrics.sarif
+ stage: test
+ script:
+ - pip install reviewr
+ - reviewr . --metrics --all --output-format sarif > metrics.sarif
+ artifacts:
+ reports:
+ sast: metrics.sarif
 ```
 
 ### Bitbucket Pipelines
 
 ```yaml
 pipelines:
-  default:
-    - step:
-        name: Code Metrics
-        script:
-          - pip install reviewr
-          - reviewr . --metrics --all --output-format sarif
+ default:
+ - step:
+ name: Code Metrics
+ script:
+ - pip install reviewr
+ - reviewr . --metrics --all --output-format sarif
 ```
 
 ## Performance
@@ -344,8 +344,8 @@ analyzer = ComplexityAnalyzer()
 metrics = analyzer.analyze_file(Path("myfile.py"))
 
 for metric in metrics:
-    if metric.is_complex:
-        print(f"{metric.name}: cyclomatic={metric.cyclomatic}")
+ if metric.is_complex:
+ print(f"{metric.name}: cyclomatic={metric.cyclomatic}")
 
 # Detect duplication
 detector = DuplicationDetector(min_lines=6)
@@ -355,9 +355,9 @@ print(f"Duplication: {report.duplication_percentage}%")
 # Estimate debt
 estimator = TechnicalDebtEstimator()
 debt_report = estimator.estimate_from_metrics(
-    complexity_metrics=metrics,
-    duplication_report=report,
-    total_loc=10000
+ complexity_metrics=metrics,
+ duplication_report=report,
+ total_loc=10000
 )
 print(f"Technical debt: {debt_report.total_debt_days:.1f} days")
 print(f"SQALE rating: {debt_report.sqale_rating}")
@@ -388,4 +388,3 @@ print(f"SQALE rating: {debt_report.sqale_rating}")
 For issues, questions, or feature requests, please visit:
 - GitHub Issues: https://github.com/yourusername/reviewr/issues
 - Documentation: https://reviewr.dev/docs/metrics
-
