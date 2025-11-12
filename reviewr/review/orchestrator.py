@@ -22,14 +22,14 @@ class ReviewResult:
     files_reviewed: int = 0
     total_chunks: int = 0
     provider_stats: Dict[str, Any] = field(default_factory=dict)
-    
+
     def has_critical_issues(self) -> bool:
         """Check if there are any critical or high severity issues."""
         return any(
-            f.severity in ('critical', 'high') 
+            f.severity in ('critical', 'high')
             for f in self.findings
         )
-    
+
     def get_findings_by_severity(self) -> Dict[str, List[ReviewFinding]]:
         """Group findings by severity."""
         by_severity: Dict[str, List[ReviewFinding]] = {
@@ -39,13 +39,75 @@ class ReviewResult:
             'low': [],
             'info': []
         }
-        
+
         for finding in self.findings:
             if finding.severity in by_severity:
                 by_severity[finding.severity].append(finding)
-        
+
         return by_severity
-    
+
+    def get_quick_summary(self) -> Dict[str, Any]:
+        """
+        Get a quick summary for fast triage.
+
+        Returns:
+            Dictionary with key statistics for reviewers
+        """
+        from ..utils.finding_optimizer import FindingOptimizer
+        optimizer = FindingOptimizer()
+        return optimizer.get_quick_summary(self.findings)
+
+    def get_prioritized_findings(self) -> List[Any]:
+        """
+        Get findings prioritized by impact.
+
+        Returns:
+            List of FindingPriority objects sorted by priority
+        """
+        from ..utils.finding_optimizer import FindingOptimizer
+        optimizer = FindingOptimizer()
+        return optimizer.prioritize_findings(self.findings)
+
+    def get_findings_by_file(self) -> Dict[str, List[ReviewFinding]]:
+        """
+        Group findings by file path.
+
+        Returns:
+            Dictionary mapping file paths to findings
+        """
+        from ..utils.finding_optimizer import FindingOptimizer
+        optimizer = FindingOptimizer()
+        return optimizer.group_by_file(self.findings)
+
+    def get_findings_by_category(self) -> Dict[str, List[ReviewFinding]]:
+        """
+        Group findings by category.
+
+        Returns:
+            Dictionary mapping categories to findings
+        """
+        from ..utils.finding_optimizer import FindingOptimizer
+        optimizer = FindingOptimizer()
+        return optimizer.group_by_category(self.findings)
+
+    def deduplicate_findings(self) -> 'ReviewResult':
+        """
+        Return a new ReviewResult with deduplicated findings.
+
+        Returns:
+            New ReviewResult with unique findings only
+        """
+        from ..utils.finding_optimizer import FindingOptimizer
+        optimizer = FindingOptimizer()
+        deduplicated = optimizer.deduplicate_findings(self.findings)
+
+        return ReviewResult(
+            findings=deduplicated,
+            files_reviewed=self.files_reviewed,
+            total_chunks=self.total_chunks,
+            provider_stats=self.provider_stats
+        )
+
     def get_findings_by_type(self) -> Dict[str, List[ReviewFinding]]:
         """Group findings by review type."""
         by_type: Dict[str, List[ReviewFinding]] = {}

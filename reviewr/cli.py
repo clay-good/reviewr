@@ -27,6 +27,8 @@ console = Console()
 @click.option('--all', 'all_types', is_flag=True, help='Run all review types (except explain)')
 @click.option('--output-format', type=click.Choice(['sarif', 'markdown', 'html', 'junit']),
               help='Output format (required for review)')
+@click.option('--enhanced-html', is_flag=True, help='Use enhanced HTML format with interactive filtering and navigation')
+@click.option('--deduplicate', is_flag=True, help='Remove duplicate or similar findings')
 @click.option('--preset', help='Use a configuration preset (security, performance, quick, comprehensive, etc.)')
 @click.option('--custom-presets-dir', type=click.Path(exists=True, file_okay=False, path_type=Path),
               help='Directory containing custom preset files')
@@ -87,6 +89,7 @@ console = Console()
 def cli(path: Optional[str], security: bool, performance: bool,
         correctness: bool, maintainability: bool, architecture: bool,
         standards: bool, explain: bool, all_types: bool, output_format: Optional[str],
+        enhanced_html: bool, deduplicate: bool,
         preset: Optional[str], custom_presets_dir: Optional[Path],
         config: Optional[str], provider: Optional[str], verbose: int, no_cache: bool,
         no_local_analysis: bool, local_only: bool, rules: Optional[str], interactive: bool, language: Optional[str],
@@ -317,6 +320,15 @@ def cli(path: Optional[str], security: bool, performance: bool,
             decisions_path = Path.cwd() / "reviewr-decisions.json"
             reviewer.export_decisions(str(decisions_path))
 
+        # Apply deduplication if requested
+        if deduplicate:
+            console.print("[cyan]Deduplicating findings...[/cyan]")
+            original_count = len(result.findings)
+            result = result.deduplicate_findings()
+            removed_count = original_count - len(result.findings)
+            if removed_count > 0:
+                console.print(f"[green]✓[/green] Removed {removed_count} duplicate finding(s)")
+
         # Generate and save output file based on format
         if output_format == 'sarif':
             from .utils.formatters import SarifFormatter
@@ -336,8 +348,15 @@ def cli(path: Optional[str], security: bool, performance: bool,
             console.print(f"[green]✓[/green] Markdown report saved to: {output_path}")
 
         elif output_format == 'html':
-            from .utils.formatters import HtmlFormatter
-            formatter = HtmlFormatter()
+            # Use enhanced HTML formatter if requested
+            if enhanced_html:
+                from .utils.enhanced_html_formatter import EnhancedHtmlFormatter
+                formatter = EnhancedHtmlFormatter()
+                console.print("[cyan]Using enhanced HTML format with interactive features...[/cyan]")
+            else:
+                from .utils.formatters import HtmlFormatter
+                formatter = HtmlFormatter()
+
             output = formatter.format_result(result)
             output_path = Path.cwd() / "reviewr-report.html"
             with open(output_path, 'w') as f:
@@ -353,7 +372,24 @@ def cli(path: Optional[str], security: bool, performance: bool,
                 f.write(output)
             console.print(f"[green]✓[/green] JUnit XML report saved to: {output_path}")
 
-        # Show summary in terminal
+        # Show quick summary for triage
+        quick_summary = result.get_quick_summary()
+        console.print(f"\n[bold cyan]⚡ Quick Triage Summary:[/bold cyan]")
+        console.print(f"Total findings: {quick_summary['total_findings']}")
+        console.print(f"Files affected: {quick_summary['files_affected']}")
+        console.print(f"High confidence critical: {quick_summary['high_confidence_critical']}")
+        console.print(f"Actionable findings: {quick_summary['actionable_findings']}")
+
+        if quick_summary['needs_immediate_attention']:
+            console.print(f"[bold red]⚠️  NEEDS IMMEDIATE ATTENTION[/bold red]")
+
+        # Show top files with most issues
+        if quick_summary['top_files']:
+            console.print(f"\n[bold cyan]Top Files with Issues:[/bold cyan]")
+            for file_path, count in quick_summary['top_files'][:3]:
+                console.print(f"  {file_path}: {count} issue(s)")
+
+        # Show detailed summary
         console.print(f"\n[bold cyan]Review Summary:[/bold cyan]")
         console.print(f"Files reviewed: {result.files_reviewed}")
         console.print(f"Total findings: {len(result.findings)}")

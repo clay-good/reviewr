@@ -1,14 +1,11 @@
 # Include important documentation files
 include README.md
 include LICENSE
-include CONTRIBUTING.md
-include QUICKSTART.md
-include PRODUCTION_CHECKLIST.md
-include STATUS.md
+recursive-include docs *.md
 
 # Include configuration files
-include .pre-commit-hooks.yaml
-include .pre-commit-config.yaml.example
+include pyproject.toml
+include pytest.ini
 
 # Include package data
 recursive-include reviewr *.py
@@ -24,5 +21,10 @@ exclude .gitignore
 exclude poetry.lock
 prune venv
 prune reviewr/venv
-prune vscode-extension/node_modules
+prune vscode-extension
+prune intellij-plugin
+prune tests
+exclude test_*.py
+exclude demo_*.py
+exclude run_all_tests.py
 

@@ -1,10 +1,30 @@
 [tool.poetry]
 name = "reviewr"
-version = "0.1.0"
-description = "AI-powered code review CLI tool supporting multiple LLM providers"
+version = "1.0.0"
+description = "Enterprise-grade AI-powered code review platform for pre-commit validation, CI/CD integration, and comprehensive code quality enforcement"
 authors = ["Clay Good <hi@claygood.com>"]
 readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/claygood/reviewr"
+repository = "https://github.com/claygood/reviewr"
+documentation = "https://github.com/claygood/reviewr/blob/main/README.md"
+keywords = ["code-review", "ai", "llm", "static-analysis", "security", "linting", "quality", "ci-cd"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Software Development :: Testing",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
 packages = [{include = "reviewr"}]
+exclude = ["tests", "test_*", "demo_*"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -20,6 +40,16 @@ anthropic = ">=0.18"
 openai = ">=1.0"
 google-generativeai = ">=0.3"
 tomli = {version = ">=2.0.0", python = "<3.11"}
+requests = {version = ">=2.28", optional = true}
+fastapi = {version = ">=0.100", optional = true}
+uvicorn = {version = ">=0.23", optional = true}
+sqlalchemy = {version = ">=2.0", optional = true}
+
+[tool.poetry.extras]
+github = ["requests"]
+gitlab = ["requests"]
+dashboard = ["fastapi", "uvicorn", "sqlalchemy"]
+all = ["requests", "fastapi", "uvicorn", "sqlalchemy"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
@@ -32,6 +62,8 @@ mypy = "^1.0"
 [tool.poetry.scripts]
 reviewr = "reviewr.cli:main"
 reviewr-pre-commit = "reviewr.pre_commit_hook:main"
+reviewr-github = "reviewr.cli_github:github_pr"
+reviewr-gitlab = "reviewr.cli_gitlab:gitlab_mr"
 
 [build-system]
 requires = ["poetry-core"]
