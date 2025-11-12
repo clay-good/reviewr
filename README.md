@@ -379,26 +379,3 @@ reviewr src/ --all --output-format html --enhanced-html --deduplicate
 # Or use presets
 reviewr src/ --preset quick --output-format sarif
 ```
-
-## Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new features
-4. Ensure all tests pass: `pytest tests/`
-5. Submit a pull request
-
-## License
-
-See LICENSE file for details.
-
-## Support
-
-- **Documentation**: See docs/ directory
-- **Issues**: GitHub Issues
-- **Discussions**: GitHub Discussions
-
----
-
-**Made with ❤️ by the reviewr team**
