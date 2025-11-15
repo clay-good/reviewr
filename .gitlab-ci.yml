@@ -1,0 +1,156 @@
+# GitLab CI/CD Pipeline for Reviewr - AI-Powered Code Review
+# This pipeline runs on every merge request to provide automated security and code quality reviews
+
+variables:
+  DOCKER_IMAGE: "reviewr:latest"
+  REVIEWR_REPORT_PATH: "reviewr-report"
+
+stages:
+  - build
+  - review
+  - report
+
+# Build Docker image with reviewr
+build_image:
+  stage: build
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  before_script:
+    - docker info
+  script:
+    - echo "Building reviewr Docker image..."
+    - docker build -t $DOCKER_IMAGE .
+    - docker save $DOCKER_IMAGE -o reviewr-image.tar
+  artifacts:
+    paths:
+      - reviewr-image.tar
+    expire_in: 1 day
+  only:
+    - merge_requests
+  tags:
+    - docker
+
+# Run reviewr security and code quality analysis
+code_review:
+  stage: review
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  dependencies:
+    - build_image
+  before_script:
+    - docker load -i reviewr-image.tar
+  script:
+    - echo "Running AI-powered code review on merge request..."
+    - |
+      docker run --rm \
+        -v $CI_PROJECT_DIR:/code \
+        -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" \
+        -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
+        -e AUGMENTCODE_API_KEY="${AUGMENTCODE_API_KEY}" \
+        -e GOOGLE_API_KEY="${GOOGLE_API_KEY}" \
+        $DOCKER_IMAGE \
+        /code \
+        --security \
+        --performance \
+        --correctness \
+        --output-format sarif \
+        --output-file /code/$REVIEWR_REPORT_PATH.sarif \
+        --provider "${REVIEWR_PROVIDER:-augmentcode}" \
+        --deduplicate \
+        --diff \
+        --diff-base "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}" \
+        --verbose
+    - |
+      docker run --rm \
+        -v $CI_PROJECT_DIR:/code \
+        -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" \
+        -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
+        -e AUGMENTCODE_API_KEY="${AUGMENTCODE_API_KEY}" \
+        -e GOOGLE_API_KEY="${GOOGLE_API_KEY}" \
+        $DOCKER_IMAGE \
+        /code \
+        --security \
+        --performance \
+        --correctness \
+        --output-format html \
+        --output-file /code/$REVIEWR_REPORT_PATH.html \
+        --provider "${REVIEWR_PROVIDER:-augmentcode}" \
+        --enhanced-html \
+        --deduplicate \
+        --diff \
+        --diff-base "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}"
+  artifacts:
+    reports:
+      sast: $REVIEWR_REPORT_PATH.sarif
+    paths:
+      - $REVIEWR_REPORT_PATH.html
+      - $REVIEWR_REPORT_PATH.sarif
+    expire_in: 30 days
+  only:
+    - merge_requests
+  tags:
+    - docker
+
+# Post review results as MR comment
+post_gitlab_comment:
+  stage: report
+  image: docker:24-dind
+  services:
+    - docker:24-dind
+  dependencies:
+    - build_image
+    - code_review
+  before_script:
+    - docker load -i reviewr-image.tar
+  script:
+    - echo "Posting review results to GitLab merge request..."
+    - |
+      docker run --rm \
+        -v $CI_PROJECT_DIR:/code \
+        -e GITLAB_TOKEN="${GITLAB_TOKEN}" \
+        -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" \
+        -e OPENAI_API_KEY="${OPENAI_API_KEY}" \
+        -e AUGMENTCODE_API_KEY="${AUGMENTCODE_API_KEY}" \
+        -e GOOGLE_API_KEY="${GOOGLE_API_KEY}" \
+        $DOCKER_IMAGE \
+        reviewr-gitlab \
+        --mr-iid $CI_MERGE_REQUEST_IID \
+        --security \
+        --performance \
+        --correctness \
+        --provider "${REVIEWR_PROVIDER:-augmentcode}" \
+        --deduplicate
+  only:
+    - merge_requests
+  when: on_success
+  allow_failure: true
+  tags:
+    - docker
+
+# Security gate - fail pipeline on critical security issues
+security_gate:
+  stage: report
+  image: alpine:latest
+  dependencies:
+    - code_review
+  script:
+    - apk add --no-cache jq
+    - echo "Checking for critical security issues..."
+    - |
+      CRITICAL_COUNT=$(jq '[.runs[].results[] | select(.level == "error" or .level == "warning")] | length' $REVIEWR_REPORT_PATH.sarif)
+      echo "Found $CRITICAL_COUNT critical/high severity issues"
+      if [ "$CRITICAL_COUNT" -gt 0 ]; then
+        echo "❌ Pipeline failed: Critical security issues detected!"
+        echo "Review the artifacts for details: $REVIEWR_REPORT_PATH.html"
+        exit 1
+      else
+        echo "✅ No critical security issues found"
+      fi
+  only:
+    - merge_requests
+  when: on_success
+  allow_failure: false
+  tags:
+    - docker

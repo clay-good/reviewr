@@ -1,0 +1,95 @@
+# Simple GitLab CI/CD Pipeline for Reviewr (No Docker Build Required)
+# Use pre-built Python image for faster pipeline execution
+
+variables:
+  REVIEWR_PROVIDER: "augmentcode"  # Options: augmentcode, claude, openai, gemini
+
+stages:
+  - review
+  - report
+
+# Quick security review using pre-built Python image
+security_review:
+  stage: review
+  image: python:3.11-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git
+    - pip install --no-cache-dir reviewr[all]
+  script:
+    - echo "Running security-focused code review..."
+    - |
+      reviewr . \
+        --security \
+        --performance \
+        --correctness \
+        --output-format sarif \
+        --output-file reviewr-report.sarif \
+        --provider $REVIEWR_PROVIDER \
+        --deduplicate \
+        --diff \
+        --diff-base "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}" \
+        --verbose
+    - |
+      reviewr . \
+        --security \
+        --performance \
+        --correctness \
+        --output-format html \
+        --output-file reviewr-report.html \
+        --provider $REVIEWR_PROVIDER \
+        --enhanced-html \
+        --deduplicate \
+        --diff \
+        --diff-base "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-main}"
+  artifacts:
+    reports:
+      sast: reviewr-report.sarif
+    paths:
+      - reviewr-report.html
+      - reviewr-report.sarif
+    expire_in: 30 days
+  only:
+    - merge_requests
+
+# Post results to GitLab MR
+post_results:
+  stage: report
+  image: python:3.11-slim
+  dependencies:
+    - security_review
+  before_script:
+    - pip install --no-cache-dir reviewr[gitlab]
+  script:
+    - |
+      reviewr-gitlab \
+        --mr-iid $CI_MERGE_REQUEST_IID \
+        --security \
+        --performance \
+        --correctness \
+        --provider $REVIEWR_PROVIDER \
+        --deduplicate
+  only:
+    - merge_requests
+  when: on_success
+  allow_failure: true
+
+# Quality gate - block merge on critical issues
+quality_gate:
+  stage: report
+  image: alpine:latest
+  dependencies:
+    - security_review
+  script:
+    - apk add --no-cache jq
+    - |
+      CRITICAL=$(jq '[.runs[].results[] | select(.level == "error")] | length' reviewr-report.sarif)
+      echo "Critical issues found: $CRITICAL"
+      if [ "$CRITICAL" -gt 0 ]; then
+        echo "❌ BLOCKED: Critical security issues must be fixed before merge"
+        echo "📄 View detailed report in pipeline artifacts"
+        exit 1
+      fi
+      echo "✅ No critical issues - ready for merge"
+  only:
+    - merge_requests
+  when: on_success

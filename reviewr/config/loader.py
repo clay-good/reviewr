@@ -139,15 +139,18 @@ class ConfigLoader:
         
         # Check for provider API keys
         providers: Dict[str, Any] = {}
-        
+
         if api_key := os.environ.get('ANTHROPIC_API_KEY'):
             providers['claude'] = {'api_key': api_key}
-        
+
         if api_key := os.environ.get('OPENAI_API_KEY'):
             providers['openai'] = {'api_key': api_key}
-        
+
         if api_key := os.environ.get('GOOGLE_API_KEY'):
             providers['gemini'] = {'api_key': api_key}
+
+        if api_key := os.environ.get('AUGMENTCODE_API_KEY'):
+            providers['augmentcode'] = {'api_key': api_key}
         
         if providers:
             overrides['providers'] = providers

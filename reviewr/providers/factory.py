@@ -3,16 +3,18 @@ from .base import LLMProvider
 from .claude import ClaudeProvider
 from .openai import OpenAIProvider
 from .gemini import GeminiProvider
+from .augmentcode import AugmentCodeProvider
 from ..config.schema import ProviderConfig
 
 
 class ProviderFactory:
     """Factory for creating LLM provider instances."""
-    
+
     _providers: Dict[str, Type[LLMProvider]] = {
         'claude': ClaudeProvider,
         'openai': OpenAIProvider,
         'gemini': GeminiProvider,
+        'augmentcode': AugmentCodeProvider,
     }
     
     @classmethod

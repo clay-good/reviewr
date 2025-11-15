@@ -3,6 +3,12 @@ from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
+try:
+    from ..security import get_security_prompt_context
+    SECURITY_CONTEXT_AVAILABLE = True
+except ImportError:
+    SECURITY_CONTEXT_AVAILABLE = False
+
 
 class ReviewType(Enum):
     """Types of code reviews."""
@@ -167,6 +173,10 @@ class LLMProvider(ABC):
         if len(review_types) == 1 and review_types[0] == ReviewType.EXPLAIN:
             return self._build_explain_prompt(chunk)
 
+        # Use comprehensive security context if security review is requested
+        if ReviewType.SECURITY in review_types and SECURITY_CONTEXT_AVAILABLE:
+            return self._build_security_focused_prompt(chunk, review_types)
+
         # Build comprehensive review instructions
         review_instructions = self._build_review_instructions(review_types)
 
@@ -206,15 +216,25 @@ Return [] if no issues found.
 
         for review_type in review_types:
             if review_type == ReviewType.SECURITY:
-                instructions.append("""SECURITY REVIEW:
-- SQL injection, XSS, CSRF vulnerabilities
-- Authentication/authorization bypasses
-- Insecure data handling (passwords, tokens, PII)
-- Cryptographic weaknesses
-- Input validation failures
-- Path traversal vulnerabilities
-- Insecure deserialization
-- Race conditions and TOCTOU issues""")
+                instructions.append("""SECURITY REVIEW (CRITICAL FOCUS):
+Focus on HIGH and CRITICAL severity vulnerabilities:
+- SQL injection, XSS, CSRF, command injection vulnerabilities
+- Authentication/authorization bypasses and privilege escalation
+- Insecure data handling (passwords, tokens, PII, secrets in code)
+- Cryptographic weaknesses (weak algorithms, hardcoded keys, improper cert validation)
+- Input validation failures leading to code execution
+- Path traversal vulnerabilities and arbitrary file access
+- Insecure deserialization leading to RCE
+- Race conditions and TOCTOU issues with security impact
+
+For EACH security issue, provide:
+1. Vulnerability type and potential CWE/CVE reference
+2. Exploitation scenario and real-world impact
+3. MULTIPLE fix options (2-3) with specific code examples:
+   - Quick fix: Immediate mitigation (pros/cons)
+   - Secure fix: Comprehensive solution (pros/cons)
+   - Best practice: Industry-standard approach (pros/cons)
+4. Recommended approach with justification""")
 
             elif review_type == ReviewType.PERFORMANCE:
                 instructions.append("""PERFORMANCE REVIEW:
@@ -310,6 +330,70 @@ EXPLANATION REQUIREMENTS:
 
 RESPONSE FORMAT (JSON):
 [{{"type":"explain","severity":"info","line_start":{chunk.start_line},"line_end":{chunk.end_line},"message":"<comprehensive explanation covering all requirements>","suggestion":"<recommendations for improvements, usage tips, or related best practices>","confidence":1.0}}]
+"""
+        return prompt
+
+    def _build_security_focused_prompt(self, chunk: CodeChunk, review_types: List[ReviewType]) -> str:
+        """Build security-focused prompt with comprehensive vulnerability detection."""
+        if not SECURITY_CONTEXT_AVAILABLE:
+            # Fallback to regular security review if module not available
+            return self._build_review_prompt(chunk, review_types)
+
+        security_context = get_security_prompt_context()
+
+        prompt = f"""{security_context}
+
+═══════════════════════════════════════════════════════════════════════════════
+CODE UNDER REVIEW
+═══════════════════════════════════════════════════════════════════════════════
+
+FILE: {chunk.file_path}
+LINES: {chunk.start_line}-{chunk.end_line}
+LANGUAGE: {chunk.language}
+
+```{chunk.language}
+{chunk.content}
+```
+"""
+
+        if chunk.context:
+            prompt += f"""
+SURROUNDING CODE CONTEXT:
+```{chunk.language}
+{chunk.context}
+```
+"""
+
+        prompt += """
+═══════════════════════════════════════════════════════════════════════════════
+YOUR ANALYSIS TASK
+═══════════════════════════════════════════════════════════════════════════════
+
+Systematically analyze this code for ALL critical security vulnerabilities.
+For EACH vulnerability found, provide a complete report following the format above.
+
+RESPONSE FORMAT (JSON array):
+[
+  {
+    "type": "security",
+    "severity": "critical|high",
+    "line_start": <line_number>,
+    "line_end": <line_number>,
+    "message": "CWE-XXX: [Vulnerability Name]\\n\\nDETAILS:\\n[Full description]\\n\\nEXPLOITATION:\\n[How to exploit]\\n\\nIMPACT:\\n[Real-world consequences]",
+    "suggestion": "OPTION 1 - Quick Fix:\\n```\\n[code]\\n```\\n✅ PROS: [list]\\n❌ CONS: [list]\\n⏱️ Time: [estimate]\\n\\nOPTION 2 - Secure Fix:\\n```\\n[code]\\n```\\n✅ PROS: [list]\\n❌ CONS: [list]\\n⏱️ Time: [estimate]\\n\\nOPTION 3 - Best Practice:\\n```\\n[code]\\n```\\n✅ PROS: [list]\\n❌ CONS: [list]\\n⏱️ Time: [estimate]\\n\\nRECOMMENDATION: [Which option and why]",
+    "confidence": <0.9-1.0 for critical issues>
+  }
+]
+
+REMEMBER:
+- ONLY report CRITICAL and HIGH severity vulnerabilities
+- MUST provide 2-3 fix options with code examples
+- MUST include exploitation scenario
+- MUST use CWE references
+- Confidence 0.9+ for critical issues
+- Return [] if NO critical/high issues found
+
+BEGIN ANALYSIS NOW:
 """
         return prompt
 

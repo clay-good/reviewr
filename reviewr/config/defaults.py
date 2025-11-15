@@ -15,6 +15,11 @@ def get_default_config() -> ReviewrConfig:
     """Get default configuration."""
     return ReviewrConfig(
         providers={
+            "augmentcode": ProviderConfig(
+                model="augment-code-1",
+                max_tokens=8192,
+                temperature=0.0,
+            ),
             "claude": ProviderConfig(
                 model="claude-sonnet-4-20250514",
                 max_tokens=8192,
@@ -56,7 +61,7 @@ def get_default_config() -> ReviewrConfig:
             retry_backoff=RetryBackoff.EXPONENTIAL,
             initial_retry_delay=1.0,
         ),
-        default_provider="claude",
+        default_provider="augmentcode",
     )
 
 
@@ -64,18 +69,24 @@ DEFAULT_CONFIG_TEMPLATE_YAML = """# reviewr configuration file
 # This file uses YAML format and supports environment variable expansion
 
 providers:
+  augmentcode:
+    api_key: ${AUGMENTCODE_API_KEY}  # Set via environment variable
+    model: augment-code-1
+    max_tokens: 8192
+    temperature: 0.0
+
   claude:
     api_key: ${ANTHROPIC_API_KEY}  # Set via environment variable
     model: claude-sonnet-4-20250514
     max_tokens: 8192
     temperature: 0.0
-    
+
   openai:
     api_key: ${OPENAI_API_KEY}
     model: gpt-4-turbo-preview
     max_tokens: 4096
     temperature: 0.0
-    
+
   gemini:
     api_key: ${GOOGLE_API_KEY}
     model: gemini-pro
@@ -83,7 +94,7 @@ providers:
     temperature: 0.0
 
 # Default provider to use
-default_provider: claude
+default_provider: augmentcode
 
 # Review configuration
 review:
@@ -150,6 +161,12 @@ rate_limiting:
 DEFAULT_CONFIG_TEMPLATE_TOML = """# reviewr configuration file
 # This file uses TOML format
 
+[providers.augmentcode]
+api_key = "${AUGMENTCODE_API_KEY}"  # Set via environment variable
+model = "augment-code-1"
+max_tokens = 8192
+temperature = 0.0
+
 [providers.claude]
 api_key = "${ANTHROPIC_API_KEY}"  # Set via environment variable
 model = "claude-sonnet-4-20250514"
@@ -169,7 +186,7 @@ max_tokens = 4096
 temperature = 0.0
 
 # Default provider to use
-default_provider = "claude"
+default_provider = "augmentcode"
 
 [review]
 # Default review types to run if none specified
